@@ -33,6 +33,8 @@ class LocalizedService extends cc.EventTarget implements IService {
     // 当前语言
     private curLang: LocalizedService.LangType = null;
 
+    private readonly langPath = 'Langs'
+
     constructor() {
         super();
     }
@@ -45,7 +47,8 @@ class LocalizedService extends cc.EventTarget implements IService {
     public load(lang: LocalizedService.LangType, data: { [key: string]: string }) {
         this.langs[lang] = data;
         if (lang == this.curLang) {
-            this.emit('LanguageChange', lang);
+            this.emit(LocalizedService.EventType.LanguageChange, lang);
+            app.notice.emit(LocalizedService.EventType.LanguageChange, lang);
         }
     }
 
@@ -53,11 +56,13 @@ class LocalizedService extends cc.EventTarget implements IService {
      * 从目录加载多国语言json文件
      */
     public loadFolder() {
-        cc.loader.loadResDir('Langs', (err, resource, urls) => {
+        cc.loader.loadResDir(this.langPath, (err, resource, urls) => {
             const jsonResList = resource as cc.JsonAsset[];
             for (const jsonRes of jsonResList) {
                 this.load(jsonRes.name as any, jsonRes.json);
             }
+
+            this.info();
         });
     }
 
@@ -68,7 +73,8 @@ class LocalizedService extends cc.EventTarget implements IService {
     public setLang(lang: LocalizedService.LangType) {
         if (lang != null && this.curLang != lang) {
             this.curLang = lang;
-            this.emit('LanguageChange', lang);
+            this.emit(LocalizedService.EventType.LanguageChange, lang);
+            app.notice.emit(LocalizedService.EventType.LanguageChange, lang);
         }
     }
 
@@ -94,14 +100,43 @@ class LocalizedService extends cc.EventTarget implements IService {
         }
         return content;
     }
+
+
+    info(name?: string) {
+        if (name) {
+            if (this.langs[name] != null) {
+                console.log(name + ":", this.langs[name]);
+            } else {
+                throw new Error("没有" + name + "注册语言");
+            }
+        } else {
+            let info = "多语言信息:\n"
+
+            for (const key in this.langs) {
+                if (this.langs.hasOwnProperty(key)) {
+                    const lang = this.langs[key];
+                    info += "   " + key + ":" + "✔" + "\n";
+                }
+            }
+            if (info == "多语言信息:\n") {
+                info += "   没有注册语言";
+            }
+
+            console.log(info)
+        }
+    }
 }
 
 
 namespace LocalizedService {
+    export enum EventType {
+        LanguageChange = "LanguageChange"
+    }
+
     export enum LangType {
-        zh_CN,
-        zh_TW,
-        en_US
+        zh_CN = "zh_CN",
+        zh_TW = "zh_TW",
+        en_US = "en_US"
     }
 }
 

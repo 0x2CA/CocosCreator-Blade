@@ -14,15 +14,32 @@ class PoolService implements IService {
 
     public static readonly instance: PoolService
 
-    private static list = new Map<string, PoolService.Pool>();
+    private list = new Map<string, PoolService.Pool>();
+
+    private readonly perfabPath = "Prefabs/Pools"
 
     public initialize(): void {
+        this.loadFolder();
     }
 
     public lazyInitialize(): void {
     }
 
-    static async register(
+    /**
+    * 从目录加载预制体
+    */
+    public loadFolder() {
+        cc.loader.loadResDir(this.perfabPath, (err, resource, urls) => {
+            for (let index = 0; index < resource.length; index++) {
+                const prefab = (resource as cc.Prefab[])[index];
+                this.register(prefab.name, prefab, 10);
+            }
+
+            this.info();
+        });
+    }
+
+    async register(
         name: string,
         prefab: cc.Prefab,
         length: number,
@@ -33,14 +50,14 @@ class PoolService implements IService {
         }
     }
 
-    static async unregister(name: string) {
+    async unregister(name: string) {
         if (this.list.has(name)) {
             this.list.get(name).clear();
             this.list.delete(name);
         }
     }
 
-    static put(name: string, node: cc.Node) {
+    put(name: string, node: cc.Node) {
         if (this.list.has(name)) {
             this.list.get(name).put(node);
         } else {
@@ -48,7 +65,7 @@ class PoolService implements IService {
         }
     }
 
-    static get(name: string) {
+    get(name: string) {
         if (this.list.has(name)) {
             return this.list.get(name).get();
         } else {
@@ -56,7 +73,7 @@ class PoolService implements IService {
         }
     }
 
-    static info(name?: string) {
+    info(name?: string) {
         if (name) {
             if (this.list.has(name)) {
                 console.log(name + ":", this.list.get(name).progress());
@@ -64,11 +81,17 @@ class PoolService implements IService {
                 throw new Error("没有注册预制体");
             }
         } else {
-            this.list.forEach(
-                (value: PoolService.Pool, key: string, map: Map<string, PoolService.Pool>) => {
-                    console.log(key + ":", value.progress());
-                }
-            );
+            let info = "对象池信息:\n"
+            if (this.list.size > 0) {
+                this.list.forEach(
+                    (value: PoolService.Pool, key: string, map: Map<string, PoolService.Pool>) => {
+                        info += "   " + key + ":" + value.progress() + "\n";
+                    }
+                );
+            } else {
+                info += "   没有注册对象池对象";
+            }
+            console.log(info)
         }
     }
 }

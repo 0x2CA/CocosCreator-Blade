@@ -102,10 +102,10 @@ abstract class IPopup extends cc.Component implements ITicker {
     }
 
     /**
-	 * 模版参数, 传入打开参数等
+	 * 模版参数, 传入打开参数
 	 * @param tpl
 	 */
-    public apply?(tpl: any);
+    public applyTemplate?(tpl: any);
 
 	/**
 	 * 发送用户点击结果, 发送后将关闭弹窗

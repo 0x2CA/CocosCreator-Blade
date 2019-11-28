@@ -71,7 +71,17 @@ class PopupService implements IService, ITicker {
             this.modal = modalNode;
 
             // const backgroundNode = new cc.Node("Background");
+            // backgroundNode.color = cc.Color.BLACK;
+            // backgroundNode.opacity = 150;
             // const backgroundSprite = backgroundNode.addComponent(cc.Sprite)
+            // cc.loader.load("db://internal/image/default_sprite_splash.png", (err: Error, res: any) => {
+            //     if (err) {
+            //         cc.error(err);
+            //         backgroundNode.active = false;
+            //     } else {
+            //         backgroundSprite.spriteFrame = new cc.SpriteFrame(res);
+            //     }
+            // })
             // const backgroundWidget = backgroundNode.addComponent(cc.Widget)
             // backgroundWidget.isAlignTop = true;
             // backgroundWidget.isAlignBottom = true;
@@ -82,7 +92,6 @@ class PopupService implements IService, ITicker {
             // backgroundWidget.left = 0
             // backgroundWidget.right = 0
             // backgroundNode.parent = modalNode;
-
         }
     }
 
@@ -144,6 +153,18 @@ class PopupService implements IService, ITicker {
 
                 const panel: IPopup = panelNode.getComponent(IPopup);
 
+                // 填充文字
+                if (info.template) {
+                    const viewsComponent = panelNode.getComponents(IPopup);
+                    if (viewsComponent && viewsComponent.length > 0) {
+                        for (const v of viewsComponent) {
+                            if (v.applyTemplate) {
+                                v.applyTemplate(info.template);
+                            }
+                        }
+                    }
+                }
+
                 // 点击回调
                 panelNode.once(
                     PopupService.EventType.POPUP_CLICK,
@@ -190,11 +211,12 @@ class PopupService implements IService, ITicker {
 
     /**
      * 显示弹窗
+     * 默认等待，可以强行插队
      */
     public popNode(
         node: cc.Node | cc.Prefab | string,
         template: { [key: string]: any } = {},
-        immediate = true,
+        immediate = false,
         callback?: (type: string) => void,
         thisTarget?: any
     ) {

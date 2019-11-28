@@ -1,3 +1,6 @@
+/**
+ * 随机助手
+ */
 export default class RandomHelper {
     /**
     * 获取随机布尔值

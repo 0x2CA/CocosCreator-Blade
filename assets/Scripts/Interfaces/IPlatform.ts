@@ -14,15 +14,6 @@ abstract class IPlatform {
 	 */
     private type: PlatformService.PlatformType;
 
-    /**
-     * 平台登录
-     */
-    public abstract login(): Promise<any>;
-    /**
-     * 平台登出
-     */
-    public abstract logout(): Promise<any>;
-
 	/**
 	 * 平台初始化操作
 	 */
@@ -164,9 +155,9 @@ abstract class IPlatform {
     }
 
 	/**
-	 * 获取地址参数
+	 * 获取启动参数
 	 */
-    public getQuery(): {} {
+    public getLaunchOptions(): any {
         return {};
     }
 

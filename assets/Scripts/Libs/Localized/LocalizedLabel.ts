@@ -1,4 +1,5 @@
 import LocalizedItem from "./LocalizedItem";
+import LocalizedService from "../../Services/LocalizedService";
 
 const { ccclass, property, executeInEditMode, menu, requireComponent, executionOrder } = cc._decorator;
 
@@ -55,7 +56,7 @@ export default class LocalizedLabel extends cc.Component implements LocalizedIte
 
     onLoad() {
         this.updateLang();
-        app.locale.on('LanguageChange', this.updateLang, this);
+        app.locale.on(LocalizedService.EventType.LanguageChange, this.updateLang, this);
 
         // 编辑器模式, 执行定时更新
         if (CC_EDITOR) {
@@ -64,7 +65,7 @@ export default class LocalizedLabel extends cc.Component implements LocalizedIte
     }
 
     onDestroy() {
-        app.locale.off('LanguageChange', this.updateLang, this);
+        app.locale.off(LocalizedService.EventType.LanguageChange, this.updateLang, this);
         if (this.updateInterval > 0) {
             clearInterval(this.updateInterval);
         }

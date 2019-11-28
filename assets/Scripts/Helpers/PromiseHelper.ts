@@ -1,3 +1,6 @@
+/**
+ *  异步助手
+ */
 export default class PromiseHelper {
     /**
     * 等待时间, 单位：秒

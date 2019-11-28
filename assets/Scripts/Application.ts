@@ -4,7 +4,6 @@ import ControllerService from "./Services/ControllerService";
 import NotificationService from "./Services/NotificationService";
 import ModelService from "./Services/ModelService";
 import CommandService from "./Services/CommandService";
-import IService from "./Interfaces/IService";
 import PlatformService from "./Services/PlatformService";
 import TweenService from "./Services/TweenService";
 import LocalizedService from "./Services/LocalizedService";
@@ -113,28 +112,6 @@ export default class Application extends IApplication {
     */
     public readonly scene = SceneService.instance
 
-    /**
-     * 初始化服务
-     */
-    public initialize() {
-        Object.getOwnPropertyNames(this).filter((name) => {
-            return (this[name] as IService).initialize
-        }).forEach((name) => {
-            (this[name] as IService).initialize();
-        })
-    }
-
-
-    /**
-     * 延时初始化服务
-     */
-    public lazyInitialize() {
-        Object.getOwnPropertyNames(this).filter((name) => {
-            return (this[name] as IService).lazyInitialize
-        }).forEach((name) => {
-            (this[name] as IService).lazyInitialize();
-        })
-    }
 }
 
 declare global {
@@ -142,7 +119,9 @@ declare global {
 }
 
 if (typeof app == typeof undefined) {
+
     const app = new Application();
+    (window as any).app = app;
 
     if (cc.sys.platform !== cc.sys.EDITOR_PAGE) {
         // App初始化
@@ -173,8 +152,8 @@ if (typeof app == typeof undefined) {
             app.lazyInitialize()
         });
 
+    } else {
+      app.locale.initialize();
     }
-
-    (window as any).app = app;
 }
 

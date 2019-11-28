@@ -2,26 +2,22 @@ import IPlatform from "../Interfaces/IPlatform";
 
 export default class WebPlatform extends IPlatform {
 
-
-    public login(): Promise<any> {
+    public initialize(): void {
         this.userInfo = {
             avatar: 'https://img.readygo.yunyungquan.com/common/default_avatar.png',
             nickname: '测试用户',
-            platform: 'WEB'
+            platform: 'WEB',
+            gender: 1,
+            device: "PC",
+            country: "China",
+            province: "GuangDong",
+            city: "GuangZhou"
         };
-        return Promise.resolve();
-    }
-
-    public logout(): Promise<any> {
-        return Promise.resolve();
-    }
-
-    public initialize(): void {
-        this.login();
     }
 
     public lazyInitialize(): void {
     }
+
 
 
 }
