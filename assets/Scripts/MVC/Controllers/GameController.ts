@@ -2,6 +2,7 @@ import IController from "../../Interfaces/IController";
 import Controller from "../../Decorators/Controller";
 import Command from "../../Decorators/Command";
 import GameModel from "../Models/GameModel";
+import ArchiveServerSDK from "../../Libs/ArchiveServerSDK/ArchiveServerSDK";
 
 const { ccclass, property } = cc._decorator;
 
@@ -9,7 +10,14 @@ const { ccclass, property } = cc._decorator;
 @Controller("GameController")
 export default class GameController extends IController {
 
-    onRegister() {
+    async  onRegister() {
+        // 登录服务器
+        await ArchiveServerSDK.login("leek")
+        // 同步存档
+        await ArchiveServerSDK.sync()
+        console.log(app.timer.getTime(), new Date().getTime())
+
+        console.log(ArchiveServerSDK.get<Array<string>>("harvestCount"))
     }
 
     onUnRegister() {

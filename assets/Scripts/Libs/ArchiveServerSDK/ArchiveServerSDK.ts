@@ -4,12 +4,12 @@ import PlatformService from "../../Services/PlatformService";
 /**
  * 数据服务器
  */
-export default class ArchiveServerSDK {
+class ArchiveServerSDK {
     // 游戏名
-    private static readonly GameName = "leekExternal"
+    private static GameName = ""
 
     // 存档服务器URL
-    private static readonly ArchiveDebugUrl = `https://192.168.0.113:81`
+    private static readonly ArchiveDebugUrl = `https://gamearchive.tongchuangyouxi.com`
     private static readonly ArchiveUrl = "https://gamearchive.tongchuangyouxi.com"
 
     private static readonly AnonyAccount = true;
@@ -24,6 +24,14 @@ export default class ArchiveServerSDK {
     // openid
     private static openid: string = null;
 
+    // 排行榜缓存
+    private static rankList: ArchiveServerSDK.RankItem[] = [];
+    private static selfRank: ArchiveServerSDK.RankItem = null;
+
+    // 读取出来的存档内容
+    private static data: any = null;
+    // 本地存档自动保存时间, 单位：秒
+    private static ArchiveAutoSaveSecond = 5
 
     /**
      * 调用远程Web接口
@@ -52,7 +60,7 @@ export default class ArchiveServerSDK {
                 method,
                 data: data || {},
                 headers: {
-                    Authorization: `Bearer ${this.authToken}`,
+                    Authorization: `Bearer ${ArchiveServerSDK.authToken}`,
                 },
                 contentType: "JSON",
                 dataType: "JSON",
@@ -65,7 +73,6 @@ export default class ArchiveServerSDK {
                     }
                 })
                 .catch((reason) => {
-                    console.error(`request "${url}" error cause: ${reason ? reason : "no reason"}`);
                     reject(reason);
                 });
         });
@@ -75,7 +82,14 @@ export default class ArchiveServerSDK {
     /**
     * 登陆操作
     */
-    public static async login() {
+    public static async login(name: string) {
+        // 已经登录
+        if (ArchiveServerSDK.isLogin() == true) {
+            return;
+        }
+
+        ArchiveServerSDK.GameName = name
+
         if (CC_DEBUG && ArchiveServerSDK.AnonyAccount) {
             cc.warn("调试模式: 正在匿名登陆");
             ArchiveServerSDK.authToken = ArchiveServerSDK.AnonyAuthToken;
@@ -109,8 +123,28 @@ export default class ArchiveServerSDK {
             } else {
                 throw new Error("返回信息错误" + data);
             }
+
+            // 同步数据
+            ArchiveServerSDK.data = ArchiveServerSDK.loadLocal()
+            console.log("游戏数据：", ArchiveServerSDK.data);
+
+            // 定时保存
+            app.timer.startTimer(ArchiveServerSDK.ArchiveAutoSaveSecond, () => {
+                ArchiveServerSDK.save(true)
+            }, this);
         } catch (e) {
             cc.error(`登陆失败${e ? ":" + e.toString() : ""}`);
+        }
+    }
+
+    /**
+     * 是否已经登录
+     */
+    public static isLogin() {
+        if (ArchiveServerSDK.authToken != null && ArchiveServerSDK.openid != null) {
+            return true;
+        } else {
+            return false;
         }
     }
 
@@ -219,15 +253,234 @@ export default class ArchiveServerSDK {
             throw new Error();
         }
     }
-}
 
-if (CC_DEBUG && cc.sys.platform != cc.sys.WECHAT_GAME) {
-    (async () => {
-        try {
-            await ArchiveServerSDK.login();
-        } catch (error) {
-            console.warn(error);
+
+    /**
+     * 获取当前毫秒级时间
+     */
+    public static async getTime(): Promise<number> {
+        let data = await ArchiveServerSDK.remoteCall("/comapi/time", {}, "GET")
+        return data.time
+    }
+
+
+    /**
+	 * 设置排名
+	 * @param rankName
+	 * @param score
+	 */
+    public static async setScore(rankName: string, score: number) {
+        if (ArchiveServerSDK.isLogin() == false) {
+            throw new Error("请先调用ArchiveServerSDK.login(),登录服务器!")
+        }
+        await ArchiveServerSDK
+            .remoteCall(
+                "/rank/set",
+                {
+                    rank: rankName,
+                    score: score.toFixed(0),
+                },
+                "POST"
+            )
+    }
+
+    /**
+    * 获取排名
+    * @param rankName
+    */
+    public async getRank(rankName: string): Promise<{ list: ArchiveServerSDK.RankItem[]; self: ArchiveServerSDK.RankItem }> {
+        // 有缓存记录, 直接返回
+        if (ArchiveServerSDK.rankList.length > 0) {
+            return {
+                list: ArchiveServerSDK.rankList,
+                self: ArchiveServerSDK.selfRank,
+            };
         }
 
-    })();
+        if (ArchiveServerSDK.isLogin() == false) {
+            throw new Error("请先调用ArchiveServerSDK.login(),登录服务器!")
+        }
+        let data = await ArchiveServerSDK
+            .remoteCall(
+                "/rank/get",
+                {
+                    rank: rankName,
+                    top: 50,
+                },
+                "GET"
+            )
+
+        // 保存记录
+        ArchiveServerSDK.rankList = data.list || [];
+        ArchiveServerSDK.selfRank = data.self;
+
+        return data;
+    }
+
+    /**
+   * 从网络读取存档
+   */
+    private static async loadRemote() {
+        if (ArchiveServerSDK.isLogin() == false) {
+            throw new Error("请先调用ArchiveServerSDK.login(),登录服务器!")
+        }
+
+        try {
+            const remoteData = await ArchiveServerSDK.remoteCall('/archive/get', {}, 'GET');
+            if (remoteData) {
+                return remoteData;
+            }
+
+            throw new Error();
+        }
+        catch (e) {
+            return {};
+        }
+    }
+
+    /**
+    * 保存数据到网络
+    */
+    private static async saveRemote(data: any, overwrite = true, force = true) {
+        if (ArchiveServerSDK.isLogin() == false) {
+            throw new Error("请先调用ArchiveServerSDK.login(),登录服务器!")
+        }
+
+        await ArchiveServerSDK.remoteCall('/archive/save', {
+            data: data,
+            overwrite,
+            force,
+        });
+    }
+
+    /**
+     * 从本地读取存档
+     */
+    private static loadLocal() {
+        try {
+            const result = JSON.parse(app.platform.getPlatform().getArchive('user'));
+            return result;
+        } catch (e) {
+            return {};
+        }
+
+    }
+
+    /**
+     * 保存数据到本地
+     */
+    private static saveLocal(data: any) {
+        // 通过调用平台本地存档接口进行保存
+        app.platform.getPlatform().saveArchive('user', JSON.stringify(data));
+    }
+
+    /**
+    * 本地和网络存档进行同步
+    */
+    public static async sync() {
+        if (ArchiveServerSDK.isLogin() == false) {
+            throw new Error("请先调用ArchiveServerSDK.login(),登录服务器!")
+        }
+
+        const remoteData: any = await ArchiveServerSDK.loadRemote();
+        const localData = ArchiveServerSDK.data;
+        //本地无存档
+        if (localData == null) {
+            console.log("本地无存档!")
+            ArchiveServerSDK.data = remoteData;
+            return;
+        }
+
+        const localTime = localData.alterTime || 0;
+        const remoteTime = remoteData && remoteData.alterTime || 0;
+        if (localTime < remoteTime) {
+            // 网络覆盖本地
+            console.log("更新本地存档")
+            ArchiveServerSDK.data = remoteData;
+            await ArchiveServerSDK.saveLocal(ArchiveServerSDK.data)
+        }
+        else {
+            console.log("更新云存档")
+            ArchiveServerSDK.data.alterTime = app.timer.getTime();
+            // 本地覆盖网络
+            await ArchiveServerSDK.saveRemote(ArchiveServerSDK.data);
+        }
+    }
+
+
+
+    /**
+     * 保存操作
+     * @param force 强行保存, 不管是否被标记为修改
+     */
+    public static save(force: boolean = false) {
+        if (force) {
+            // console.log("强制保存!")
+            ArchiveServerSDK.data.alterTime = app.timer.getTime();
+            // 通过调用平台本地存档接口进行保存
+            ArchiveServerSDK.saveLocal(ArchiveServerSDK.data)
+            // 调用网络接口进行云保存
+            ArchiveServerSDK.saveRemote(ArchiveServerSDK.data);
+        }
+    }
+
+    /**
+     * 获取指定键对应的值
+     * 如果存档中找不到, 则返回默认值
+     * @param key 
+     */
+    public static get<T>(key: string): T {
+        if (ArchiveServerSDK.data == null) {
+            throw new Error("请先同步数据！")
+        }
+        return ArchiveServerSDK.data[key] == null ? null : ArchiveServerSDK.data[key];
+    }
+
+    /**
+     * 修改存到指定键名的值
+     * @param key 
+     * @param newValue 
+     */
+    public static set(key: string, newValue: any) {
+        if (ArchiveServerSDK.data == null) {
+            throw new Error("请先同步数据！")
+        }
+        const oldValue = ArchiveServerSDK.data[key];
+        if (oldValue && typeof oldValue != typeof newValue) {
+            throw new Error('存档新值和旧值类型不一致, 忽略存入');
+        }
+        // 旧值和新值不是同一个
+        if (oldValue !== newValue) {
+            this.data[key] = newValue;
+        }
+    }
+
+
 }
+
+namespace ArchiveServerSDK {
+    /**
+     * 排行榜单个数据项
+     */
+    export interface RankItem {
+        uid: string;
+        score: string;
+        nick: string;
+        avatar: string;
+        rank?: number;
+    }
+}
+
+// if (CC_DEBUG && cc.sys.platform != cc.sys.WECHAT_GAME) {
+//     (async () => {
+//         try {
+//             await ArchiveServerSDK.login("leek");
+//         } catch (error) {
+//             console.warn(error);
+//         }
+
+//     })();
+// }
+
+
+export default ArchiveServerSDK;

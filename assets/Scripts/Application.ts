@@ -148,6 +148,7 @@ if (typeof app == typeof undefined) {
             }
         });
 
+        // 延迟初始化
         cc.director.once(cc.Director.EVENT_AFTER_SCENE_LAUNCH, (scene: cc.Scene) => {
             app.lazyInitialize()
         });

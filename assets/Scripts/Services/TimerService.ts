@@ -3,6 +3,7 @@ import Service from "../Decorators/Service";
 import Singleton from "../Decorators/Singleton";
 import IView from "../Interfaces/IView";
 import ITicker from "../Interfaces/ITicker";
+import ArchiveServerSDK from "../Libs/ArchiveServerSDK/ArchiveServerSDK";
 
 /**
  * 时间服务
@@ -43,7 +44,7 @@ class TimerService implements IService, ITicker {
         app.ticker.register(this);
 
         // 定时更新时间
-        this.startTimer(1000, () => {
+        this.startTimer(1, () => {
             if (this.timeStamp > 0) {
                 this.timeStamp += 1000;
             }
@@ -67,12 +68,34 @@ class TimerService implements IService, ITicker {
         this.syncing = true;
 
         return new Promise((resolve, reject) => {
-            //TODO: 暂时使用本地时间
-            this.lastSyncTime = new Date().getTime();
-            this.timeStamp = new Date().getTime();
-            this.syncing = false;
-            console.log("同步时间", this.timeStamp)
-            resolve()
+            // //TODO: 暂时使用本地时间
+            // this.lastSyncTime = new Date().getTime();
+            // this.timeStamp = new Date().getTime();
+            // this.syncing = false;
+            // console.log("同步时间", this.timeStamp)
+            // resolve()
+            ArchiveServerSDK.getTime().then((time) => {
+                console.log(
+                    "同步时间:",
+                    this.timeStamp,
+                    "  :  ",
+                    time
+                );
+                if (Math.abs(this.timeStamp - time) > TimerService.MAX_TIME_DIFF) {
+                    // 超出出可接受的时间差
+                    this.timeStamp = this.lastSyncTime = time;
+                    this.syncing = false;
+                    reject("超出出可接受的时间差!");
+                } else {
+                    this.timeStamp = this.lastSyncTime = time;
+                    this.syncing = false;
+                    resolve(time);
+                }
+            })
+                .catch((reason) => {
+                    this.syncing = false;
+                    reject(reason);
+                });
         })
     }
 
@@ -157,7 +180,7 @@ class TimerService implements IService, ITicker {
         let deleteList = []
         this.list.forEach((timer) => {
             //减时间
-            timer.timeRemain -= delta * 1000;
+            timer.timeRemain -= delta;
             if (timer.timeRemain <= 0) {
                 // 时间结束
                 timer.callback.apply(timer.thisArgs, ...timer.args);
