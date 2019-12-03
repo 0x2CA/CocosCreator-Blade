@@ -211,12 +211,11 @@ class PopupService implements IService, ITicker {
 
     /**
      * 显示弹窗
-     * 默认等待，可以强行插队
+     * 默认等待
      */
     public popNode(
         node: cc.Node | cc.Prefab | string,
         template: { [key: string]: any } = {},
-        immediate = false,
         callback?: (type: string) => void,
         thisTarget?: any
     ) {
@@ -225,7 +224,29 @@ class PopupService implements IService, ITicker {
             node: node,
             callback: callback,
             callbackTarget: thisTarget,
-            immediate,
+            immediate: false,
+        });
+    }
+
+    /**
+     * 显示弹窗，强行插队
+     * @param node 
+     * @param template 
+     * @param callback 
+     * @param thisTarget 
+     */
+    public popNodeTop(
+        node: cc.Node | cc.Prefab | string,
+        template: { [key: string]: any } = {},
+        callback?: (type: string) => void,
+        thisTarget?: any
+    ) {
+        return this.pop({
+            template: template,
+            node: node,
+            callback: callback,
+            callbackTarget: thisTarget,
+            immediate: true,
         });
     }
 
