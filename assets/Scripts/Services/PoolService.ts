@@ -57,6 +57,11 @@ class PoolService implements IService {
         }
     }
 
+    /**
+     * 回收指定对象
+     * @param name 
+     * @param node 
+     */
     put(name: string, node: cc.Node) {
         if (this.list.has(name)) {
             this.list.get(name).put(node);
@@ -65,6 +70,10 @@ class PoolService implements IService {
         }
     }
 
+    /**
+     * 获取指定对象
+     * @param name 
+     */
     get(name: string) {
         if (this.list.has(name)) {
             return this.list.get(name).get();
@@ -73,6 +82,10 @@ class PoolService implements IService {
         }
     }
 
+    /**
+    * 打印信息
+    * @param name
+    */
     info(name?: string) {
         if (name) {
             if (this.list.has(name)) {
@@ -85,7 +98,7 @@ class PoolService implements IService {
             if (this.list.size > 0) {
                 this.list.forEach(
                     (value: PoolService.Pool, key: string, map: Map<string, PoolService.Pool>) => {
-                        info += "   " + key + ":" + value.progress() + "\n";
+                        info += "   " + key + "    " + value.progress() + "\n";
                     }
                 );
             } else {

@@ -13,6 +13,7 @@ import PopupService from "./Services/PopupService";
 import PoolService from "./Services/PoolService";
 import SceneService from "./Services/SceneService";
 import TimerService from "./Services/TimerService";
+import AudioService from "./Services/AudioService";
 
 
 export default class Application extends IApplication {
@@ -104,7 +105,12 @@ export default class Application extends IApplication {
     * @memberof Application
     */
     public readonly pool = PoolService.instance
-
+    /**
+      * 声音服务
+      *
+      * @memberof Application
+      */
+    public readonly audio = AudioService.instance
     /**
     * 场景服务
     *
@@ -154,7 +160,7 @@ if (typeof app == typeof undefined) {
         });
 
     } else {
-      app.locale.initialize();
+        app.locale.initialize();
     }
 }
 

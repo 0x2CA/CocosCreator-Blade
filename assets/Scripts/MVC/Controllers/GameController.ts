@@ -18,6 +18,8 @@ export default class GameController extends IController {
         console.log(app.timer.getTime(), new Date().getTime())
 
         console.log(ArchiveServerSDK.get<Array<string>>("harvestCount"))
+
+        app.audio.playBGM("bgm")
     }
 
     onUnRegister() {

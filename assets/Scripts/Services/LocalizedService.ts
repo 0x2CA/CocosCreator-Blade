@@ -101,7 +101,10 @@ class LocalizedService extends cc.EventTarget implements IService {
         return content;
     }
 
-
+    /**
+    * 打印信息
+    * @param name
+    */
     info(name?: string) {
         if (name) {
             if (this.langs[name] != null) {
@@ -115,7 +118,7 @@ class LocalizedService extends cc.EventTarget implements IService {
             for (const key in this.langs) {
                 if (this.langs.hasOwnProperty(key)) {
                     const lang = this.langs[key];
-                    info += "   " + key + ":" + "✔" + "\n";
+                    info += "   " + key + "    ✔" + "\n";
                 }
             }
             if (info == "多语言信息:\n") {
