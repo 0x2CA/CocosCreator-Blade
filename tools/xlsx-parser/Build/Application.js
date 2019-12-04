@@ -138,7 +138,7 @@ var Application = /** @class */ (function () {
                     var type = types[index_1];
                     definitionItem += "\t\t\t" + Application.definitionFromFormat(name_1, type) + "\n";
                 }
-                definitionContent += "\tdeclare interface " + outputName + " {\n\t\t[" + Application.definitionFromFormat("key", indextype).slice(0, Application.definitionFromFormat("key", indextype).length - 1) + "]:{\n" + definitionItem + "\t\t}\n\t}\n";
+                definitionContent += "\n\tdeclare interface " + outputName + " {\n\t\t[" + Application.definitionFromFormat("key", indextype).slice(0, Application.definitionFromFormat("key", indextype).length - 1) + "]:{\n" + definitionItem + "\t\t}\n\t}";
             }
             else {
                 var definitionItem = "";
@@ -147,13 +147,13 @@ var Application = /** @class */ (function () {
                     var type = types[index_2];
                     definitionItem += "\t\t" + Application.definitionFromFormat(name_2, type) + "\n";
                 }
-                definitionContent += "\tdeclare interface " + outputName + " {\n" + definitionItem + "\t}\n";
+                definitionContent += "\n\tdeclare interface " + outputName + " extends Array<\n\t{\n" + definitionItem + "\t}>{}";
             }
             // console.log(definitionContent)
         }
         // 导出声明文件
         if (definitionContent && definitionContent.length > 0) {
-            definitionContent = "declare namespace Configs {\n" + definitionContent + "}";
+            definitionContent = "declare namespace Configs {" + definitionContent + "\n}";
             var pathInfo = path_1.default.parse(definition);
             var outputPath = void 0, outputDir = void 0;
             if (pathInfo.name == "") {

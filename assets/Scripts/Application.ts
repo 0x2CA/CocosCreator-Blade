@@ -14,6 +14,7 @@ import PoolService from "./Services/PoolService";
 import SceneService from "./Services/SceneService";
 import TimerService from "./Services/TimerService";
 import AudioService from "./Services/AudioService";
+import ConfigService from "./Services/ConfigService";
 
 
 export default class Application extends IApplication {
@@ -105,12 +106,21 @@ export default class Application extends IApplication {
     * @memberof Application
     */
     public readonly pool = PoolService.instance
+
     /**
-      * 声音服务
-      *
-      * @memberof Application
-      */
+    * 声音服务
+    *
+    * @memberof Application
+    */
     public readonly audio = AudioService.instance
+    
+    /**
+    * 配置服务
+    *
+    * @memberof Application
+    */
+    public readonly config = ConfigService.instance
+
     /**
     * 场景服务
     *

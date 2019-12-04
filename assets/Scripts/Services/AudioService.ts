@@ -19,7 +19,7 @@ export default class AudioService implements IService {
 
     private list = new Map<string, cc.AudioClip>();
 
-    private readonly perfabPath = "Audios"
+    private readonly audioPath = "Audios"
 
     // 声音大小
     private bgmVolume: number = 1.0;
@@ -58,7 +58,7 @@ export default class AudioService implements IService {
     * 从目录加载声音
     */
     public loadFolder() {
-        cc.loader.loadResDir(this.perfabPath, (err, resource, urls) => {
+        cc.loader.loadResDir(this.audioPath, (err, resource, urls) => {
             for (let index = 0; index < resource.length; index++) {
                 const audio = (resource as cc.AudioClip[])[index];
                 this.register(audio.name, audio);
@@ -181,7 +181,7 @@ export default class AudioService implements IService {
     info(name?: string) {
         if (name) {
             if (this.list.has(name)) {
-                console.log(name + ":", this.list[name]);
+                console.log(name + ":", this.list.get(name));
             } else {
                 throw new Error("没有声音");
             }

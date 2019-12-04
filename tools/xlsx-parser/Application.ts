@@ -156,7 +156,7 @@ export default class Application {
                     const type = types[index]
                     definitionItem += "\t\t\t" + Application.definitionFromFormat(name, type) + "\n";
                 }
-                definitionContent += `\tdeclare interface ${outputName} {\n\t\t[${Application.definitionFromFormat("key", indextype).slice(0, Application.definitionFromFormat("key", indextype).length - 1)}]:{\n${definitionItem}\t\t}\n\t}\n`;
+                definitionContent += `\n\tdeclare interface ${outputName} {\n\t\t[${Application.definitionFromFormat("key", indextype).slice(0, Application.definitionFromFormat("key", indextype).length - 1)}]:{\n${definitionItem}\t\t}\n\t}`;
             } else {
                 let definitionItem = ""
                 for (let index = 0; index < keys.length; index++) {
@@ -164,7 +164,7 @@ export default class Application {
                     const type = types[index]
                     definitionItem += "\t\t" + Application.definitionFromFormat(name, type) + "\n";
                 }
-                definitionContent += `\tdeclare interface ${outputName} {\n${definitionItem}\t}\n`;
+                definitionContent += `\n\tdeclare interface ${outputName} extends Array<\n\t{\n${definitionItem}\t}>{}`;
             }
 
             // console.log(definitionContent)
@@ -173,7 +173,7 @@ export default class Application {
 
         // 导出声明文件
         if (definitionContent && definitionContent.length > 0) {
-            definitionContent = `declare namespace Configs {\n${definitionContent}}`;
+            definitionContent = `declare namespace Configs {${definitionContent}\n}`;
             const pathInfo = path.parse(definition);
             let outputPath, outputDir;
             if (pathInfo.name == "") {

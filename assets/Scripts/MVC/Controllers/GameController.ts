@@ -20,6 +20,10 @@ export default class GameController extends IController {
         console.log(ArchiveServerSDK.get<Array<string>>("harvestCount"))
 
         app.audio.playBGM("bgm")
+        let list = app.config.get<Configs.arrlist>("arrlist")
+        console.log(list)
+        let obj = app.config.get<Configs.objList>("objList")
+        console.log(obj)
     }
 
     onUnRegister() {
