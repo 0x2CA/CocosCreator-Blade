@@ -94,12 +94,11 @@ export default class ConfigService implements IService {
                 const item = data[i];
                 let obj = {};
                 for (let j = 0; j < item.length; j++) {
-                    obj[key[j]] = item[j];
-                }
-                if (obj[index]) {
-                    result[obj[index]] = obj;
-                } else {
-                    throw new Error(`数据错误!无${index}主键`)
+                    if (key[j] != index) {
+                        obj[key[j]] = item[j];
+                    }else{
+                        result[item[j]] = obj;
+                    }
                 }
             }
         }
