@@ -1,2 +1,2 @@
-node ./xlsx-parser/app -i %1 -o "../assets/resources/Configs" -d "../declare/expconf.d.ts"
+node ./xlsx-parser/build\Application.js  -i %1 -o "../assets/resources/Configs" -d "../declare/Configs.d.ts"
 pause

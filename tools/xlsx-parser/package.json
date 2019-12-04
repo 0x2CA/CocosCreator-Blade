@@ -1,17 +1,16 @@
 {
-  "name": "com.hl.xlsxparser",
+  "name": "xlsx-parser",
   "version": "1.0.0",
   "description": "",
-  "main": "app.js",
-  "dependencies": {
-    "commander": "^2.19.0",
-    "xlsx": "^0.14.1"
-  },
-  "devDependencies": {},
+  "main": "./build/Application.js",
   "scripts": {
-    "start": "node app",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "tsc:w": "tsc -w"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {
+    "@types/node": "^12.12.14",
+    "commander": "^4.0.1",
+    "xlsx": "^0.15.3"
+  }
 }
