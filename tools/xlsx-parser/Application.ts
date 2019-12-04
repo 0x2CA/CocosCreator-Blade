@@ -164,7 +164,7 @@ export default class Application {
                     const type = types[index]
                     definitionItem += "\t\t" + Application.definitionFromFormat(name, type) + "\n";
                 }
-                definitionContent += `\n\tdeclare interface ${outputName} extends Array<\n\t{\n${definitionItem}\t}>{}`;
+                definitionContent += `\n\tdeclare interface ${outputName} extends Array<{\n${definitionItem}\t}>{}`;
             }
 
             // console.log(definitionContent)
