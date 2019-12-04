@@ -2,6 +2,7 @@ import Singleton from "../Decorators/Singleton";
 import Service from "../Decorators/Service";
 import IService from "../Interfaces/IService";
 
+
 /**
  * 全局的配置服务
  *
@@ -9,12 +10,12 @@ import IService from "../Interfaces/IService";
  */
 @Singleton
 @Service("ConfigService")
-export default class ConfigService implements IService {
+class ConfigService implements IService {
     public alias: string;
 
     public static readonly instance: ConfigService
 
-    private list = new Map<string, { obj: any, json: cc.JsonAsset }>();
+    private list = new Map<string, ConfigService.ConfigInfo>();
 
     private configPath = "Configs"
 
@@ -43,10 +44,10 @@ export default class ConfigService implements IService {
 
     async register(
         name: string,
-        json: cc.JsonAsset
+        jsonAsset: cc.JsonAsset
     ) {
         if (!this.list.has(name)) {
-            this.list.set(name, { json, obj: null });
+            this.list.set(name, { jsonAsset: jsonAsset, data: null });
         }
     }
 
@@ -63,10 +64,10 @@ export default class ConfigService implements IService {
     public get<T>(name: string): T {
         if (this.list.has(name)) {
             let info = this.list.get(name);
-            if (info.obj) {
-                return info.obj
+            if (info.data) {
+                return info.data
             } else {
-                return info.obj = this.build(info.json.json)
+                return info.data = this.build(info.jsonAsset.json)
             }
         }
     }
@@ -96,7 +97,7 @@ export default class ConfigService implements IService {
                 for (let j = 0; j < item.length; j++) {
                     if (key[j] != index) {
                         obj[key[j]] = item[j];
-                    }else{
+                    } else {
                         result[item[j]] = obj;
                     }
                 }
@@ -114,7 +115,7 @@ export default class ConfigService implements IService {
     info(name?: string) {
         if (name) {
             if (this.list.has(name)) {
-                console.log(name + ":", this.list.get(name).json);
+                console.log(name + ":", this.list.get(name).jsonAsset);
             } else {
                 throw new Error("没有配置文件");
             }
@@ -122,7 +123,7 @@ export default class ConfigService implements IService {
             let info = "配置信息:\n"
             if (this.list.size > 0) {
                 this.list.forEach(
-                    (value: cc.JsonAsset, key: string, map: Map<string, cc.JsonAsset>) => {
+                    (value: ConfigService.ConfigInfo, key: string, map: Map<string, ConfigService.ConfigInfo>) => {
                         info += "   " + key + "    ✔" + "\n";
                     }
                 );
@@ -134,3 +135,12 @@ export default class ConfigService implements IService {
     }
 }
 
+namespace ConfigService {
+    export interface ConfigInfo {
+        data: any,
+        jsonAsset: cc.JsonAsset
+    }
+}
+
+
+export default ConfigService;
