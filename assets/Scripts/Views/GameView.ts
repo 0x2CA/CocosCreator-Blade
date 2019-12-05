@@ -16,7 +16,13 @@ export default class GameView extends IView {
 
     @property(cc.Button)
     button: cc.Button = null
-    
+
+    @property(cc.Camera)
+    camera: cc.Camera
+
+    @property(cc.Node)
+    touch: cc.Node
+
     gameModel: GameModel = null
 
     onRegister() {
@@ -26,6 +32,14 @@ export default class GameView extends IView {
         this.button.node.on(cc.Node.EventType.TOUCH_END, async () => {
             let result = await app.popup.popNode("TestPanel", { a: 1, b: 2 })
             console.log(result)
+        })
+
+        this.touch.on(cc.Node.EventType.TOUCH_END, async (event: cc.Event.EventTouch) => {
+            let ray = this.camera.getRay(event.getLocation())
+            let results = (cc as any).geomUtils.intersect.raycast(cc.director.getScene(), ray);
+            for (let i = 0; i < results.length; i++) {
+                console.log(results[i].node.name)
+            }
         })
     }
 
