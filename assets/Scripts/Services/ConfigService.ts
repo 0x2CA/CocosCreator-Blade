@@ -117,7 +117,7 @@ class ConfigService implements IService {
             if (this.list.has(name)) {
                 console.log(name + ":", this.list.get(name).jsonAsset);
             } else {
-                throw new Error("没有配置文件");
+                console.log(`没有${name}配置文件`);
             }
         } else {
             let info = "配置信息:\n"

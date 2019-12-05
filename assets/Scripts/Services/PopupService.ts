@@ -50,7 +50,7 @@ class PopupService implements IService, ITicker {
         if (this.modal == null) {
             const appNode = cc.find("Application");
             if (appNode == null) {
-                throw new Error("没有节点")
+                throw new Error("没有Application节点")
             }
 
             // 添加模态层节点

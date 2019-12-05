@@ -47,7 +47,7 @@ export default abstract class IController extends cc.Component implements ITicke
             return this[funcName].call(this, ...args);
         }
         else {
-            throw new Error(`调用不存在的方法${funcName}`);
+            console.error(`调用${this.alias}不存在的方法${funcName}`);
         }
     }
 

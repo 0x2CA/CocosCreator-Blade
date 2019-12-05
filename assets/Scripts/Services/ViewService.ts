@@ -11,10 +11,10 @@ export default class ViewService implements IService {
     public static readonly instance: ViewService;
 
 
-    private list: { [name: string]: IView }
+    private list: Map<string, IView>
 
     public initialize(): void {
-        this.list = {};
+        this.list = new Map<string, IView>();
     }
     public lazyInitialize(): void {
     }
@@ -23,12 +23,14 @@ export default class ViewService implements IService {
     * 注册控制器
     */
     public register(view: IView) {
-        if (Reflect.has(this.list, view.alias)) {
-            throw new Error(`已经存在${view.alias}视图!`);
+        if (this.list.has(view.alias)) {
+            console.error(`已经存在${view.alias}视图!`);
+            console.log(this.list[view.alias])
+            this.unregister(this.list.get(view.alias))
+            console.log(this.list[view.alias])
+            this.register(view);
         } else {
-            Reflect.defineProperty(this.list, view.alias, {
-                value: view
-            })
+            this.list.set(view.alias, view)
         }
     }
 
@@ -36,8 +38,8 @@ export default class ViewService implements IService {
      * 注销控制器
      */
     public unregister(view: IView) {
-        if (Reflect.has(this.list, view.alias)) {
-            Reflect.deleteProperty(this.list, view.alias)
+        if (this.list.has(view.alias)) {
+            this.list.delete(view.alias)
         }
     }
 
@@ -47,7 +49,7 @@ export default class ViewService implements IService {
      * @param alias 
      */
     public getView(alias: string) {
-        return this.list[alias] || null;
+        return this.list.get(alias) || null;
     }
 
 
@@ -60,7 +62,8 @@ export default class ViewService implements IService {
     public orderViewById(alias: string, funcName: string, ...args: any[]): any {
         const view: IView = this.getView(alias);
         if (view == null) {
-            throw new Error(`视图（${alias}）不存在`);
+            console.error(`视图（${alias}）不存在`);
+            return;
         }
 
         return view.order(funcName, ...args);

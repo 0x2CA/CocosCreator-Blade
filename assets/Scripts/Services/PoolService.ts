@@ -66,7 +66,8 @@ class PoolService implements IService {
         if (this.list.has(name)) {
             this.list.get(name).put(node);
         } else {
-            throw new Error("没有注册预制体");
+            console.error("没有注册预制体");
+            node.destroy();
         }
     }
 
@@ -78,7 +79,7 @@ class PoolService implements IService {
         if (this.list.has(name)) {
             return this.list.get(name).get();
         } else {
-            throw new Error("没有注册预制体");
+            console.error("没有注册预制体");
         }
     }
 
@@ -91,7 +92,7 @@ class PoolService implements IService {
             if (this.list.has(name)) {
                 console.log(name + ":", this.list.get(name).progress());
             } else {
-                throw new Error("没有注册预制体");
+                console.log(`没有注册${name}预制体`);
             }
         } else {
             let info = "对象池信息:\n"

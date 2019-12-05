@@ -40,7 +40,7 @@ export default abstract class IView extends cc.Component implements ITicker {
             return this[funcName].call(this, ...args);
         }
         else {
-            throw new Error(`调用不存在的方法${funcName}`);
+            console.error(`调用${this.alias}不存在的方法${funcName}`);
         }
     }
 

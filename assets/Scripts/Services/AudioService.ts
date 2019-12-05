@@ -183,7 +183,7 @@ export default class AudioService implements IService {
             if (this.list.has(name)) {
                 console.log(name + ":", this.list.get(name));
             } else {
-                throw new Error("没有声音");
+                console.log(`没有${name}声音`);
             }
         } else {
             let info = "声音信息:\n"

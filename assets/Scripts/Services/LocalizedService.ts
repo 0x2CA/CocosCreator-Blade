@@ -110,7 +110,7 @@ class LocalizedService extends cc.EventTarget implements IService {
             if (this.langs[name] != null) {
                 console.log(name + ":", this.langs[name]);
             } else {
-                throw new Error("没有" + name + "注册语言");
+                console.log(`没有注册${name}语言`);
             }
         } else {
             let info = "多语言信息:\n"
