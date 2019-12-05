@@ -25,9 +25,7 @@ export default class ViewService implements IService {
     public register(view: IView) {
         if (this.list.has(view.alias)) {
             console.error(`已经存在${view.alias}视图!`);
-            console.log(this.list[view.alias])
             this.unregister(this.list.get(view.alias))
-            console.log(this.list[view.alias])
             this.register(view);
         } else {
             this.list.set(view.alias, view)
