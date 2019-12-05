@@ -7,8 +7,8 @@ import Controller from "../Decorators/Controller";
 const { ccclass, property } = cc._decorator;
 
 @ccclass
-@Controller("GameController")
-export default class GameController extends IController {
+@Controller("UIController")
+export default class UIController extends IController {
 
     async  onRegister() {
         // 登录服务器

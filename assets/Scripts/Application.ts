@@ -113,7 +113,7 @@ export default class Application extends IApplication {
     * @memberof Application
     */
     public readonly audio = AudioService.instance
-    
+
     /**
     * 配置服务
     *
@@ -151,6 +151,7 @@ if (typeof app == typeof undefined) {
                 node = new cc.Node();
                 node.name = "Application";
                 node.parent = scene;
+                node.group = "ui"
             }
 
             // 更新常驻节点的位置和尺寸

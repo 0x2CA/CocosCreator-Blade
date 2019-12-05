@@ -7,8 +7,8 @@ import Action from "../Decorators/Action";
 const { ccclass, property } = cc._decorator;
 
 @ccclass
-@View("GameView")
-export default class GameView extends IView {
+@View("UIView")
+export default class UIView extends IView {
 
 
     @property(cc.Label)
@@ -16,7 +16,7 @@ export default class GameView extends IView {
 
     @property(cc.Button)
     button: cc.Button = null
-    
+
     gameModel: GameModel = null
 
     onRegister() {
