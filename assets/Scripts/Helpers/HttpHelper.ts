@@ -1,3 +1,5 @@
+import PlatformService from "../Services/PlatformService";
+
 /**
  * Http助手
  */
@@ -36,7 +38,7 @@ class HttpHelper {
                 options.headers = null;
             }
 
-            if (cc.sys.platform === cc.sys.WECHAT_GAME) {
+            if (app.platform.getType() == PlatformService.PlatformType.WX) {
                 if (options.contentType != "JSON") {
                     options.headers = options.headers || {};
                     options.headers["Content-Type"] =
@@ -80,7 +82,7 @@ class HttpHelper {
                                 return resolve(dataObj);
                             }
                         } else {
-                            return reject();
+                            return reject(xhr.status);
                         }
                     }
                 };
@@ -105,6 +107,7 @@ class HttpHelper {
                 }
 
                 xhr.open(options.method, url, true);
+                
                 // 设置header
                 for (const key in headers) {
                     if (typeof headers[key] == "string") {

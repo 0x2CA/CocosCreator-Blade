@@ -1,5 +1,6 @@
 import HttpHelper from "../../Helpers/HttpHelper";
 import PlatformService from "../../Services/PlatformService";
+import TimerService from "../../Services/TimerService";
 
 /**
  * 数据服务器
@@ -33,18 +34,17 @@ class ArchiveServerSDK {
     // 本地存档自动保存时间, 单位：秒
     private static ArchiveAutoSaveSecond = 5
 
+    private static autoSave: TimerService.Timer = null
     /**
      * 调用远程Web接口
      * @param path
      * @param data
      * @param method
-     * @param errTip 错误提示方式
      */
     private static remoteCall(
         path: string,
         data: any = {},
-        method: HttpHelper.RequestMethod = "POST",
-        errTip: "none" | "pop" | "toast" = "none"
+        method: HttpHelper.RequestMethod = "POST"
     ): Promise<any> {
         let url;
 
@@ -129,7 +129,10 @@ class ArchiveServerSDK {
             console.log("游戏数据：", ArchiveServerSDK.data);
 
             // 定时保存
-            app.timer.startTimer(ArchiveServerSDK.ArchiveAutoSaveSecond, () => {
+            if (ArchiveServerSDK.autoSave) {
+                app.timer.stopTimer(ArchiveServerSDK.autoSave)
+            }
+            ArchiveServerSDK.autoSave = app.timer.startTimer(ArchiveServerSDK.ArchiveAutoSaveSecond, () => {
                 ArchiveServerSDK.save(true)
             }, this);
         } catch (e) {
