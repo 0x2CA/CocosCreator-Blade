@@ -1,12 +1,12 @@
-import CommandHelper from "./Helper/CommandHelper";
+import Commander from 'commander';
+import XLSX from "xlsx"
 import fs from "fs";
 import path from "path";
-import XLSXHelper from "./Helper/XLSXHelper";
 
 export default class Application {
 
     public static Main(argv: string[]) {
-        let command = CommandHelper.getCommander()
+        let command = new Commander.Command()
         command.version('1.0.0')
             .option('-i, --input <string>', 'xlsx文件路径')
             .option('-o, --output <string>', '文件保存目录')
@@ -14,11 +14,11 @@ export default class Application {
             .option('-d, --definition <string>', '同时导出Typescript定义文件')
             .parse(argv);
 
-        if (fs.statSync(CommandHelper.getArgv(command, "input")).isDirectory()) {
-            Application.BuildFolder(CommandHelper.getArgv(command, "input"), CommandHelper.getArgv(command, "output") || __dirname, CommandHelper.getArgv(command, "nconver") !== true, CommandHelper.getArgv(command, "definition"));
+        if (fs.statSync(command["input"]).isDirectory()) {
+            Application.BuildFolder(command["input"], command["output"] || __dirname, command["nconver"] !== true, command["definition"]);
         }
         else {
-            Application.BuildFile(CommandHelper.getArgv(command, "input"), CommandHelper.getArgv(command, "output") || __dirname, CommandHelper.getArgv(command, "nconver") !== true, "", CommandHelper.getArgv(command, "definition"));
+            Application.BuildFile(command["input"], command["output"] || __dirname, command["nconver"] !== true, "", command["definition"]);
         }
     }
 
@@ -57,8 +57,8 @@ export default class Application {
      * @param definition 
      */
     public static BuildFile(file: string, folder: string, ignoreCover: boolean, outputFilePrefix: string, definition: string) {
-        const workbook = XLSXHelper.getWorkBook(file);
-        const sheetnames = XLSXHelper.getSheetNames(workbook);
+        const workbook = XLSX.readFile(file);
+        const sheetnames = workbook.SheetNames;
         /**
         *  声明内容
         */
@@ -77,9 +77,8 @@ export default class Application {
             console.log(`正在导出${outputFileName}表...`);
 
             // 获取表内容
-            const worksheet = XLSXHelper.getWorkSheet(workbook, name);
-
-            const json = XLSXHelper.sheet2Json(worksheet, { header: 1, defval: false, raw: false }) as string[];
+            const worksheet = workbook.Sheets[name];
+            const json = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: false, raw: false }) as string[];
 
             // console.log(json)
             let col, row;
@@ -156,7 +155,7 @@ export default class Application {
                     const type = types[index]
                     definitionItem += "\t\t\t" + Application.definitionFromFormat(name, type) + "\n";
                 }
-                definitionContent += `\n\tdeclare interface ${outputName} {\n\t\t[${Application.definitionFromFormat("key", indextype).slice(0, Application.definitionFromFormat("key", indextype).length - 1)}]:{\n${definitionItem}\t\t}\n\t}`;
+                definitionContent += `\n\tdeclare interface ${outputName} {\n\t\t[${Application.definitionFromFormat(indexkey, indextype).slice(0, Application.definitionFromFormat("key", indextype).length - 1)}]:{\n${definitionItem}\t\t}\n\t}`;
             } else {
                 let definitionItem = ""
                 for (let index = 0; index < keys.length; index++) {

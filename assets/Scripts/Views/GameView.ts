@@ -1,8 +1,8 @@
-import Command from "../../Decorators/Command";
+import Command from "../Decorators/Command";
 import GameModel from "../Models/GameModel";
-import IView from "../../Interfaces/IView";
-import View from "../../Decorators/View";
-import Action from "../../Decorators/Action";
+import IView from "../Interfaces/IView";
+import View from "../Decorators/View";
+import Action from "../Decorators/Action";
 
 const { ccclass, property } = cc._decorator;
 
@@ -14,13 +14,16 @@ export default class GameView extends IView {
     @property(cc.Label)
     label: cc.Label = null
 
+    @property(cc.Button)
+    button: cc.Button = null
+    
     gameModel: GameModel = null
 
     onRegister() {
         this.gameModel = app.model.getModel(GameModel);
         this.gameModel.on(["data1"], this.updateData, this)
 
-        this.label.node.on(cc.Node.EventType.TOUCH_END, async () => {
+        this.button.node.on(cc.Node.EventType.TOUCH_END, async () => {
             let result = await app.popup.popNode("TestPanel", { a: 1, b: 2 })
             console.log(result)
         })

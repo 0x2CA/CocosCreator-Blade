@@ -1,5 +1,5 @@
-import IModel from "../../Interfaces/IModel";
-import Model from "../../Decorators/Model";
+import IModel from "../Interfaces/IModel";
+import Model from "../Decorators/Model";
 
 
 @Model("GameModel")

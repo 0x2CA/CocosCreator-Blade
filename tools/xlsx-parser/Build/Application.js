@@ -3,26 +3,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var CommandHelper_1 = __importDefault(require("./Helper/CommandHelper"));
+var commander_1 = __importDefault(require("commander"));
+var xlsx_1 = __importDefault(require("xlsx"));
 var fs_1 = __importDefault(require("fs"));
 var path_1 = __importDefault(require("path"));
-var XLSXHelper_1 = __importDefault(require("./Helper/XLSXHelper"));
 var Application = /** @class */ (function () {
     function Application() {
     }
     Application.Main = function (argv) {
-        var command = CommandHelper_1.default.getCommander();
+        var command = new commander_1.default.Command();
         command.version('1.0.0')
             .option('-i, --input <string>', 'xlsx文件路径')
             .option('-o, --output <string>', '文件保存目录')
             .option('-n, --nconver', '导出的文件存在时，不强行覆盖')
             .option('-d, --definition <string>', '同时导出Typescript定义文件')
             .parse(argv);
-        if (fs_1.default.statSync(CommandHelper_1.default.getArgv(command, "input")).isDirectory()) {
-            Application.BuildFolder(CommandHelper_1.default.getArgv(command, "input"), CommandHelper_1.default.getArgv(command, "output") || __dirname, CommandHelper_1.default.getArgv(command, "nconver") !== true, CommandHelper_1.default.getArgv(command, "definition"));
+        if (fs_1.default.statSync(command["input"]).isDirectory()) {
+            Application.BuildFolder(command["input"], command["output"] || __dirname, command["nconver"] !== true, command["definition"]);
         }
         else {
-            Application.BuildFile(CommandHelper_1.default.getArgv(command, "input"), CommandHelper_1.default.getArgv(command, "output") || __dirname, CommandHelper_1.default.getArgv(command, "nconver") !== true, "", CommandHelper_1.default.getArgv(command, "definition"));
+            Application.BuildFile(command["input"], command["output"] || __dirname, command["nconver"] !== true, "", command["definition"]);
         }
     };
     /**
@@ -53,8 +53,8 @@ var Application = /** @class */ (function () {
      * @param definition
      */
     Application.BuildFile = function (file, folder, ignoreCover, outputFilePrefix, definition) {
-        var workbook = XLSXHelper_1.default.getWorkBook(file);
-        var sheetnames = XLSXHelper_1.default.getSheetNames(workbook);
+        var workbook = xlsx_1.default.readFile(file);
+        var sheetnames = workbook.SheetNames;
         /**
         *  声明内容
         */
@@ -70,8 +70,8 @@ var Application = /** @class */ (function () {
             var outputFileName = outputName + '.json';
             console.log("\u6B63\u5728\u5BFC\u51FA" + outputFileName + "\u8868...");
             // 获取表内容
-            var worksheet = XLSXHelper_1.default.getWorkSheet(workbook, name);
-            var json = XLSXHelper_1.default.sheet2Json(worksheet, { header: 1, defval: false, raw: false });
+            var worksheet = workbook.Sheets[name];
+            var json = xlsx_1.default.utils.sheet_to_json(worksheet, { header: 1, defval: false, raw: false });
             // console.log(json)
             var col = void 0, row = void 0;
             var keys = void 0;
@@ -138,7 +138,7 @@ var Application = /** @class */ (function () {
                     var type = types[index_1];
                     definitionItem += "\t\t\t" + Application.definitionFromFormat(name_1, type) + "\n";
                 }
-                definitionContent += "\n\tdeclare interface " + outputName + " {\n\t\t[" + Application.definitionFromFormat("key", indextype).slice(0, Application.definitionFromFormat("key", indextype).length - 1) + "]:{\n" + definitionItem + "\t\t}\n\t}";
+                definitionContent += "\n\tdeclare interface " + outputName + " {\n\t\t[" + Application.definitionFromFormat(indexkey, indextype).slice(0, Application.definitionFromFormat("key", indextype).length - 1) + "]:{\n" + definitionItem + "\t\t}\n\t}";
             }
             else {
                 var definitionItem = "";

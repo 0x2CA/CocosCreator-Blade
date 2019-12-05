@@ -1,4 +1,4 @@
-import IPopup from "../../../Interfaces/IPopup";
+import IPopup from "../Interfaces/IPopup";
 
 
 const { ccclass, property } = cc._decorator;

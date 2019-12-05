@@ -1,8 +1,8 @@
-import IController from "../../Interfaces/IController";
-import Controller from "../../Decorators/Controller";
-import Command from "../../Decorators/Command";
-import GameModel from "../Models/GameModel";
-import ArchiveServerSDK from "../../Libs/ArchiveServerSDK/ArchiveServerSDK";
+import IController from "../Interfaces/IController";
+import ArchiveServerSDK from "../Libs/ArchiveServerSDK/ArchiveServerSDK";
+import Command from "../Decorators/Command";
+import Controller from "../Decorators/Controller";
+
 
 const { ccclass, property } = cc._decorator;
 
