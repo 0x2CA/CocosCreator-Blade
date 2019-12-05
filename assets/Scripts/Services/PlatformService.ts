@@ -82,6 +82,11 @@ namespace PlatformService {
         IOS,
         WEB
     }
+
+    /**
+    * 内置事件
+    */
+    export type EventType = IPlatform.EventType
 }
 
 export default PlatformService;

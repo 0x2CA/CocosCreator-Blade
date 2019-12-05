@@ -1,4 +1,5 @@
 import IPlatform from "../Interfaces/IPlatform";
+import HttpHelper from "../Helpers/HttpHelper";
 
 export default class WebPlatform extends IPlatform {
 
@@ -18,6 +19,8 @@ export default class WebPlatform extends IPlatform {
     public lazyInitialize(): void {
     }
 
-
+    public getLaunchOptions(): any {
+        return HttpHelper.getQueryParams();
+    }
 
 }

@@ -142,6 +142,42 @@ class HttpHelper {
         return formData;
     }
 
+    /**
+    * 获取地址栏指定参数
+    * @param name 
+    */
+    public static getUrlParam(name: string) {
+        if (typeof window != undefined) {
+            var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+            var r = window.location.search.substr(1).match(reg);
+            if (r != null) {
+                return unescape(r[2]);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 获取地址栏所有启动参数
+     */
+    public static getQueryParams() {
+        if (typeof window != undefined) {
+            let qs = window.location.search || '';
+            qs = qs.split('+').join(' ');
+
+            const params = {};
+            const re = /[?&]?([^=]+)=([^&]*)/g;
+            let tokens;
+
+            while (tokens = re.exec(qs)) {
+                params[decodeURIComponent(tokens[1])] = decodeURIComponent(tokens[2]);
+            }
+
+            return params;
+        }
+        return {};
+    }
+
 }
 
 namespace HttpHelper {

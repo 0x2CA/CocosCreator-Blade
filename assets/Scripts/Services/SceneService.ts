@@ -17,7 +17,7 @@ class SceneService implements IService {
     }
 
     public lazyInitialize(): void {
-
+        this.stack.push({ name: cc.director.getScene().name, params: app.platform.getPlatform().getLaunchOptions() });
     }
 
     /**
@@ -40,6 +40,19 @@ class SceneService implements IService {
         }
         else {
             return null;
+        }
+    }
+
+    /**
+    * 返回上一个场景
+    */
+    public backScene() {
+        if (this.stack.size() >= 2) {
+            this.stack.pop();
+            let info = this.stack.peek();
+            cc.director.loadScene(info.name);
+        } else {
+            console.error("该场景为第一个,无法返回上一个场景！")
         }
     }
 }

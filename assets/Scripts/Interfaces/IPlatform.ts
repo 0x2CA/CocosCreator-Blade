@@ -3,7 +3,7 @@ import PlatformService from "../Services/PlatformService";
 /**
  * 平台接口类
  */
-abstract class IPlatform {
+abstract class IPlatform extends cc.EventTarget {
 	/**
 	 * 用户授权信息
 	 */
@@ -213,6 +213,13 @@ namespace IPlatform {
          * 设备
          */
         device?: string;
+    }
+    
+    /**
+     * 内置事件
+     */
+    export enum EventType {
+
     }
 }
 

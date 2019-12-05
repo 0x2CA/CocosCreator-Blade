@@ -24,6 +24,8 @@ export default class UIController extends IController {
         console.log(list)
         let obj = app.config.get<Configs.objList>("objList")
         console.log(obj)
+
+        console.log(app.platform.getPlatform().getUserInfo())
     }
 
     onUnRegister() {
