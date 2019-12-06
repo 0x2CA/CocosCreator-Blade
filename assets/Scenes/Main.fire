@@ -707,7 +707,7 @@
     },
     "_contentSize": {
       "__type__": "cc.Size",
-      "width": 80,
+      "width": 64.47,
       "height": 50.4
     },
     "_anchorPoint": {
@@ -753,8 +753,8 @@
       }
     ],
     "_useOriginalSize": true,
-    "_string": "测试",
-    "_N$string": "测试",
+    "_string": "test",
+    "_N$string": "test",
     "_fontSize": 40,
     "_lineHeight": 40,
     "_enableWrapText": true,

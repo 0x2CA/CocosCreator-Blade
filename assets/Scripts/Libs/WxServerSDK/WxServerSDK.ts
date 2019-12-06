@@ -662,7 +662,7 @@ class WxServerSDK {
                 let advert_sort_info: {
                     time: number;
                     index;
-                } = JSON.parse(cc.sys.localStorage.getItem("advert_sort_" + key + "_info"));
+                } = JSON.parse(app.platform.getPlatform().getArchive("advert_sort_" + key + "_info"));
 
                 if (
                     advert_sort_info == null ||
@@ -680,7 +680,7 @@ class WxServerSDK {
                 advert_sort_info.index++;
                 advert_sort_info.index = advert_sort_info.index % sortList.length;
 
-                cc.sys.localStorage.setItem(
+                app.platform.getPlatform().saveArchive(
                     "advert_sort_" + key + "_info",
                     JSON.stringify(advert_sort_info)
                 );

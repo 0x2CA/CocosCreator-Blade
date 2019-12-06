@@ -40,13 +40,13 @@ export default class AudioService implements IService {
      * 初始化音量
      */
     public initVolume() {
-        const bgmVol = cc.sys.localStorage.getItem(AudioService.BGM_VOL_KEY);
+        const bgmVol = app.platform.getPlatform().getArchive(AudioService.BGM_VOL_KEY);
         this.bgmVolume = parseFloat(bgmVol);
         if (isNaN(this.bgmVolume)) {
             this.bgmVolume = 1;
         }
 
-        const sfxVol = cc.sys.localStorage.getItem(AudioService.SFX_VOL_KEY);
+        const sfxVol = app.platform.getPlatform().getArchive(AudioService.SFX_VOL_KEY);
         this.sfxVolume = parseFloat(sfxVol);
         if (isNaN(this.sfxVolume)) {
             this.sfxVolume = 1;

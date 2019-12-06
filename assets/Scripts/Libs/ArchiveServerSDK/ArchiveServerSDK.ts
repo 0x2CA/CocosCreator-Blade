@@ -217,7 +217,7 @@ class ArchiveServerSDK {
      * 苹果登录
      */
     private static async asLogin() {
-        const uid = cc.sys.localStorage.getItem("asuid");
+        const uid = app.platform.getPlatform().getArchive("asuid");
         // 请求服务器, uid可为空
         const data = await ArchiveServerSDK.remoteCall(
             "/asapi/login",
@@ -228,7 +228,7 @@ class ArchiveServerSDK {
             "GET"
         );
         if (data && data.token && data.openid) {
-            cc.sys.localStorage.setItem("asuid", data.openid);
+            app.platform.getPlatform().saveArchive("asuid", data.openid);
             return data;
         } else {
             throw new Error();
@@ -239,7 +239,7 @@ class ArchiveServerSDK {
      * 安卓登录
      */
     private static async gpLogin() {
-        const uid = cc.sys.localStorage.getItem("asuid");
+        const uid = app.platform.getPlatform().getArchive("asuid");
         // 请求服务器, uid可为空
         const data = await ArchiveServerSDK.remoteCall(
             "/gpapi/login",
@@ -250,7 +250,7 @@ class ArchiveServerSDK {
             "GET"
         );
         if (data && data.token && data.openid) {
-            cc.sys.localStorage.setItem("asuid", data.openid);
+            app.platform.getPlatform().saveArchive("asuid", data.openid);
             return data;
         } else {
             throw new Error();
@@ -361,12 +361,11 @@ class ArchiveServerSDK {
      */
     private static loadLocal() {
         try {
-            const result = JSON.parse(app.platform.getPlatform().getArchive('user'));
+            const result = JSON.parse(app.platform.getPlatform().getArchive('Archive'));
             return result;
         } catch (e) {
             return {};
         }
-
     }
 
     /**
@@ -374,7 +373,7 @@ class ArchiveServerSDK {
      */
     private static saveLocal(data: any) {
         // 通过调用平台本地存档接口进行保存
-        app.platform.getPlatform().saveArchive('user', JSON.stringify(data));
+        app.platform.getPlatform().saveArchive('Archive', JSON.stringify(data));
     }
 
     /**

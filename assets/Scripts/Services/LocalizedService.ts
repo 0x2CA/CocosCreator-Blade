@@ -10,20 +10,9 @@ import Singleton from "../Decorators/Singleton";
 class LocalizedService extends cc.EventTarget implements IService {
     public alias: string;
 
-
-    public initialize(): void {
-        //加载多语言配置
-        this.loadFolder();
-
-        this.setLang(LocalizedService.LangType.zh_CN);
-
-    }
-
-    public lazyInitialize(): void {
-
-    }
     public static readonly instance: LocalizedService;
 
+    private static readonly CURRENT_LANG_KEY = 'curLang';
 
     // 编辑器刷新间隔, 秒
     public readonly EditorRefreshInterval: number = 2;
@@ -35,9 +24,41 @@ class LocalizedService extends cc.EventTarget implements IService {
 
     private readonly langPath = 'Langs'
 
-    constructor() {
-        super();
+    public initialize(): void {
+        //加载多语言配置
+        this.loadFolder();
+        // 初始化语言
+        this.initLang();
     }
+
+    public lazyInitialize(): void {
+
+    }
+
+    /**
+     * 初始化语言
+     */
+    public initLang() {
+        let sysLang = cc.sys.language
+        let lang: LocalizedService.LangType = app.platform.getPlatform().getArchive(LocalizedService.CURRENT_LANG_KEY) as LocalizedService.LangType;
+        if (lang == null) {
+            switch (sysLang) {
+                case cc.sys.LANGUAGE_CHINESE:
+                    if (cc.sys.languageCode == "zh-tw") {
+                        lang = LocalizedService.LangType.zh_TW
+                    } else {
+                        lang = LocalizedService.LangType.zh_CN
+                    }
+                    break;
+                default:
+                    lang = LocalizedService.LangType.en_US
+                    break;
+            }
+        }
+
+        this.setLang(lang);
+    }
+
 
     /**
      * 加载多国语言
@@ -73,6 +94,8 @@ class LocalizedService extends cc.EventTarget implements IService {
         if (lang != null && this.curLang != lang) {
             this.curLang = lang;
             app.locale.emit(LocalizedService.EventType.LanguageChange, lang);
+            console.log("设置语言环境:", lang)
+            app.platform.getPlatform().saveArchive(LocalizedService.CURRENT_LANG_KEY, lang)
         }
     }
 
