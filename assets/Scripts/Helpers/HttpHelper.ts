@@ -50,7 +50,7 @@ class HttpHelper {
                     method: options.method,
                     data: options.data,
                     header: options.headers || {},
-                    // responseType: 'text',
+                    responseType: 'text',
                     dataType: options.dataType.toLowerCase(),
                     success: (res) => {
                         if (res.statusCode == 200) {
@@ -107,7 +107,7 @@ class HttpHelper {
                 }
 
                 xhr.open(options.method, url, true);
-                
+
                 // 设置header
                 for (const key in headers) {
                     if (typeof headers[key] == "string") {

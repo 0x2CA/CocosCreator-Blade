@@ -1,26 +1,45 @@
 import IPlatform from "../Interfaces/IPlatform";
+import HttpHelper from "../Helpers/HttpHelper";
+import StringHelper from "../Helpers/StringHelper";
+import PromiseHelper from "../Helpers/PromiseHelper";
+import PlatformConfig from "../Defines/PlatformConfig";
 
-class WxPlatform extends IPlatform {
+/**
+ *  微信
+ */
+export default class WxPlatform extends IPlatform {
 
     // 启动参数
-    private launchOptions: {
-        /** 场景值*/
-        scene: number;
-        /** 启动参数*/
-        query: Object;
-        /** 启动来源 */
-        referrerInfo?: {
-            appId?: string;
-            extraData?: object;
-        };
-        /** 当前小游戏是否被显示在聊天顶部*/
-        isSticky: boolean;
-        /** shareTicket*/
-        shareTicket: string;
-    } = null;
+    private launchOptions: wx.launchOption
+        = null;
 
     // 授权按钮
     private authorizeButton = null;
+
+    // 菜单分享
+    private shareMenuInfo: {
+        title: string,
+        imageUrl: string,
+        query: string,
+        success: Function
+    } = null;
+
+    private videoState: IPlatform.AdState = IPlatform.AdState.None;
+    private bannerState: IPlatform.AdState = IPlatform.AdState.None;
+    private interstitialState: IPlatform.AdState = IPlatform.AdState.None;
+
+    /**
+    * 激励视频实例
+    */
+    private video: wx.RewardedVideoAd = null;
+
+    private banner: wx.BannerAd = null;
+
+    private interstitial: wx.InterstitialAd = null;
+
+    private bannerActive: boolean = false;
+
+
 
     public initialize(): void {
         // 获取尝试用户信息
@@ -28,9 +47,9 @@ class WxPlatform extends IPlatform {
 
         wx.onShow((res) => {
             // 更新启动参数
-            this.setLaunchOptions(<any>res);
+            this.setLaunchOptions(res);
             // 显示事件
-            this.emit("onShow", res)
+            this.emit(IPlatform.EventType.OnShow, res)
         });
     }
 
@@ -38,14 +57,13 @@ class WxPlatform extends IPlatform {
     }
 
 
-    public getArchive(file: string): string {
-        return wx.getStorageSync(file) as string;
+    public getArchive(name: string): string {
+        return wx.getStorageSync(name) as string;
     }
 
-    public saveArchive(file: string, data: string) {
-        wx.setStorageSync(file, data);
+    public saveArchive(name: string, data: string) {
+        wx.setStorageSync(name, data);
     }
-
 
     public getLaunchOptions() {
         if (!this.launchOptions) {
@@ -58,21 +76,7 @@ class WxPlatform extends IPlatform {
      * 更新启动参数
      * @param value 
      */
-    private setLaunchOptions(value: {
-        /** 场景值*/
-        scene: number;
-        /** 启动参数*/
-        query: Object;
-        /** 启动来源 */
-        referrerInfo?: {
-            appId?: string;
-            extraData?: object;
-        };
-        /** 当前小游戏是否被显示在聊天顶部*/
-        isSticky: boolean;
-        /** shareTicket*/
-        shareTicket: string;
-    }) {
+    private setLaunchOptions(value: wx.launchOption) {
         this.launchOptions = value;
     }
 
@@ -160,7 +164,7 @@ class WxPlatform extends IPlatform {
                     wx.getSetting({
                         success: (res) => {
                             wx.getSystemInfo({
-                                success: (res: SystemInfo) => {
+                                success: (res) => {
                                     if (options) {
                                         options.height *= res.screenHeight;
                                         options.width *= res.screenWidth;
@@ -225,13 +229,342 @@ class WxPlatform extends IPlatform {
         }
     }
 
-}
 
+    /**
+    * 配置菜单分享内容
+    */
+    public async setShareMenuInfo(imageUrl: string, title: string, param: any, callback?: Function, caller?: any) {
+        if (this.shareMenuInfo == null) {
+            wx.showShareMenu({
+                withShareTicket: true,
+            });
 
-namespace WxPlatform {
-    export enum EventType {
+            wx.onShareAppMessage(() => {
+                return this.shareMenuInfo
+            });
+        }
 
+        let query = HttpHelper.formatParams(param);
+
+        this.shareMenuInfo = {
+            imageUrl, title, query, success: () => {
+                this.emit(IPlatform.EventType.OpenShare, imageUrl, title, param);
+                if (callback) {
+                    callback.call(caller, imageUrl, title, param);
+                }
+            }
+        }
     }
+
+
+    /**
+	 * 判断是否支持视频
+	 */
+    public isSupportRewardVideo(): boolean {
+        return StringHelper.compareVersion(wx.getSystemInfoSync().SDKVersion, "2.0.4") >= 0
+    }
+
+    /**
+	 * 判断视频是否已经加载完成
+	 */
+    public isVideoLoaded(): boolean {
+        return this.videoState == IPlatform.AdState.Loaded;
+    }
+
+    /**
+    * 预加载激励视频
+    */
+    public async preloadRewardVideo(): Promise<any> {
+        if (!this.isSupportRewardVideo()) {
+            return;
+        }
+
+        // 已经加载
+        if (this.videoState == IPlatform.AdState.Loaded) {
+            return;
+        }
+
+        // 正在加载, 等待加载结束
+        if (this.videoState == IPlatform.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => this.videoState != IPlatform.AdState.Loading);
+        }
+
+        this.videoState = IPlatform.AdState.Loading;
+
+        if (this.video == null) {
+            // 初次创建会调load方法
+            this.video = wx.createRewardedVideoAd({
+                adUnitId: PlatformConfig.wx.videoId,
+            });
+            // 加载成功
+            this.video.onLoad(() => {
+                this.videoState = IPlatform.AdState.Loaded;
+            });
+            // 加载失败
+            this.video.onError((err) => {
+                this.videoState = IPlatform.AdState.None;
+            });
+            this.video.onClose((res) => {
+                let result = (res && res.isEnded) || res === undefined;
+                app.ticker.setPause(false);
+                app.audio.resumeAll();
+                this.preloadRewardVideo();
+                // 发送结果
+                this.emit(IPlatform.EventType.CloseVideo, result);
+            })
+        } else {
+            this.video.load();
+        }
+
+        this.video.load();
+
+        // 正在加载, 等待加载结束
+        return await PromiseHelper.waitUntil(() => this.videoState != IPlatform.AdState.Loading);
+    }
+
+	/**
+	 * 播放激励视频
+	 */
+    public async playRewardVideo(): Promise<boolean> {
+        if (this.video != null && this.videoState == IPlatform.AdState.Loaded) {
+            this.videoState = IPlatform.AdState.None;
+            app.ticker.setPause(true);
+            app.audio.pauseAll();
+
+            let result: boolean = await new Promise(async (resolve, reject) => {
+                const closeFunc = (result) => {
+                    resolve(result);
+                };
+                this.once(IPlatform.EventType.CloseVideo, closeFunc);
+                try {
+                    await this.video.show()
+                    this.emit(IPlatform.EventType.OpenVideo);
+                } catch (error) {
+                    app.ticker.setPause(false);
+                    app.audio.resumeAll();
+                    this.preloadRewardVideo();
+                    this.off(IPlatform.EventType.CloseVideo, closeFunc);
+                    resolve(false);
+                }
+            })
+
+            return result;
+        } else {
+            return false;
+        }
+    }
+
+
+    /**
+    * 判断是否支持横幅广告
+    */
+    public isSupportBanner(): boolean {
+        return StringHelper.compareVersion(wx.getSystemInfoSync().SDKVersion, "2.0.4") >= 0
+    }
+
+    /**
+    * 预加载横幅
+    */
+    public async preloadBanner(): Promise<any> {
+        if (!this.isSupportBanner()) {
+            return;
+        }
+
+        // 已经加载
+        if (this.bannerState == WxPlatform.AdState.Loaded) {
+            return;
+        }
+
+        // 正在加载, 等待加载结束
+        if (this.bannerState == WxPlatform.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => this.bannerState != WxPlatform.AdState.Loading);
+        }
+
+        if (this.banner) {
+            this.banner.destroy();
+            this.banner = null
+        }
+
+        const sysInfo: wx.systemInfo = wx.getSystemInfoSync();
+        this.banner = wx.createBannerAd({
+            adUnitId: PlatformConfig.wx.bannerId,
+            style: {
+                top: 0,
+                left: 0,
+                height: 50,
+                width: 200,
+            },
+        });
+
+        this.banner.onLoad(async () => {
+            this.bannerState = WxPlatform.AdState.Loaded;
+            if (this.bannerActive) {
+                this.emit(IPlatform.EventType.OpenBanner);
+                this.banner.show();
+            }
+        });
+
+        this.banner.onError((err) => {
+            this.bannerState = WxPlatform.AdState.None;
+        });
+
+        this.banner.onResize((res) => {
+            // 重设横幅位置
+            this.banner.style.top =
+                sysInfo.windowHeight - this.banner.style.realHeight;
+            this.banner.style.left =
+                (sysInfo.windowWidth - this.banner.style.realWidth) / 2;
+        });
+    }
+
+
+    /**
+    * 激活 显示/隐藏横幅广告
+    * @param active
+    */
+    public activeBanner(active: boolean) {
+        if (this.banner == null) {
+            return false;
+        }
+
+        if (active) {
+            if (this.bannerState != IPlatform.AdState.Loaded) {
+                return false;
+            }
+
+            this.emit(IPlatform.EventType.OpenBanner);
+            this.banner.show();
+            this.bannerState = IPlatform.AdState.Opening;
+            return true;
+        } else {
+            // 直接销毁重新创建banner, 刷新广告
+            if (this.bannerState != IPlatform.AdState.Opening) {
+                return false;
+            }
+            this.emit(IPlatform.EventType.CloseBanner);
+            this.banner.destroy();
+            this.banner = null;
+            this.bannerState = IPlatform.AdState.None;
+            this.preloadBanner();
+            return true;
+        }
+    }
+
+    public isSupportInterstitial() {
+        return StringHelper.compareVersion(wx.getSystemInfoSync().SDKVersion, "2.6.0") >= 0
+    }
+
+    public isInterstitialLoaded() {
+        return this.interstitialState == IPlatform.AdState.Loaded;
+    }
+
+    public async preloadInterstitial() {
+        if (!this.isSupportInterstitial()) {
+            return;
+        }
+
+        if (this.interstitialState == IPlatform.AdState.Loaded) {
+            return;
+        }
+
+        if (this.interstitialState == IPlatform.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => {
+                return this.interstitialState != IPlatform.AdState.Loading;
+            });
+        }
+
+        this.interstitialState = IPlatform.AdState.Loading;
+        if (this.interstitial == null) {
+            this.interstitial = wx.createInterstitialAd({ adUnitId: PlatformConfig.wx.interstitialId });
+
+            this.interstitial.onLoad(() => {
+                this.interstitialState = IPlatform.AdState.Loaded;
+            });
+
+            this.interstitial.onError(async (error) => {
+                this.interstitialState = IPlatform.AdState.None;
+            });
+
+            this.interstitial.onClose(() => {
+                this.interstitialState = IPlatform.AdState.None;
+                this.emit(IPlatform.EventType.CloseInterstitial);
+            });
+        }
+    }
+
+    async showInterstitial() {
+        if (!this.isSupportInterstitial()) {
+            return;
+        }
+
+        if (!this.isInterstitialLoaded()) {
+            return;
+        }
+
+        try {
+            await this.interstitial.show();
+            this.interstitialState = IPlatform.AdState.Opening;
+            this.emit(IPlatform.EventType.OpenInterstitial)
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+
+    /**
+	 * 发送邀请
+	 */
+    public async sendInvite(imageUrl: string, title: string, param: any): Promise<any> {
+        wx.shareAppMessage({
+            title: imageUrl,
+            imageUrl: imageUrl,
+            query: HttpHelper.formatParams(param),
+        });
+        await PromiseHelper.wait(1)
+
+        this.emit(IPlatform.EventType.OpenShare, imageUrl, title, param);
+    }
+
+
+    /**
+	 * 设备震动
+	 * @param short
+	 */
+    public vibrate(short: boolean = true) {
+        if (short) {
+            wx.vibrateShort({
+                success: null,
+                fail: null,
+                complete: null,
+            });
+        } else {
+            wx.vibrateLong({
+                success: null,
+                fail: null,
+                complete: null,
+            });
+        }
+    }
+
+    /**
+	 * 跳转到其他小游戏
+	 * @param appid
+	 */
+    public linkGame(appid: string, path: string, extraData: any) {
+        return new Promise((resolve, reject) => {
+            wx.navigateToMiniProgram({
+                appId: appid,
+                path: path,
+                extraData: extraData,
+                success: () => {
+                    console.log(`跳转 ${appid}`);
+                    resolve(true);
+                },
+                fail: reject,
+            });
+        });
+    }
+
 }
 
-export default WxPlatform;
+

@@ -10,11 +10,6 @@ abstract class IPlatform extends cc.EventTarget {
     protected userInfo: IPlatform.UserInfo = null;
 
 	/**
-	 * 平台类型
-	 */
-    private type: PlatformService.PlatformType;
-
-	/**
 	 * 平台初始化操作
 	 */
     public abstract initialize(): void;
@@ -38,19 +33,19 @@ abstract class IPlatform extends cc.EventTarget {
 
 	/**
 	 * 获取本地存档
-	 * @param file
+	 * @param name
 	 */
-    public getArchive?(file: string): string {
-        return cc.sys.localStorage.getItem(file);
+    public getArchive?(name: string): string {
+        return cc.sys.localStorage.getItem(name);
     }
 
 	/**
 	 * 保存本地存档
-	 * @param file
+	 * @param name
 	 * @param data
 	 */
-    public saveArchive?(file: string, data: string) {
-        cc.sys.localStorage.setItem(file, data);
+    public saveArchive?(name: string, data: string) {
+        cc.sys.localStorage.setItem(name, data);
     }
 
 	/**
@@ -107,14 +102,21 @@ abstract class IPlatform extends cc.EventTarget {
 	 * 激活 显示/隐藏横幅广告
 	 * @param active
 	 */
-    public activeBanner(name: string, active: boolean) {
-        return false;
+    public activeBanner(active: boolean) {
+        return;
     }
 
 	/**
 	 * 判断是否支持插页广告
 	 */
     public isSupportInterstitial(): boolean {
+        return false;
+    }
+
+	/**
+	 * 判插页频是否已经加载
+	 */
+    public isInterstitialLoaded(): boolean {
         return false;
     }
 
@@ -128,17 +130,9 @@ abstract class IPlatform extends cc.EventTarget {
 	/**
 	 * 显示插页广告
 	 */
-    public showInterstitial(): Promise<any> {
-        return Promise.resolve();
+    public showInterstitial() {
+        return;
     }
-
-	/**
-	 * 判插页频是否已经加载
-	 */
-    public isInterstitialLoaded(): boolean {
-        return false;
-    }
-
 
 	/**
 	 * 获取用户信息
@@ -147,12 +141,6 @@ abstract class IPlatform extends cc.EventTarget {
         return this.userInfo;
     }
 
-	/**
-	 * 获取平台
-	 */
-    public getType() {
-        return this.type;
-    }
 
 	/**
 	 * 获取启动参数
@@ -164,7 +152,7 @@ abstract class IPlatform extends cc.EventTarget {
 	/**
 	 * 发送邀请
 	 */
-    public sendInvite(param: {} = {}): Promise<any> {
+    public sendInvite(imageUrl: string, title: string, param: any): Promise<any> {
         return Promise.resolve();
     }
 
@@ -214,12 +202,29 @@ namespace IPlatform {
          */
         device?: string;
     }
-    
+
+    /**
+    * 广告状态
+    */
+    export enum AdState {
+        None,
+        Loading,
+        Loaded,
+        Opening,
+    }
+
     /**
      * 内置事件
      */
     export enum EventType {
-
+        OnShow = "OnShow",
+        OpenVideo = "OpenVideo",
+        CloseVideo = "CloseVideo",
+        OpenBanner = "OpenBanner",
+        CloseBanner = "CloseBanner",
+        OpenInterstitial = "OpenInterstitial",
+        CloseInterstitial = "CloseInterstitial",
+        OpenShare = "OpenShare"
     }
 }
 

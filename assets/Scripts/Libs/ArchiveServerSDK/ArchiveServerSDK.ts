@@ -321,6 +321,30 @@ class ArchiveServerSDK {
     }
 
     /**
+    * 上传用户信息
+    */
+    public static async uploadUserInfo() {
+        if (ArchiveServerSDK.isLogin() == false) {
+            throw new Error("请先调用ArchiveServerSDK.login(),登录服务器!")
+        }
+        const userInfo = app.platform.getPlatform().getUserInfo();
+        if (
+            userInfo
+        ) {
+            try {
+                await ArchiveServerSDK.remoteCall("/user/record", userInfo, "POST");
+                console.log("上传用户成功！", userInfo);
+            } catch (error) {
+                console.error("无法上传用户数据！", error)
+
+            }
+        } else {
+            console.error("暂无用户信息！无法上传用户数据！")
+        }
+    }
+
+
+    /**
    * 从网络读取存档
    */
     private static async loadRemote() {

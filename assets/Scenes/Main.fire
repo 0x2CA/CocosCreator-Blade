@@ -981,8 +981,8 @@
       }
     ],
     "_useOriginalSize": false,
-    "_string": "button",
-    "_N$string": "button",
+    "_string": "Panel",
+    "_N$string": "Panel",
     "_fontSize": 40,
     "_lineHeight": 45,
     "_enableWrapText": false,

@@ -4,10 +4,10 @@
 const PlatformConfig = {
     // 微信
     wx: {
-        appid: "",
+        appId: "",
         interstitialId: "",
-        adid: "",
-        bannerid: "",
+        videoId: "",
+        bannerId: "",
     },
     //手Q
     qq: {
@@ -18,7 +18,7 @@ const PlatformConfig = {
     // Facebook
     fb: {
         appid: "",
-        adid: "",
+        videoId: "",
         interstitialid: "",
     },
     // Google play
