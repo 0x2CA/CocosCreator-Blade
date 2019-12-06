@@ -3,6 +3,7 @@ import Service from "../Decorators/Service";
 import Singleton from "../Decorators/Singleton";
 import IPlatform from "../Interfaces/IPlatform";
 import WebPlatform from "../Platforms/WebPlatform";
+import WxPlatform from "../Platforms/WxPlatform";
 
 @Singleton
 @Service("PlatformService")
@@ -15,11 +16,11 @@ class PlatformService implements IService {
 
     public initialize(): void {
         switch (this.getType()) {
-            case PlatformService.PlatformType.WEB:
-                this.platform = new WebPlatform();
+            case PlatformService.PlatformType.WX:
+                this.platform = new WxPlatform();
                 break;
-
             default:
+                this.platform = new WebPlatform();
                 break;
         }
 

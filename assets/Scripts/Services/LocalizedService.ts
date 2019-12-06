@@ -27,12 +27,13 @@ class LocalizedService extends cc.EventTarget implements IService {
     public initialize(): void {
         //加载多语言配置
         this.loadFolder();
+
         // 初始化语言
         this.initLang();
+
     }
 
     public lazyInitialize(): void {
-
     }
 
     /**
@@ -40,7 +41,12 @@ class LocalizedService extends cc.EventTarget implements IService {
      */
     public initLang() {
         let sysLang = cc.sys.language
-        let lang: LocalizedService.LangType = app.platform.getPlatform().getArchive(LocalizedService.CURRENT_LANG_KEY) as LocalizedService.LangType;
+        let lang: LocalizedService.LangType;
+        if (cc.sys.platform == cc.sys.EDITOR_PAGE) {
+            lang = LocalizedService.LangType.zh_CN
+        } else {
+            lang = app.platform.getPlatform().getArchive(LocalizedService.CURRENT_LANG_KEY) as LocalizedService.LangType;
+        }
         if (lang == null) {
             switch (sysLang) {
                 case cc.sys.LANGUAGE_CHINESE:
@@ -95,7 +101,9 @@ class LocalizedService extends cc.EventTarget implements IService {
             this.curLang = lang;
             app.locale.emit(LocalizedService.EventType.LanguageChange, lang);
             console.log("设置语言环境:", lang)
-            app.platform.getPlatform().saveArchive(LocalizedService.CURRENT_LANG_KEY, lang)
+            if (cc.sys.platform != cc.sys.EDITOR_PAGE) {
+                app.platform.getPlatform().saveArchive(LocalizedService.CURRENT_LANG_KEY, lang)
+            }
         }
     }
 
