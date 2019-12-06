@@ -30,7 +30,7 @@ export default class CommandService extends cc.EventTarget implements IService {
     }
 
     /**
-     * 注销注册命令
+     * 注销命令
      */
     public unregister(controller: IController) {
         Object.getOwnPropertyNames(controller).filter((method: string) => {

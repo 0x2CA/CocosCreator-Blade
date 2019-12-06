@@ -12,14 +12,14 @@ import Tween from "../Libs/Tween/Tween";
  */
 @Singleton
 @Service("PopupService")
-class PopupService implements IService, ITicker {
+class PopupService extends cc.EventTarget implements IService, ITicker {
 
 
     public alias: string;
     public static readonly instance: PopupService;
 
 
-    private static readonly ModalPrefabPath = "Prefabs/commons/Modal";
+    private static readonly ModalPrefabPath = "Prefabs/Commons/Modal";
 
     // 当前在显示的弹窗队列
     private readonly list: PriorityQueue<IPopup> = new PriorityQueue<IPopup>()
@@ -37,6 +37,17 @@ class PopupService implements IService, ITicker {
             if (err) {
                 cc.error(`路径('${PopupService.ModalPrefabPath}')不存在模态层预制件`);
                 this.createModal();
+            }else{
+                // 添加模态层节点
+                const appNode = cc.find("Application");
+                if (appNode == null) {
+                    throw new Error("没有Application节点")
+                }
+                const modalNode: cc.Node = cc.instantiate(res);
+                modalNode.parent = appNode;
+                modalNode.active = false;
+                modalNode.zIndex = -1;
+                this.modal = modalNode;
             }
         });
 
@@ -169,7 +180,7 @@ class PopupService implements IService, ITicker {
                 panelNode.once(
                     PopupService.EventType.POPUP_CLICK,
                     async (eventType: string, panel: IPopup | cc.Node) => {
-                        app.notice.emit(PopupService.EventType.POPUP_CLICK, eventType, panel);
+                        app.popup.emit(PopupService.EventType.POPUP_CLICK, eventType, panel);
 
                         if (panel instanceof cc.Node) {
                             panel = panel.getComponent(IPopup);
@@ -178,7 +189,7 @@ class PopupService implements IService, ITicker {
                         await panel.disappear();
                         panel.onDisappear();
                         // 发送隐藏通知
-                        app.notice.emit(PopupService.EventType.PANEL_DISABLE);
+                        app.popup.emit(PopupService.EventType.PANEL_DISABLE);
                         // 移出队列
                         this.list.dequeue();
                         // 执行回调
@@ -295,7 +306,7 @@ class PopupService implements IService, ITicker {
             console.warn(err);
         });
         // 发送模态层弹出通知
-        app.notice.emit(PopupService.EventType.PANEL_ENABLE);
+        app.popup.emit(PopupService.EventType.PANEL_ENABLE);
     }
 
     onTick(delta: number): void {

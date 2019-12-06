@@ -17,7 +17,7 @@ export default class ActionService extends cc.EventTarget implements IService {
     }
 
     /**
-     * 注册命令
+     * 注册动作
      */
     public register(view: IView) {
         const prototy = Object.getPrototypeOf(view)
@@ -30,7 +30,7 @@ export default class ActionService extends cc.EventTarget implements IService {
     }
 
     /**
-     * 注销注册命令
+     * 注销动作
      */
     public unregister(view: IView) {
         Object.getOwnPropertyNames(view).filter((method: string) => {
@@ -43,10 +43,10 @@ export default class ActionService extends cc.EventTarget implements IService {
 
     /**
      * 执行动作
-     * @param cmd 
+     * @param action 
      * @param args 
      */
-    public do(cmd: string | number, ...args) {
-        this.emit(cmd.toString(), ...args)
+    public do(action: string | number, ...args) {
+        this.emit(action.toString(), ...args)
     }
 }

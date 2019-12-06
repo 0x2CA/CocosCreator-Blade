@@ -47,8 +47,7 @@ class LocalizedService extends cc.EventTarget implements IService {
     public load(lang: LocalizedService.LangType, data: { [key: string]: string }) {
         this.langs[lang] = data;
         if (lang == this.curLang) {
-            this.emit(LocalizedService.EventType.LanguageChange, lang);
-            app.notice.emit(LocalizedService.EventType.LanguageChange, lang);
+            app.locale.emit(LocalizedService.EventType.LanguageChange, lang);
         }
     }
 
@@ -73,8 +72,7 @@ class LocalizedService extends cc.EventTarget implements IService {
     public setLang(lang: LocalizedService.LangType) {
         if (lang != null && this.curLang != lang) {
             this.curLang = lang;
-            this.emit(LocalizedService.EventType.LanguageChange, lang);
-            app.notice.emit(LocalizedService.EventType.LanguageChange, lang);
+            app.locale.emit(LocalizedService.EventType.LanguageChange, lang);
         }
     }
 
