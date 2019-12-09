@@ -31,6 +31,31 @@ class SceneService implements IService {
     }
 
     /**
+     * 预加载场景
+     * @param name 
+     * @param progressFun 
+     */
+    public preloadScene(name: string, progressFun?: (completedCount: number, totalCount: number, item: any) => void): Promise<boolean> {
+        return new Promise((resolve, reject) => {
+            cc.director.preloadScene(
+                name,
+                (completedCount: number, totalCount: number, item: any) => {
+                    if (progressFun) {
+                        progressFun(completedCount, totalCount, item);
+                    }
+                },
+                (error: Error) => {
+                    if (!error) {
+                        resolve(true)
+                    } else {
+                        resolve(false)
+                    }
+                }
+            );
+        })
+    }
+
+    /**
     * 获取当前的场景参数, 场景初始化时可使用
     */
     public getSceneParam(): any {
