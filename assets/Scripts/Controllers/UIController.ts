@@ -15,14 +15,14 @@ export default class UIController extends IController {
         await ArchiveServerSDK.login("leek")
         // 同步存档
         await ArchiveServerSDK.sync()
-        console.log(app.timer.getTime(), new Date().getTime())
+        console.log(blade.timer.getTime(), new Date().getTime())
 
         console.log(ArchiveServerSDK.get<Array<string>>("harvestCount"))
 
-        app.audio.playBGM("bgm")
-        let list = app.config.get<Configs.arrlist>("arrlist")
+        blade.audio.playBGM("bgm")
+        let list = blade.config.get<Configs.arrlist>("arrlist")
         console.log(list)
-        let obj = app.config.get<Configs.objList>("objList")
+        let obj = blade.config.get<Configs.objList>("objList")
         console.log(obj)
 
         await ArchiveServerSDK.uploadUserInfo()
@@ -40,7 +40,7 @@ export default class UIController extends IController {
     @Command(1)
     test(time: number) {
         console.log("controller func")
-        app.action.do(3, time)
+        blade.action.do(3, time)
 
     }
 }

@@ -56,20 +56,20 @@ export default class LocalizedSprite extends cc.Component implements LocalizedIt
 
     onLoad() {
         this.defaultFrame = this.spriteFrame;
-        app.locale.on('LanguageChange', this.updateLang, this);
+        blade.locale.on('LanguageChange', this.updateLang, this);
 
         // 编辑器模式, 执行
         if (CC_EDITOR) {
-            setInterval && setInterval(this.updateLang.bind(this), app.locale.EditorRefreshInterval * 1000);
+            setInterval && setInterval(this.updateLang.bind(this), blade.locale.EditorRefreshInterval * 1000);
         }
     }
 
     onDestroy() {
-        app.locale.off('LanguageChange', this.updateLang, this);
+        blade.locale.off('LanguageChange', this.updateLang, this);
     }
 
     updateLang() {
-        this.spriteFrame = this.getSpriteFrameByLang(app.locale.getLang());
+        this.spriteFrame = this.getSpriteFrameByLang(blade.locale.getLang());
     }
 
     private getSpriteFrameByLang(lang): cc.SpriteFrame {

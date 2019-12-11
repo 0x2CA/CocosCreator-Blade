@@ -17,7 +17,7 @@ class SceneService implements IService {
     }
 
     public lazyInitialize(): void {
-        this.stack.push({ name: cc.director.getScene().name, params: app.platform.getPlatform().getLaunchOptions() });
+        this.stack.push({ name: cc.director.getScene().name, params: blade.platform.getPlatform().getLaunchOptions() });
     }
 
     /**

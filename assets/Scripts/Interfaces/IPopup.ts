@@ -27,7 +27,7 @@ abstract class IPopup extends cc.Component implements ITicker {
 
     onLoad() {
         // 注册计时器
-        app.ticker.register(this);
+        blade.ticker.register(this);
 
         if (this.buttonConfirm) {
             this.buttonConfirm.node.on(
@@ -63,7 +63,7 @@ abstract class IPopup extends cc.Component implements ITicker {
         }
 
         // 注销计时器
-        app.ticker.unregister(this);
+        blade.ticker.unregister(this);
     }
 
 

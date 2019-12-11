@@ -11,7 +11,7 @@ export default function Ticker(target: typeof ITicker & typeof cc.Component) {
     let onLoad = Reflect.get(prototype, "onLoad")
     let onDestroy = Reflect.get(prototype, "onDestroy")
     Reflect.set(prototype, "onLoad", function () {
-        app.ticker.register(this)
+        blade.ticker.register(this)
         if (onLoad) {
             onLoad();
         }
@@ -20,6 +20,6 @@ export default function Ticker(target: typeof ITicker & typeof cc.Component) {
         if (onDestroy) {
             onDestroy();
         }
-        app.ticker.unregister(this)
+        blade.ticker.unregister(this)
     })
 }

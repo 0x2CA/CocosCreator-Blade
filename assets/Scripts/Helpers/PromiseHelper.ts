@@ -12,7 +12,7 @@ export default class PromiseHelper {
             if (comp) {
                 comp.scheduleOnce(resolve, delay);
             } else {
-                app.timer.startTimeout(delay, resolve);
+                blade.timer.startTimeout(delay, resolve);
             }
         });
     }
@@ -31,16 +31,16 @@ export default class PromiseHelper {
                 onTick: () => {
                     try {
                         if (untilFunc.call(thisObj, ...args)) {
-                            app.ticker.unregister(ticker);
+                            blade.ticker.unregister(ticker);
                             resolve();
                         }
                     } catch (e) {
-                        app.ticker.unregister(ticker);
+                        blade.ticker.unregister(ticker);
                         reject(e);
                     }
                 },
             };
-            app.ticker.register(ticker);
+            blade.ticker.register(ticker);
         });
     }
 
@@ -58,16 +58,16 @@ export default class PromiseHelper {
                 onTick: () => {
                     try {
                         if (!whileFunc.call(thisObj, ...args)) {
-                            app.ticker.unregister(ticker);
+                            blade.ticker.unregister(ticker);
                             resolve();
                         }
                     } catch (e) {
-                        app.ticker.unregister(ticker);
+                        blade.ticker.unregister(ticker);
                         reject(e);
                     }
                 },
             };
-            app.ticker.register(ticker);
+            blade.ticker.register(ticker);
         });
     }
 

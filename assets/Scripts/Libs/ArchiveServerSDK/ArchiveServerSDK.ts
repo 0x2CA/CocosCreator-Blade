@@ -99,7 +99,7 @@ class ArchiveServerSDK {
             let data;
 
             // 服务器登录
-            switch (app.platform.getType()) {
+            switch (blade.platform.getType()) {
                 case PlatformService.PlatformType.WX:
                     data = await ArchiveServerSDK.wxLogin();
                     break;
@@ -130,9 +130,9 @@ class ArchiveServerSDK {
 
             // 定时保存
             if (ArchiveServerSDK.autoSave) {
-                app.timer.stopTimer(ArchiveServerSDK.autoSave)
+                blade.timer.stopTimer(ArchiveServerSDK.autoSave)
             }
-            ArchiveServerSDK.autoSave = app.timer.startTimer(ArchiveServerSDK.ArchiveAutoSaveSecond, () => {
+            ArchiveServerSDK.autoSave = blade.timer.startTimer(ArchiveServerSDK.ArchiveAutoSaveSecond, () => {
                 ArchiveServerSDK.save(true)
             }, this);
         } catch (e) {
@@ -217,7 +217,7 @@ class ArchiveServerSDK {
      * 苹果登录
      */
     private static async asLogin() {
-        const uid = app.platform.getPlatform().getArchive("asuid");
+        const uid = blade.platform.getPlatform().getArchive("asuid");
         // 请求服务器, uid可为空
         const data = await ArchiveServerSDK.remoteCall(
             "/asapi/login",
@@ -228,7 +228,7 @@ class ArchiveServerSDK {
             "GET"
         );
         if (data && data.token && data.openid) {
-            app.platform.getPlatform().saveArchive("asuid", data.openid);
+            blade.platform.getPlatform().saveArchive("asuid", data.openid);
             return data;
         } else {
             throw new Error();
@@ -239,7 +239,7 @@ class ArchiveServerSDK {
      * 安卓登录
      */
     private static async gpLogin() {
-        const uid = app.platform.getPlatform().getArchive("asuid");
+        const uid = blade.platform.getPlatform().getArchive("asuid");
         // 请求服务器, uid可为空
         const data = await ArchiveServerSDK.remoteCall(
             "/gpapi/login",
@@ -250,7 +250,7 @@ class ArchiveServerSDK {
             "GET"
         );
         if (data && data.token && data.openid) {
-            app.platform.getPlatform().saveArchive("asuid", data.openid);
+            blade.platform.getPlatform().saveArchive("asuid", data.openid);
             return data;
         } else {
             throw new Error();
@@ -327,7 +327,7 @@ class ArchiveServerSDK {
         if (ArchiveServerSDK.isLogin() == false) {
             throw new Error("请先调用ArchiveServerSDK.login(),登录服务器!")
         }
-        const userInfo = app.platform.getPlatform().getUserInfo();
+        const userInfo = blade.platform.getPlatform().getUserInfo();
         if (
             userInfo
         ) {
@@ -385,7 +385,7 @@ class ArchiveServerSDK {
      */
     private static loadLocal() {
         try {
-            const result = JSON.parse(app.platform.getPlatform().getArchive('Archive'));
+            const result = JSON.parse(blade.platform.getPlatform().getArchive('Archive'));
             return result;
         } catch (e) {
             return {};
@@ -397,7 +397,7 @@ class ArchiveServerSDK {
      */
     private static saveLocal(data: any) {
         // 通过调用平台本地存档接口进行保存
-        app.platform.getPlatform().saveArchive('Archive', JSON.stringify(data));
+        blade.platform.getPlatform().saveArchive('Archive', JSON.stringify(data));
     }
 
     /**
@@ -427,7 +427,7 @@ class ArchiveServerSDK {
         }
         else {
             console.log("更新云存档")
-            ArchiveServerSDK.data.alterTime = app.timer.getTime();
+            ArchiveServerSDK.data.alterTime = blade.timer.getTime();
             // 本地覆盖网络
             await ArchiveServerSDK.saveRemote(ArchiveServerSDK.data);
         }
@@ -442,7 +442,7 @@ class ArchiveServerSDK {
     public static save(force: boolean = false) {
         if (force) {
             // console.log("强制保存!")
-            ArchiveServerSDK.data.alterTime = app.timer.getTime();
+            ArchiveServerSDK.data.alterTime = blade.timer.getTime();
             // 通过调用平台本地存档接口进行保存
             ArchiveServerSDK.saveLocal(ArchiveServerSDK.data)
             // 调用网络接口进行云保存

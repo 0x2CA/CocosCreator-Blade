@@ -10,11 +10,11 @@ export default abstract class IController extends cc.Component implements ITicke
 
     onLoad() {
         // 注册控制器
-        app.ctrl.register(this);
+        blade.ctrl.register(this);
         // 注册命令
-        app.cmd.register(this);
+        blade.cmd.register(this);
         // 注册计时器
-        app.ticker.register(this);
+        blade.ticker.register(this);
 
 
         if (this.onRegister) {
@@ -30,11 +30,11 @@ export default abstract class IController extends cc.Component implements ITicke
         }
 
         // 注销控制器
-        app.ctrl.unregister(this);
+        blade.ctrl.unregister(this);
         // 注销命令
-        app.cmd.unregister(this);
+        blade.cmd.unregister(this);
         // 注销计时器
-        app.ticker.unregister(this);
+        blade.ticker.unregister(this);
     }
 
     /**

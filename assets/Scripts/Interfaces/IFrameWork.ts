@@ -1,6 +1,6 @@
 import IService from "./IService";
 
-export default abstract class IApplication {
+export default abstract class IFrameWork {
 
     /**
      * 初始化服务
@@ -24,4 +24,4 @@ export default abstract class IApplication {
             (this[name] as IService).lazyInitialize();
         })
     }
-}
+} 

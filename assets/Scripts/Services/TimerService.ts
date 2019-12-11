@@ -41,7 +41,7 @@ class TimerService implements IService, ITicker {
     public initialize(): void {
         this.list.clear();
 
-        app.ticker.register(this);
+        blade.ticker.register(this);
 
         // 定时更新时间
         this.startTimer(1, () => {

@@ -20,11 +20,11 @@ export default class UIView extends IView {
     gameModel: GameModel = null
 
     onRegister() {
-        this.gameModel = app.model.getModel(GameModel);
+        this.gameModel = blade.model.getModel(GameModel);
         this.gameModel.on(["data1"], this.updateData, this)
 
         this.button.node.on(cc.Node.EventType.TOUCH_END, async () => {
-            let result = await app.popup.popNode("TestPanel", { a: 1, b: 2 })
+            let result = await blade.popup.popNode("TestPanel", { a: 1, b: 2 })
             console.log(result)
         })
     }

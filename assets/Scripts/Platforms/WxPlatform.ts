@@ -306,8 +306,8 @@ export default class WxPlatform extends IPlatform {
             });
             this.video.onClose((res) => {
                 let result = (res && res.isEnded) || res === undefined;
-                app.ticker.setPause(false);
-                app.audio.resumeAll();
+                blade.ticker.setPause(false);
+                blade.audio.resumeAll();
                 this.preloadRewardVideo();
                 // 发送结果
                 this.emit(IPlatform.EventType.CloseVideo, result);
@@ -328,8 +328,8 @@ export default class WxPlatform extends IPlatform {
     public async playRewardVideo(): Promise<boolean> {
         if (this.video != null && this.videoState == IPlatform.AdState.Loaded) {
             this.videoState = IPlatform.AdState.None;
-            app.ticker.setPause(true);
-            app.audio.pauseAll();
+            blade.ticker.setPause(true);
+            blade.audio.pauseAll();
 
             let result: boolean = await new Promise(async (resolve, reject) => {
                 const closeFunc = (result) => {
@@ -340,8 +340,8 @@ export default class WxPlatform extends IPlatform {
                     await this.video.show()
                     this.emit(IPlatform.EventType.OpenVideo);
                 } catch (error) {
-                    app.ticker.setPause(false);
-                    app.audio.resumeAll();
+                    blade.ticker.setPause(false);
+                    blade.audio.resumeAll();
                     this.preloadRewardVideo();
                     this.off(IPlatform.EventType.CloseVideo, closeFunc);
                     resolve(false);

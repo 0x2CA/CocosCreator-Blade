@@ -12,7 +12,7 @@ export default abstract class IModel {
      * @param target 
      */
     public on(watchField: Array<keyof this>, onFieldChangeFn: ModelService.WatchCallback, target: any) {
-        app.model.on(this, watchField, onFieldChangeFn, target)
+        blade.model.on(this, watchField, onFieldChangeFn, target)
     }
 
 
@@ -23,7 +23,7 @@ export default abstract class IModel {
      * @param target 
      */
     public off(watchField: Array<keyof this>, onFieldChangeFn: ModelService.WatchCallback, target: any) {
-        app.model.off(this, watchField, onFieldChangeFn, target)
+        blade.model.off(this, watchField, onFieldChangeFn, target)
     }
 
 }

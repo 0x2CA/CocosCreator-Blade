@@ -435,7 +435,7 @@ class WxServerSDK {
 
         if (cc.sys.platform === cc.sys.WECHAT_GAME) {
             let systemInfo = wx.getSystemInfoSync();
-            let openInfo = (<WxPlatform>app.platform.getPlatform()).getLaunchOptions();
+            let openInfo = (<WxPlatform>blade.platform.getPlatform()).getLaunchOptions();
             let code = "";
 
             if (!openId) {
@@ -469,7 +469,7 @@ class WxServerSDK {
             }
 
             //渠道
-            let params = app.platform.getPlatform().getLaunchOptions();
+            let params = blade.platform.getPlatform().getLaunchOptions();
             if (params["channel"]) {
                 channel = params["channel"];
             }
@@ -662,25 +662,25 @@ class WxServerSDK {
                 let advert_sort_info: {
                     time: number;
                     index;
-                } = JSON.parse(app.platform.getPlatform().getArchive("advert_sort_" + key + "_info"));
+                } = JSON.parse(blade.platform.getPlatform().getArchive("advert_sort_" + key + "_info"));
 
                 if (
                     advert_sort_info == null ||
-                    app.timer.getTime() >
+                    blade.timer.getTime() >
                     moment(advert_sort_info.time)
                         .add(1, "days")
                         .unix()
                 ) {
                     advert_sort_info = {
                         index: -1,
-                        time: app.timer.getTime(),
+                        time: blade.timer.getTime(),
                     };
                 }
 
                 advert_sort_info.index++;
                 advert_sort_info.index = advert_sort_info.index % sortList.length;
 
-                app.platform.getPlatform().saveArchive(
+                blade.platform.getPlatform().saveArchive(
                     "advert_sort_" + key + "_info",
                     JSON.stringify(advert_sort_info)
                 );

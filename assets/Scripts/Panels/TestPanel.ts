@@ -11,7 +11,7 @@ export default class TestPanel extends IPopup {
     }
 
     async  onConfirm() {
-        let result = await app.popup.popNode("TestPanel", { a: 1, b: 2 })
+        let result = await blade.popup.popNode("TestPanel", { a: 1, b: 2 })
         console.log(result) 
     }
 

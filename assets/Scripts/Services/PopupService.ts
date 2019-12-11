@@ -39,9 +39,9 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
                 this.createModal();
             }else{
                 // 添加模态层节点
-                const appNode = cc.find("Application");
+                const appNode = cc.find("Blade");
                 if (appNode == null) {
-                    throw new Error("没有Application节点")
+                    throw new Error("没有Blade节点")
                 }
                 const modalNode: cc.Node = cc.instantiate(res);
                 modalNode.parent = appNode;
@@ -51,7 +51,7 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
             }
         });
 
-        app.ticker.register(this);
+        blade.ticker.register(this);
     }
 
     /**
@@ -59,9 +59,9 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
      */
     createModal() {
         if (this.modal == null) {
-            const appNode = cc.find("Application");
+            const appNode = cc.find("Blade");
             if (appNode == null) {
-                throw new Error("没有Application节点")
+                throw new Error("没有Blade节点")
             }
 
             // 添加模态层节点
@@ -180,7 +180,7 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
                 panelNode.once(
                     PopupService.EventType.POPUP_CLICK,
                     async (eventType: string, panel: IPopup | cc.Node) => {
-                        app.popup.emit(PopupService.EventType.POPUP_CLICK, eventType, panel);
+                        blade.popup.emit(PopupService.EventType.POPUP_CLICK, eventType, panel);
 
                         if (panel instanceof cc.Node) {
                             panel = panel.getComponent(IPopup);
@@ -189,7 +189,7 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
                         await panel.disappear();
                         panel.onDisappear();
                         // 发送隐藏通知
-                        app.popup.emit(PopupService.EventType.PANEL_DISABLE);
+                        blade.popup.emit(PopupService.EventType.PANEL_DISABLE);
                         // 移出队列
                         this.list.dequeue();
                         // 执行回调
@@ -306,7 +306,7 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
             console.warn(err);
         });
         // 发送模态层弹出通知
-        app.popup.emit(PopupService.EventType.PANEL_ENABLE);
+        blade.popup.emit(PopupService.EventType.PANEL_ENABLE);
     }
 
     onTick(delta: number): void {

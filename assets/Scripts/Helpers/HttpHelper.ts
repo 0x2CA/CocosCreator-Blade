@@ -38,7 +38,7 @@ class HttpHelper {
                 options.headers = null;
             }
 
-            if (app.platform.getType() == PlatformService.PlatformType.WX) {
+            if (blade.platform.getType() == PlatformService.PlatformType.WX) {
                 if (options.contentType != "JSON") {
                     options.headers = options.headers || {};
                     options.headers["Content-Type"] =

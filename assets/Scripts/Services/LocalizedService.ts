@@ -45,7 +45,7 @@ class LocalizedService extends cc.EventTarget implements IService {
         if (cc.sys.platform == cc.sys.EDITOR_PAGE) {
             lang = LocalizedService.LangType.zh_CN
         } else {
-            lang = app.platform.getPlatform().getArchive(LocalizedService.CURRENT_LANG_KEY) as LocalizedService.LangType;
+            lang = blade.platform.getPlatform().getArchive(LocalizedService.CURRENT_LANG_KEY) as LocalizedService.LangType;
         }
         if (lang == null) {
             switch (sysLang) {
@@ -74,7 +74,7 @@ class LocalizedService extends cc.EventTarget implements IService {
     public load(lang: LocalizedService.LangType, data: { [key: string]: string }) {
         this.langs[lang] = data;
         if (lang == this.curLang) {
-            app.locale.emit(LocalizedService.EventType.LanguageChange, lang);
+            blade.locale.emit(LocalizedService.EventType.LanguageChange, lang);
         }
     }
 
@@ -99,10 +99,10 @@ class LocalizedService extends cc.EventTarget implements IService {
     public setLang(lang: LocalizedService.LangType) {
         if (lang != null && this.curLang != lang) {
             this.curLang = lang;
-            app.locale.emit(LocalizedService.EventType.LanguageChange, lang);
+            blade.locale.emit(LocalizedService.EventType.LanguageChange, lang);
             console.log("设置语言环境:", lang)
             if (cc.sys.platform != cc.sys.EDITOR_PAGE) {
-                app.platform.getPlatform().saveArchive(LocalizedService.CURRENT_LANG_KEY, lang)
+                blade.platform.getPlatform().saveArchive(LocalizedService.CURRENT_LANG_KEY, lang)
             }
         }
     }

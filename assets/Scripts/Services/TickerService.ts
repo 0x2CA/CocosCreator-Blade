@@ -16,7 +16,7 @@ export default class TickerService implements IService {
     }
 
     public lazyInitialize(): void {
-        const appNode = cc.find('Application');
+        const appNode = cc.find('Blade');
         if (appNode.getComponent(TickerComponent) == null) {
             appNode.addComponent(TickerComponent);
         }

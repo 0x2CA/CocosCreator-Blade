@@ -16,13 +16,13 @@ export default class ModalLayer extends cc.Component {
     private spinTween: Tween;
 
     onLoad() {
-        app.popup.on(PopupService.EventType.PANEL_ENABLE, this.openPanel, this);
-        app.popup.on(PopupService.EventType.PANEL_DISABLE, this.closePanel, this);
+        blade.popup.on(PopupService.EventType.PANEL_ENABLE, this.openPanel, this);
+        blade.popup.on(PopupService.EventType.PANEL_DISABLE, this.closePanel, this);
     }
 
     onDestroy() {
-        app.popup.off(PopupService.EventType.PANEL_ENABLE, this.openPanel, this);
-        app.popup.off(PopupService.EventType.PANEL_DISABLE, this.closePanel, this);
+        blade.popup.off(PopupService.EventType.PANEL_ENABLE, this.openPanel, this);
+        blade.popup.off(PopupService.EventType.PANEL_DISABLE, this.closePanel, this);
     }
 
     start() { }

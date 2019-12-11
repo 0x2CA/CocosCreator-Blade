@@ -6,11 +6,11 @@ export default abstract class IView extends cc.Component implements ITicker {
 
     onLoad() {
         // 注册视图
-        app.view.register(this);
+        blade.view.register(this);
         // 注册动作
-        app.action.register(this);
+        blade.action.register(this);
         // 注册计时器
-        app.ticker.register(this);
+        blade.ticker.register(this);
 
         if (this.onRegister) {
             this.onRegister();
@@ -23,11 +23,11 @@ export default abstract class IView extends cc.Component implements ITicker {
         }
 
         // 注销视图
-        app.view.unregister(this);
+        blade.view.unregister(this);
         // 注销动作
-        app.action.unregister(this);
+        blade.action.unregister(this);
         // 注销计时器
-        app.ticker.unregister(this);
+        blade.ticker.unregister(this);
     }
 
     /**

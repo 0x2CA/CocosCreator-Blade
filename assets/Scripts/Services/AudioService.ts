@@ -40,13 +40,13 @@ export default class AudioService implements IService {
      * 初始化音量
      */
     public initVolume() {
-        const bgmVol = app.platform.getPlatform().getArchive(AudioService.BGM_VOL_KEY);
+        const bgmVol = blade.platform.getPlatform().getArchive(AudioService.BGM_VOL_KEY);
         this.bgmVolume = parseFloat(bgmVol);
         if (isNaN(this.bgmVolume)) {
             this.bgmVolume = 1;
         }
 
-        const sfxVol = app.platform.getPlatform().getArchive(AudioService.SFX_VOL_KEY);
+        const sfxVol = blade.platform.getPlatform().getArchive(AudioService.SFX_VOL_KEY);
         this.sfxVolume = parseFloat(sfxVol);
         if (isNaN(this.sfxVolume)) {
             this.sfxVolume = 1;
@@ -134,7 +134,7 @@ export default class AudioService implements IService {
     */
     public setSFXVolume(vol: number) {
         if (this.sfxVolume != vol) {
-            app.platform.getPlatform().saveArchive(AudioService.SFX_VOL_KEY, vol.toString());
+            blade.platform.getPlatform().saveArchive(AudioService.SFX_VOL_KEY, vol.toString());
             this.sfxVolume = vol;
         }
     }
@@ -154,7 +154,7 @@ export default class AudioService implements IService {
             }
         }
         if (this.bgmVolume != vol) {
-            app.platform.getPlatform().saveArchive(AudioService.BGM_VOL_KEY, vol.toString());
+            blade.platform.getPlatform().saveArchive(AudioService.BGM_VOL_KEY, vol.toString());
             this.bgmVolume = vol;
             cc.audioEngine.setVolume(this.bgmAudioID, vol);
         }

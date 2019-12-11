@@ -52,20 +52,20 @@ export default class LocalizedLabel extends cc.Component implements LocalizedIte
     })
     langArgs: string[] = [];
 
-    private updateInterval: number = -1;
+    private updateInterval: any = -1;
 
     onLoad() {
         this.updateLang();
-        app.locale.on(LocalizedService.EventType.LanguageChange, this.updateLang, this);
+        blade.locale.on(LocalizedService.EventType.LanguageChange, this.updateLang, this);
 
         // 编辑器模式, 执行定时更新
         if (CC_EDITOR) {
-            this.updateInterval = setInterval(this.updateLang.bind(this), app.locale.EditorRefreshInterval * 1000);
+            this.updateInterval = setInterval(this.updateLang.bind(this), blade.locale.EditorRefreshInterval * 1000);
         }
     }
 
     onDestroy() {
-        app.locale.off(LocalizedService.EventType.LanguageChange, this.updateLang, this);
+        blade.locale.off(LocalizedService.EventType.LanguageChange, this.updateLang, this);
         if (this.updateInterval > 0) {
             clearInterval(this.updateInterval);
         }
@@ -76,7 +76,7 @@ export default class LocalizedLabel extends cc.Component implements LocalizedIte
             return;
         }
 
-        const text = (this.langArgs && this.langArgs.length > 0) ? app.locale.value(this.langID, ...this.langArgs) : app.locale.value(this.langID);
+        const text = (this.langArgs && this.langArgs.length > 0) ? blade.locale.value(this.langID, ...this.langArgs) : blade.locale.value(this.langID);
         switch (this.textType) {
             case 0:
             default:

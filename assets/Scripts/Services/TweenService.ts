@@ -18,7 +18,7 @@ export default class TweenService implements IService, ITicker {
         Tween.customTick = true;
 
         // 设置更新服务
-        app.ticker.register(this);
+        blade.ticker.register(this);
     }
 
     public lazyInitialize(): void {
