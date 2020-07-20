@@ -1,6 +1,5 @@
 import IController from "../Interfaces/IController";
 import ArchiveServerSDK from "../Libs/ArchiveServerSDK/ArchiveServerSDK";
-import Command from "../Decorators/Command";
 import Controller from "../Decorators/Controller";
 
 
@@ -37,10 +36,7 @@ export default class UIController extends IController {
     }
 
 
-    @Command(1)
     test(time: number) {
         console.log("controller func")
-        blade.action.do(3, time)
-
     }
 }

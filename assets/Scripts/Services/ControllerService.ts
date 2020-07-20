@@ -56,7 +56,7 @@ export default class ControllerService implements IService {
     /**
     * 命令控制器调用指定方法
     */
-    public orderViewById(alias: string, funcName: string, ...args: any[]): any {
+    public orderControllerById(alias: string, funcName: string, ...args: any[]): any {
         const controller: IController = this.getController(alias);
         if (controller == null) {
             console.error(`控制器（${alias}）不存在`);

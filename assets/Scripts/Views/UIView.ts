@@ -1,8 +1,8 @@
-import Command from "../Decorators/Command";
 import GameModel from "../Models/GameModel";
 import IView from "../Interfaces/IView";
 import View from "../Decorators/View";
-import Action from "../Decorators/Action";
+import CommandService from "../Services/CommandService";
+import TestCommand from "../Commands/TestCommand";
 
 const { ccclass, property } = cc._decorator;
 
@@ -26,6 +26,7 @@ export default class UIView extends IView {
         this.button.node.on(cc.Node.EventType.TOUCH_END, async () => {
             let result = await blade.popup.popNode("TestPanel", { a: 1, b: 2 })
             console.log(result)
+            CommandService.instance.exec(new TestCommand(), 3, 2)
         })
     }
 
@@ -33,7 +34,6 @@ export default class UIView extends IView {
         this.gameModel.off(["data1"], this.updateData, this)
     }
 
-    @Action(3)
     test(num: number) {
         console.log(`view func`)
         this.gameModel.data1 = num;

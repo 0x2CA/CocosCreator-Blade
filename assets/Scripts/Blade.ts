@@ -8,7 +8,6 @@ import PlatformService from "./Services/PlatformService";
 import TweenService from "./Services/TweenService";
 import LocalizedService from "./Services/LocalizedService";
 import TickerService from "./Services/TickerService";
-import ActionService from "./Services/ActionService";
 import PopupService from "./Services/PopupService";
 import PoolService from "./Services/PoolService";
 import SceneService from "./Services/SceneService";
@@ -25,37 +24,34 @@ export default class Blade extends IFrameWork {
      * @memberof Blade
      */
     public readonly model = ModelService.instance
+
     /**
      * 视图
      *
      * @memberof Blade
      */
     public readonly view = ViewService.instance
+
     /**
      * 控制器
      *
      * @memberof Blade
      */
     public readonly ctrl = ControllerService.instance
+
     /**
      * 通知
      *
      * @memberof Blade
      */
     public readonly notice = NotificationService.instance
+
     /**
      * 命令
      *
      * @memberof Blade
      */
     public readonly cmd = CommandService.instance
-
-    /**
-    * 动作服务
-    *
-    * @memberof Blade
-    */
-    public readonly action = ActionService.instance
 
     /**
      *平台

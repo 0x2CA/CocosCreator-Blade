@@ -2,10 +2,12 @@ import IService from "../Interfaces/IService";
 import Service from "../Decorators/Service";
 import Singleton from "../Decorators/Singleton";
 import IController from "../Interfaces/IController";
+import ICommand from "../Interfaces/ICommand";
+import TimerService from "./TimerService";
 
 @Singleton
 @Service("CommandService")
-export default class CommandService extends cc.EventTarget implements IService {
+export default class CommandService implements IService {
     public alias: string;
     public static readonly instance: CommandService;
 
@@ -16,39 +18,43 @@ export default class CommandService extends cc.EventTarget implements IService {
     public lazyInitialize(): void {
     }
 
+
+
+
+   /**
+    * 执行命令
+    * @param cmd 
+    * @param args 
+    */
+    public exec<T extends ICommand>(cmd: T, ...args: any[]) {
+        cmd.exec(args);
+    }
+
     /**
-     * 注册命令
+     * 下一帧执行命令
+     *
+     * @template T
+     * @param {T} cmd
+     * @param {...any[]} args
+     * @memberof CommandService
      */
-    public register(controller: IController) {
-        const prototy = Object.getPrototypeOf(controller)
-        Object.getOwnPropertyNames(prototy).filter((method: string) => {
-            return typeof controller[method] === "function" && Reflect.hasMetadata(IController.COMMAND_META, controller[method])
-        }).forEach((method: string) => {
-            let cmd = Reflect.getMetadata(IController.COMMAND_META, controller[method]);
-            this.on(cmd, controller[method], controller)
+    public execNextFrame<T extends ICommand>(cmd: T, ...args: any[]) {
+        TimerService.instance.runNextFrame(() => {
+            cmd.exec(args);
         })
     }
 
     /**
-     * 注销命令
-     */
-    public unregister(controller: IController) {
-        Object.getOwnPropertyNames(controller).filter((method: string) => {
-            return typeof controller[method] === "function" && Reflect.hasMetadata(IController.COMMAND_META, controller[method])
-        }).forEach((method: string) => {
-            let cmd = Reflect.getMetadata(IController.COMMAND_META, controller[method]);
-            this.off(cmd, controller[method], controller)
-        })
-    }
-
-    /**
-     * 执行命令
+     * 异步执行命令
+     * 
      * @param cmd 
      * @param args 
      */
-    public exec(cmd: string | number, ...args) {
-        this.emit(cmd.toString(), ...args)
+    public execAsync<T extends ICommand>(cmd: T, ...args: any[]) {
+        new Promise((resolve, reject) => {
+            cmd.exec(args);
+            resolve();
+        })
     }
-
 
 }

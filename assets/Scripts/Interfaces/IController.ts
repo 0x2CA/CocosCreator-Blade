@@ -11,8 +11,6 @@ export default abstract class IController extends cc.Component implements ITicke
     onLoad() {
         // 注册控制器
         blade.ctrl.register(this);
-        // 注册命令
-        blade.cmd.register(this);
         // 注册计时器
         blade.ticker.register(this);
 
@@ -31,8 +29,6 @@ export default abstract class IController extends cc.Component implements ITicke
 
         // 注销控制器
         blade.ctrl.unregister(this);
-        // 注销命令
-        blade.cmd.unregister(this);
         // 注销计时器
         blade.ticker.unregister(this);
     }
