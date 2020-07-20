@@ -29,7 +29,7 @@ class PoolService implements IService {
     * 从目录加载预制体
     */
     public loadFolder() {
-        cc.loader.loadResDir(this.perfabPath, (err, resource, urls) => {
+        cc.resources.loadDir(this.perfabPath, (err, resource) => {
             for (let index = 0; index < resource.length; index++) {
                 const prefab = (resource as cc.Prefab[])[index];
                 this.register(prefab.name, prefab, 10);

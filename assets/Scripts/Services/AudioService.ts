@@ -58,7 +58,7 @@ export default class AudioService implements IService {
     * 从目录加载声音
     */
     public loadFolder() {
-        cc.loader.loadResDir(this.audioPath, (err, resource, urls) => {
+        cc.resources.loadDir(this.audioPath, (err, resource) => {
             for (let index = 0; index < resource.length; index++) {
                 const audio = (resource as cc.AudioClip[])[index];
                 this.register(audio.name, audio);

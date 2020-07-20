@@ -33,7 +33,7 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
     }
 
     public lazyInitialize(): void {
-        cc.loader.loadRes(PopupService.ModalPrefabPath, cc.Prefab, (err: Error, res: any) => {
+        cc.resources.load(PopupService.ModalPrefabPath, cc.Prefab, (err: Error, res: any) => {
             if (err) {
                 cc.error(`路径('${PopupService.ModalPrefabPath}')不存在模态层预制件`);
                 this.createModal();
@@ -85,7 +85,7 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
             // backgroundNode.color = cc.Color.BLACK;
             // backgroundNode.opacity = 150;
             // const backgroundSprite = backgroundNode.addComponent(cc.Sprite)
-            // cc.loader.load("db://internal/image/default_sprite_splash.png", (err: Error, res: any) => {
+            // cc.assetManager.loadRemote("db://internal/image/default_sprite_splash.png", (err: Error, res: any) => {
             //     if (err) {
             //         cc.error(err);
             //         backgroundNode.active = false;
@@ -142,7 +142,7 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
                     } else {
 
                         prefab = await new Promise((resolve, reject) => {
-                            cc.loader.loadRes(info.node as string, cc.Prefab, (err: Error, res: any) => {
+                            cc.resources.load(info.node as string, cc.Prefab, (err: Error, res: any) => {
                                 if (err) {
                                     reject(err);
                                 } else {

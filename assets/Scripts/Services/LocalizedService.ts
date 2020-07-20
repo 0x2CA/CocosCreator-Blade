@@ -82,7 +82,7 @@ class LocalizedService extends cc.EventTarget implements IService {
      * 从目录加载多国语言json文件
      */
     public loadFolder() {
-        cc.loader.loadResDir(this.langPath, (err, resource, urls) => {
+        cc.resources.loadDir(this.langPath, (err, resource) => {
             const jsonResList = resource as cc.JsonAsset[];
             for (const jsonRes of jsonResList) {
                 this.load(jsonRes.name as any, jsonRes.json);

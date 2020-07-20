@@ -32,7 +32,7 @@ class ConfigService implements IService {
     * 从目录加载配置
     */
     public loadFolder() {
-        cc.loader.loadResDir(this.configPath, (err, resource, urls) => {
+        cc.resources.loadDir(this.configPath, (err, resource) => {
             for (let index = 0; index < resource.length; index++) {
                 const json = (resource as cc.JsonAsset[])[index];
                 this.register(json.name, json);

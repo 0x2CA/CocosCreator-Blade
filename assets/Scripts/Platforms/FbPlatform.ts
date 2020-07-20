@@ -217,7 +217,7 @@ export default class FbPlatform extends IPlatform {
      * @param url 
      */
     private async getImageBase64(url: string) {
-        let image = await PromiseHelper.load(url, "png");
+        let image = await PromiseHelper.loadRemote(url);
         let canvas = document.createElement("canvas");
         let ctx = canvas.getContext("2d");
         var img = image.getHtmlElementObj();

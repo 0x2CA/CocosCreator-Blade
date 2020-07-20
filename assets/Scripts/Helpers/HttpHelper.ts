@@ -67,7 +67,7 @@ class HttpHelper {
                     },
                 });
             } else {
-                var xhr = cc.loader.getXMLHttpRequest();
+                var xhr = new XMLHttpRequest();
                 xhr.onreadystatechange = function () {
                     if (xhr.readyState == 4) {
                         if (xhr.status >= 200 && xhr.status < 400) {

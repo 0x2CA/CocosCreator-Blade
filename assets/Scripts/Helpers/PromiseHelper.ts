@@ -86,7 +86,7 @@ export default class PromiseHelper {
 	 */
     public static loadRes<T extends cc.Asset>(url: string, type: typeof cc.Asset): Promise<T> {
         return new Promise((resolve, reject) => {
-            cc.loader.loadRes(url, type, (err: Error, res: any) => {
+            cc.resources.load(url, type, (err: Error, res: any) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -105,7 +105,7 @@ export default class PromiseHelper {
         type: typeof cc.Asset
     ): Promise<T[]> {
         return new Promise((resolve, reject) => {
-            cc.loader.loadResArray(url, type, (err: Error, res: any[]) => {
+            cc.resources.load(url, type, (err: Error, res: any[]) => {
                 if (err) {
                     reject(err);
                 } else {
@@ -119,13 +119,9 @@ export default class PromiseHelper {
     * 加载一个远程资源
     * @param url
     */
-    public static load(url: string, type?: string): Promise<any> {
+    public static loadRemote(url: string): Promise<any> {
         return new Promise((resolve, reject) => {
-            cc.loader.load(
-                {
-                    url,
-                    type,
-                },
+            cc.assetManager.loadRemote(url,
                 (err: Error, res: any) => {
                     if (err) {
                         reject(err);
