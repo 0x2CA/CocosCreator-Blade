@@ -5,6 +5,7 @@ import IPopup from "../Interfaces/IPopup";
 import PriorityQueue from "../Libs/Structs/PriorityQueue";
 import ITicker from "../Interfaces/ITicker";
 import Tween from "../Libs/Tween/Tween";
+import PromiseHelper from "../Helpers/PromiseHelper";
 
 
 /**
@@ -37,7 +38,7 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
             if (err) {
                 cc.error(`路径('${PopupService.ModalPrefabPath}')不存在模态层预制件`);
                 this.createModal();
-            }else{
+            } else {
                 // 添加模态层节点
                 const appNode = cc.find("Blade");
                 if (appNode == null) {
@@ -121,6 +122,9 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
         }
 
         return new Promise(async (resolve, reject) => {
+
+            await PromiseHelper.waitUntil(() => this.modal)
+
 
             try {
                 let panelNode: cc.Node;
