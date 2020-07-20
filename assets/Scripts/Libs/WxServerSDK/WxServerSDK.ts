@@ -1418,7 +1418,7 @@ export default WxServerSDK;
 if (CC_DEBUG && cc.sys.platform != cc.sys.WECHAT_GAME) {
     (async () => {
         try {
-            await WxServerSDK.init("wxd0dcdb67f396fa81", "1.0.0");
+            // await WxServerSDK.init("wxd0dcdb67f396fa81", "1.0.0");
             // await WxServerSDK.init(PlatformConfig.wx.appid, "1.0.0");
         } catch (error) {
             console.warn(error);
