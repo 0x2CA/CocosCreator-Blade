@@ -21,13 +21,13 @@ export default class CommandService implements IService {
 
 
 
-   /**
-    * 执行命令
-    * @param cmd 
-    * @param args 
-    */
-    public exec<T extends ICommand>(cmd: T, ...args: any[]) {
-        cmd.exec(args);
+    /**
+     * 执行命令
+     * @param cmd 
+     * @param args 
+     */
+    public exec(cmd: typeof ICommand, ...args: any[]) {
+        (new (cmd as any)()).exec(...args);
     }
 
     /**
@@ -38,9 +38,9 @@ export default class CommandService implements IService {
      * @param {...any[]} args
      * @memberof CommandService
      */
-    public execNextFrame<T extends ICommand>(cmd: T, ...args: any[]) {
+    public execNextFrame(cmd: typeof ICommand, ...args: any[]) {
         TimerService.instance.runNextFrame(() => {
-            cmd.exec(args);
+            (new (cmd as any)()).exec(...args);
         })
     }
 
@@ -50,9 +50,9 @@ export default class CommandService implements IService {
      * @param cmd 
      * @param args 
      */
-    public execAsync<T extends ICommand>(cmd: T, ...args: any[]) {
+    public execAsync(cmd: typeof ICommand, ...args: any[]) {
         new Promise((resolve, reject) => {
-            cmd.exec(args);
+            (new (cmd as any)()).exec(...args);
             resolve();
         })
     }
