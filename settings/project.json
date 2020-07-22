@@ -9,8 +9,8 @@
       false
     ]
   ],
-  "design-resolution-height": 640,
-  "design-resolution-width": 960,
+  "design-resolution-height": 1334,
+  "design-resolution-width": 750,
   "excluded-modules": [
     "3D Physics/cannon.js",
     "3D Physics/Builtin",
@@ -27,8 +27,8 @@
       "enable": false
     }
   },
-  "fit-height": true,
-  "fit-width": false,
+  "fit-height": false,
+  "fit-width": true,
   "group-list": [
     "default",
     "ui"
@@ -41,8 +41,9 @@
   },
   "use-customize-simulator": true,
   "use-project-simulator-setting": false,
-  "start-scene": "current",
+  "start-scene": "e386505b-ed6c-459e-ba88-64737db661d7",
   "migrate-history": [
     "cloud-function"
-  ]
+  ],
+  "preview-port": 7456
 }

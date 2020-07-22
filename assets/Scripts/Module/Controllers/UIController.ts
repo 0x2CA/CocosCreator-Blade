@@ -9,12 +9,7 @@ const { ccclass, property } = cc._decorator;
 @Controller("UIController")
 export default class UIController extends IController {
 
-    async  onRegister() {
-        // 登录服务器
-        await ArchiveServerSDK.login("leek")
-        // 同步存档
-        await ArchiveServerSDK.sync()
-        console.log(blade.timer.getTime(), new Date().getTime())
+    async onRegister() {
 
         console.log(ArchiveServerSDK.get<Array<string>>("harvestCount"))
 
