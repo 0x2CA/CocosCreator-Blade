@@ -1,4 +1,6 @@
 import LocalizedItem from "./LocalizedItem";
+import LocalizedService from "../../Services/LocalizedService";
+import TimerService from "../../Services/TimerService";
 
 const { ccclass, property, executeInEditMode, menu, requireComponent, executionOrder } = cc._decorator;
 
@@ -54,18 +56,24 @@ export default class LocalizedSprite extends cc.Component implements LocalizedIt
 
     private defaultFrame: cc.SpriteFrame;
 
+    private updateInterval: TimerService.Timer = null;
+
+
     onLoad() {
         this.defaultFrame = this.spriteFrame;
-        blade.locale.on('LanguageChange', this.updateLang, this);
+        blade.locale.on(LocalizedService.EventType.LanguageChange, this.updateLang, this);
 
         // 编辑器模式, 执行
         if (CC_EDITOR) {
-            setInterval && setInterval(this.updateLang.bind(this), blade.locale.EditorRefreshInterval * 1000);
+            this.updateInterval = blade.timer.startTimer(blade.locale.EditorRefreshInterval, this.updateLang.bind(this));
         }
     }
 
     onDestroy() {
-        blade.locale.off('LanguageChange', this.updateLang, this);
+        blade.locale.off(LocalizedService.EventType.LanguageChange, this.updateLang, this);
+        if (this.updateInterval) {
+            blade.timer.stopTimer(this.updateInterval);
+        }
     }
 
     updateLang() {

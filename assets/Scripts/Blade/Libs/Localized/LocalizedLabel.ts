@@ -1,5 +1,6 @@
 import LocalizedItem from "./LocalizedItem";
-import LocalizedService from "../../../Blade/Services/LocalizedService";
+import LocalizedService from "../../Services/LocalizedService";
+import TimerService from "../../Services/TimerService";
 
 const { ccclass, property, executeInEditMode, menu, requireComponent, executionOrder } = cc._decorator;
 
@@ -52,7 +53,7 @@ export default class LocalizedLabel extends cc.Component implements LocalizedIte
     })
     langArgs: string[] = [];
 
-    private updateInterval: any = -1;
+    private updateInterval: TimerService.Timer = null;
 
     onLoad() {
         this.updateLang();
@@ -60,14 +61,15 @@ export default class LocalizedLabel extends cc.Component implements LocalizedIte
 
         // 编辑器模式, 执行定时更新
         if (CC_EDITOR) {
-            this.updateInterval = setInterval(this.updateLang.bind(this), blade.locale.EditorRefreshInterval * 1000);
+            this.updateInterval = blade.timer.startTimer(blade.locale.EditorRefreshInterval, this.updateLang.bind(this));
         }
     }
 
     onDestroy() {
         blade.locale.off(LocalizedService.EventType.LanguageChange, this.updateLang, this);
-        if (this.updateInterval > 0) {
-            clearInterval(this.updateInterval);
+
+        if (this.updateInterval) {
+            blade.timer.stopTimer(this.updateInterval);
         }
     }
 
