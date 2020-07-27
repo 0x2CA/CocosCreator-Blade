@@ -1,4 +1,4 @@
-export default class NodeHelper{
+export default class NodeHelper {
     /**
 	 *
 	 *
@@ -79,6 +79,40 @@ export default class NodeHelper{
             return true;
         } else {
             return false;
+        }
+    }
+
+    /**
+     * 节点置灰
+     * @param node 
+     * @param gray 
+     * @param defaultMaterial 
+     */
+    public static setGray(node: cc.Node, gray: boolean = true, defaultMaterial: cc.Material = cc.Material.createWithBuiltin("2d-sprite", 0)) {
+        let gray_material = cc.Material.createWithBuiltin("2d-gray-sprite", 0);
+
+        let sp = node.getComponent(cc.Sprite);
+        if (sp) {
+            if (gray) {
+                sp.setMaterial(0, gray_material);
+            } else {
+                sp.setMaterial(0, defaultMaterial);
+            }
+        }
+
+        const childrenSprite = node.getComponentsInChildren(cc.Sprite);
+        for (const cs of childrenSprite) {
+            if (cs.node != node) {
+                this.setGray(cs.node, gray);
+            }
+        }
+
+        const childrenOutline = node.getComponentsInChildren(cc.LabelOutline);
+        for (const co of childrenOutline) {
+            if (co.node != node) {
+                // 灰色直接禁用描边
+                co.enabled = !gray;
+            }
         }
     }
 }
