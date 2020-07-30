@@ -3,6 +3,7 @@ import IView from "../../Blade/Interfaces/IView";
 import View from "../../Blade/Decorators/View";
 import CommandService from "../../Blade/Services/CommandService";
 import TestCommand from "../Commands/TestCommand";
+import BigHelper from "../../Blade/Helpers/BigHelper";
 
 const { ccclass, property } = cc._decorator;
 
@@ -28,6 +29,9 @@ export default class UIView extends IView {
             console.log(result)
             CommandService.instance.exec(TestCommand, 3, 2)
         })
+
+        console.log(BigHelper.toFormat("123456789987654321.123456789"));
+        console.log(BigHelper.toSmall("123456789987654321.123456789"));
     }
 
     onUnRegister() {
