@@ -927,15 +927,16 @@
   Big['default'] = Big.Big = Big;
 
   //AMD.
-  if (typeof define === 'function' && define.amd) {
-    define(function () { return Big; });
+//   if (typeof define === 'function' && define.amd) {
+//     define(function () { return Big; });
 
-    // Node and other CommonJS-like environments that support module.exports.
-  } else if (typeof module !== 'undefined' && module.exports) {
-    module.exports = Big;
+//     // Node and other CommonJS-like environments that support module.exports.
+//   } else if (typeof module !== 'undefined' && module.exports) {
+//     module.exports = Big;
 
-    //Browser.
-  } else {
+//     //Browser.
+//   } else {
+//     GLOBAL.Big = Big;
+//   }
     GLOBAL.Big = Big;
-  }
-})(this);
+})(window);

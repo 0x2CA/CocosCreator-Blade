@@ -7,7 +7,7 @@
     //     exports["io"] = factory();
     // else
     root["io"] = factory();
-})(this, function () {
+})(window, function () {
     return /******/ (function (modules) { // webpackBootstrap
 /******/ 	// The module cache
 /******/ 	var installedModules = {};
