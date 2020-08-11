@@ -24,9 +24,9 @@ class LocalizedService extends cc.EventTarget implements IService {
 
     private readonly langPath = 'Langs'
 
-    public initialize(): void {
+    public async initialize() {
         //加载多语言配置
-        this.loadFolder();
+        await this.loadFolder();
 
         // 初始化语言
         this.initLang();
@@ -41,13 +41,13 @@ class LocalizedService extends cc.EventTarget implements IService {
      */
     public initLang() {
         let sysLang = cc.sys.language
-        let lang: LocalizedService.LangType;
+        let lang: string;
         if (cc.sys.platform == cc.sys.EDITOR_PAGE) {
             lang = LocalizedService.LangType.zh_CN
         } else {
-            lang = blade.platform.getPlatform().getArchive(LocalizedService.CURRENT_LANG_KEY) as LocalizedService.LangType;
+            lang = blade.platform.getPlatform().getArchive(LocalizedService.CURRENT_LANG_KEY);
         }
-        if (lang == null) {
+        if (lang == null || lang == "") {
             switch (sysLang) {
                 case cc.sys.LANGUAGE_CHINESE:
                     if (cc.sys.languageCode == "zh-tw") {
@@ -62,7 +62,7 @@ class LocalizedService extends cc.EventTarget implements IService {
             }
         }
 
-        this.setLang(lang);
+        this.setLang(lang as LocalizedService.LangType);
     }
 
 
@@ -82,14 +82,18 @@ class LocalizedService extends cc.EventTarget implements IService {
      * 从目录加载多国语言json文件
      */
     public loadFolder() {
-        cc.resources.loadDir(this.langPath, (err, resource) => {
-            const jsonResList = resource as cc.JsonAsset[];
-            for (const jsonRes of jsonResList) {
-                this.load(jsonRes.name as any, jsonRes.json);
-            }
+        return new Promise((resolve, reject) => {
+            cc.resources.loadDir(this.langPath, (err, resource) => {
+                const jsonResList = resource as cc.JsonAsset[];
+                for (const jsonRes of jsonResList) {
+                    this.load(jsonRes.name as any, jsonRes.json);
+                }
 
-            this.info();
-        });
+                this.info();
+                resolve();
+            });
+        })
+
     }
 
     /**
