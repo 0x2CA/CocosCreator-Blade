@@ -77,7 +77,7 @@ export default class FbPlatform extends IPlatform {
                     this.video = await FBInstant.getRewardedVideoAsync(PlatformConfig.fb.videoId);
                 }
                 else if (this.isSupportInterstitial()) {
-                    this.video = await FBInstant.getInterstitialAdAsync(PlatformConfig.fb.interstitialid);
+                    this.video = await FBInstant.getInterstitialAdAsync(PlatformConfig.fb.interstitialId);
                 }
                 else {
                     throw new Error();
@@ -160,7 +160,7 @@ export default class FbPlatform extends IPlatform {
         try {
             if (this.interstitial == null) {
                 // 初次创建会调load方法
-                this.interstitial = await FBInstant.getInterstitialAdAsync(PlatformConfig.fb.interstitialid);
+                this.interstitial = await FBInstant.getInterstitialAdAsync(PlatformConfig.fb.interstitialId);
             }
             await this.interstitial.loadAsync();
             this.interstitialState = IPlatform.AdState.Loaded;

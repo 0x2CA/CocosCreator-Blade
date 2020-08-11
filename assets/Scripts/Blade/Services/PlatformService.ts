@@ -4,6 +4,8 @@ import Singleton from "../../Blade/Decorators/Singleton";
 import IPlatform from "../../Blade/Interfaces/IPlatform";
 import WebPlatform from "../Platforms/WebPlatform";
 import WxPlatform from "../Platforms/WxPlatform";
+import QQPlatform from "../Platforms/QQPlatform";
+import GPPlatform from "../Platforms/GPPlatform";
 
 @Singleton
 @Service("PlatformService")
@@ -18,6 +20,12 @@ class PlatformService implements IService {
         switch (this.getType()) {
             case PlatformService.PlatformType.WX:
                 this.platform = new WxPlatform();
+                break;
+            case PlatformService.PlatformType.QQ:
+                this.platform = new QQPlatform();
+                break;
+            case PlatformService.PlatformType.ANDROID:
+                this.platform = new GPPlatform();
                 break;
             default:
                 this.platform = new WebPlatform();

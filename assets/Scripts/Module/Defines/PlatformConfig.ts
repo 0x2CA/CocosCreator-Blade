@@ -11,29 +11,30 @@ const PlatformConfig = {
     },
     //手Q
     qq: {
-        appid: "",
-        adid: "",
-        bannerid: "",
+        appId: "",
+        interstitialId: "",
+        videoId: "",
+        bannerId: "",
     },
     // Facebook
     fb: {
-        appid: "",
+        appId: "",
         videoId: "",
-        interstitialid: "",
+        interstitialId: "",
     },
     // Google play
     gp: {
-        appid: "",
-        adid: "",
-        bannerid: "",
-        interstitialid: "",
+        appId: "",
+        adId: "",
+        bannerId: "",
+        interstitialId: "",
     },
     // App Store
     as: {
-        appid: "",
-        adid: "",
-        bannerid: "",
-        interstitialid: "",
+        appId: "",
+        adId: "",
+        bannerId: "",
+        interstitialId: "",
     },
 };
 
