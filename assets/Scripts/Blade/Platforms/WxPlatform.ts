@@ -51,6 +51,10 @@ export default class WxPlatform extends IPlatform {
             // 显示事件
             this.emit(IPlatform.EventType.OnShow, res)
         });
+
+        this.preloadBanner();
+        this.preloadInterstitial();
+        this.preloadRewardVideo();
     }
 
     public lazyInitialize(): void {

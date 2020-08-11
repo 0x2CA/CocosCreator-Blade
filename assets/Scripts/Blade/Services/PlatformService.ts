@@ -16,6 +16,9 @@ class PlatformService implements IService {
     // 当前平台
     private platform: IPlatform;
 
+    // 数据
+    private data: any = null;
+
     public initialize(): void {
         switch (this.getType()) {
             case PlatformService.PlatformType.WX:
@@ -78,6 +81,65 @@ class PlatformService implements IService {
         return this.platform;
     }
 
+    /**
+    * 从本地读取存档
+    */
+    loadLocal() {
+        try {
+            const result = JSON.parse(blade.platform.getPlatform().getArchive('Archive'));
+            return result;
+        } catch (e) {
+            return {};
+        }
+    }
+
+    /**
+     * 保存数据到本地
+     */
+    saveLocal(data: any) {
+        // 通过调用平台本地存档接口进行保存
+        blade.platform.getPlatform().saveArchive('Archive', JSON.stringify(data));
+    }
+
+
+    /**
+ * 获取指定键对应的值
+ * 如果存档中找不到, 则返回默认值
+ * @param key 
+ */
+    public get<T>(key: string): T {
+        if (this.data == null) {
+            this.data = this.loadLocal();
+        }
+        return this.data[key] == null ? null : this.data[key];
+    }
+
+    /**
+     * 修改存到指定键名的值
+     * @param key 
+     * @param newValue 
+     */
+    public set(key: string, newValue: any) {
+        if (this.data == null) {
+            this.data = this.loadLocal();
+        }
+        const oldValue = this.data[key];
+        if (oldValue && typeof oldValue != typeof newValue) {
+            throw new Error('存档新值和旧值类型不一致, 忽略存入');
+        }
+        // 旧值和新值不是同一个
+        if (oldValue !== newValue) {
+            this.data[key] = newValue;
+        }
+        this.saveLocal(this.data);
+    }
+
+
+    public clear() {
+        cc.warn("存档已经重置");
+        this.data = {};
+        this.saveLocal(this.data);
+    }
 
 }
 

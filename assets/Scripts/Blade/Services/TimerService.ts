@@ -3,7 +3,6 @@ import Service from "../../Blade/Decorators/Service";
 import Singleton from "../../Blade/Decorators/Singleton";
 import IView from "../../Blade/Interfaces/IView";
 import ITicker from "../../Blade/Interfaces/ITicker";
-import ArchiveServerSDK from "../Libs/ArchiveServerSDK/ArchiveServerSDK";
 
 /**
  * 时间服务
@@ -69,33 +68,11 @@ class TimerService implements IService, ITicker {
 
         return new Promise((resolve, reject) => {
             // //TODO: 暂时使用本地时间
-            // this.lastSyncTime = new Date().getTime();
-            // this.timeStamp = new Date().getTime();
-            // this.syncing = false;
-            // console.log("同步时间", this.timeStamp)
-            // resolve()
-            ArchiveServerSDK.getTime().then((time) => {
-                console.log(
-                    "同步时间:",
-                    this.timeStamp,
-                    "  :  ",
-                    time
-                );
-                if (Math.abs(this.timeStamp - time) > TimerService.MAX_TIME_DIFF) {
-                    // 超出出可接受的时间差
-                    this.timeStamp = this.lastSyncTime = time;
-                    this.syncing = false;
-                    reject("超出出可接受的时间差!");
-                } else {
-                    this.timeStamp = this.lastSyncTime = time;
-                    this.syncing = false;
-                    resolve(time);
-                }
-            })
-                .catch((reason) => {
-                    this.syncing = false;
-                    reject(reason);
-                });
+            this.lastSyncTime = new Date().getTime();
+            this.timeStamp = new Date().getTime();
+            this.syncing = false;
+            console.log("同步时间", this.timeStamp)
+            resolve()
         })
     }
 

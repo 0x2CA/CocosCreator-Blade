@@ -25,8 +25,11 @@ class LocalizedService extends cc.EventTarget implements IService {
     private readonly langPath = 'Langs'
 
     public async initialize() {
-        //加载多语言配置
-        await this.loadFolder();
+        try {
+            //加载多语言配置
+            await this.loadFolder();
+        } catch (error) {
+        }
 
         // 初始化语言
         this.initLang();

@@ -1,5 +1,4 @@
 import IView from "../../Blade/Interfaces/IView";
-import ArchiveServerSDK from "../../Blade/Libs/ArchiveServerSDK/ArchiveServerSDK";
 
 const { ccclass, property } = cc._decorator;
 
@@ -26,22 +25,9 @@ export default class LoadingView extends IView {
         await blade.platform.getPlatform().checkForUpdate();
         this.progress.progress = 0.3;
 
-        // 登录服务器
-        this.labelStatus.string = blade.locale.value("LOGINING");
-        await ArchiveServerSDK.login("CukeMix")
-        this.progress.progress = 0.5;
-
         if (CC_DEBUG) {
             this.parseUrl();
         }
-
-        // 同步存档
-        this.labelStatus.string = blade.locale.value("LOADINGARCHIVE");
-        await ArchiveServerSDK.sync()
-        this.progress.progress = 1;
-
-        // 上传用户数据
-        await ArchiveServerSDK.uploadUserInfo()
 
         await this.preloadScene("Main");
 
@@ -93,7 +79,7 @@ time: 时间倍数
         // 地址栏附带启动参数检查
         // 存档重置
         if (urlParam["reset"] === "1") {
-            ArchiveServerSDK.clear();
+            blade.platform.clear();
         }
 
         try {

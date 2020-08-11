@@ -1,6 +1,5 @@
 import IController from "../../Blade/Interfaces/IController";
 import Controller from "../../Blade/Decorators/Controller";
-import ArchiveServerSDK from "../../Blade/Libs/ArchiveServerSDK/ArchiveServerSDK";
 
 
 const { ccclass, property } = cc._decorator;
@@ -11,7 +10,6 @@ export default class UIController extends IController {
 
     async onRegister() {
 
-        console.log(ArchiveServerSDK.get<Array<string>>("harvestCount"))
 
         blade.audio.playBGM("bgm")
         let list = blade.config.get<Configs.arrlist>("arrlist")
@@ -19,7 +17,6 @@ export default class UIController extends IController {
         let obj = blade.config.get<Configs.objList>("objList")
         console.log(obj)
 
-        await ArchiveServerSDK.uploadUserInfo()
     }
 
     onUnRegister() {
