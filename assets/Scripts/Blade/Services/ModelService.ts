@@ -100,7 +100,7 @@ class ModelService implements IService {
      */
     public getModel<T extends IModel>(modelType: new () => T): T {
         for (const key in this.list) {
-            if (this.list[key] instanceof modelType) {
+            if (this.list[key].model instanceof modelType) {
                 return this.list[key].model;
             }
         }

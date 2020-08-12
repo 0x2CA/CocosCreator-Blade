@@ -37,6 +37,9 @@ export default class QQPlatform extends IPlatform {
 
     private interstitial: qq.InterstitialAd = null;
 
+    private appBox: qq.AppBoxAd = null;
+
+
     private bannerActive: boolean = false;
 
 
@@ -55,6 +58,7 @@ export default class QQPlatform extends IPlatform {
         this.preloadBanner();
         this.preloadInterstitial();
         this.preloadRewardVideo();
+        this.preloadAppBox();
     }
 
     public lazyInitialize(): void {
@@ -265,7 +269,7 @@ export default class QQPlatform extends IPlatform {
 	 * 判断是否支持视频
 	 */
     public isSupportRewardVideo(): boolean {
-        return StringHelper.compareVersion(qq.getSystemInfoSync().SDKVersion, "2.0.4") >= 0
+        return StringHelper.compareVersion(qq.getSystemInfoSync().SDKVersion, "0.1.26") >= 0
     }
 
     /**
@@ -363,7 +367,7 @@ export default class QQPlatform extends IPlatform {
     * 判断是否支持横幅广告
     */
     public isSupportBanner(): boolean {
-        return StringHelper.compareVersion(qq.getSystemInfoSync().SDKVersion, "2.0.4") >= 0
+        return StringHelper.compareVersion(qq.getSystemInfoSync().SDKVersion, "0.1.26") >= 0
     }
 
     /**
@@ -455,7 +459,7 @@ export default class QQPlatform extends IPlatform {
     }
 
     public isSupportInterstitial() {
-        return StringHelper.compareVersion(qq.getSystemInfoSync().SDKVersion, "2.6.0") >= 0
+        return StringHelper.compareVersion(qq.getSystemInfoSync().SDKVersion, "1.12.0") >= 0
     }
 
     public isInterstitialLoaded() {
@@ -509,6 +513,35 @@ export default class QQPlatform extends IPlatform {
             await this.interstitial.show();
             this.interstitialState = IPlatform.AdState.Opening;
             this.emit(IPlatform.EventType.OpenInterstitial)
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+
+    async isSupportAppBox() {
+        return StringHelper.compareVersion(qq.getSystemInfoSync().SDKVersion, "1.12.0") >= 0
+    }
+
+    public async preloadAppBox() {
+        if (!this.isSupportAppBox()) {
+            return;
+        }
+
+        if (this.appBox == null) {
+            this.appBox = qq.createAppBox({ adUnitId: PlatformConfig.qq.appBoxId });
+        }
+
+        this.appBox.load();
+    }
+
+    async showAppBox() {
+        if (!this.isSupportAppBox()) {
+            return;
+        }
+
+        try {
+            await this.appBox.show();
         } catch (error) {
             console.error(error);
         }
@@ -570,5 +603,4 @@ export default class QQPlatform extends IPlatform {
     }
 
 }
-
 

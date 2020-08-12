@@ -96,9 +96,12 @@ class PlatformService implements IService {
     /**
      * 保存数据到本地
      */
-    saveLocal(data: any) {
+    async saveLocal(data: any) {
         // 通过调用平台本地存档接口进行保存
-        blade.platform.getPlatform().saveArchive('Archive', JSON.stringify(data));
+        try {
+            blade.platform.getPlatform().saveArchive('Archive', JSON.stringify(data));
+        } catch (error) {
+        }
     }
 
 
