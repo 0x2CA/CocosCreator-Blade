@@ -6,6 +6,7 @@ import WebPlatform from "../Platforms/WebPlatform";
 import WxPlatform from "../Platforms/WxPlatform";
 import QQPlatform from "../Platforms/QQPlatform";
 import GPPlatform from "../Platforms/GPPlatform";
+import TimerService from "./TimerService";
 
 @Singleton
 @Service("PlatformService")
@@ -18,6 +19,10 @@ class PlatformService implements IService {
 
     // 数据
     private data: any = null;
+
+    private autoSaveSecond: number = 3;
+
+    private autoSave: TimerService.Timer = null;
 
     public initialize(): void {
         switch (this.getType()) {
@@ -36,6 +41,19 @@ class PlatformService implements IService {
         }
 
         this.platform.initialize();
+
+        // 同步数据
+        this.data = this.loadLocal()
+        cc.log("游戏数据：", this.data);
+
+        // 定时保存
+        if (this.autoSave) {
+            blade.timer.stopTimer(this.autoSave)
+        }
+
+        this.autoSave = blade.timer.startTimer(this.autoSaveSecond, () => {
+            this.saveLocal(this.data);
+        }, this);
     }
 
     public lazyInitialize(): void {
@@ -134,7 +152,6 @@ class PlatformService implements IService {
         if (oldValue !== newValue) {
             this.data[key] = newValue;
         }
-        this.saveLocal(this.data);
     }
 
 
