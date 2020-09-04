@@ -18,25 +18,28 @@ class PoolService implements IService {
 
     private readonly perfabPath = "Prefabs/Pools"
 
-    public initialize(): void {
-        this.loadFolder();
+    public async initialize() {
+      await  this.loadFolder();
     }
 
-    public lazyInitialize(): void {
+    public async lazyInitialize() {
     }
 
     /**
     * 从目录加载预制体
     */
     public loadFolder() {
-        cc.resources.loadDir(this.perfabPath, (err, resource) => {
-            for (let index = 0; index < resource.length; index++) {
-                const prefab = (resource as cc.Prefab[])[index];
-                this.register(prefab.name, prefab, 10);
-            }
+        return new Promise((resolve,reject)=>{
+            cc.resources.loadDir(this.perfabPath, (err, resource) => {
+                for (let index = 0; index < resource.length; index++) {
+                    const prefab = (resource as cc.Prefab[])[index];
+                    this.register(prefab.name, prefab, 10);
+                }
 
-            this.info();
-        });
+                this.info();
+                resolve()
+            });
+        })
     }
 
     async register(
@@ -66,7 +69,7 @@ class PoolService implements IService {
         if (this.list.has(name)) {
             this.list.get(name).put(node);
         } else {
-            console.error("没有注册预制体");
+            cc.error("没有注册预制体");
             node.destroy();
         }
     }
@@ -79,7 +82,7 @@ class PoolService implements IService {
         if (this.list.has(name)) {
             return this.list.get(name).get();
         } else {
-            console.error("没有注册预制体");
+            cc.error("没有注册预制体");
         }
     }
 
@@ -90,9 +93,9 @@ class PoolService implements IService {
     info(name?: string) {
         if (name) {
             if (this.list.has(name)) {
-                console.log(name + ":", this.list.get(name).progress());
+                cc.log(name + ":", this.list.get(name).progress());
             } else {
-                console.log(`没有注册${name}预制体`);
+                cc.log(`没有注册${name}预制体`);
             }
         } else {
             let info = "对象池信息:\n"
@@ -105,7 +108,7 @@ class PoolService implements IService {
             } else {
                 info += "   没有注册对象池对象";
             }
-            console.log(info)
+            cc.log(info)
         }
     }
 }
@@ -154,7 +157,7 @@ namespace PoolService {
             } else {
                 node = cc.instantiate(this.template);
                 (<any>node).prefab = this.template;
-                console.warn("对象池预设不足");
+                cc.warn("对象池预设不足");
                 this.tail += 1;
             }
             node.active = true;

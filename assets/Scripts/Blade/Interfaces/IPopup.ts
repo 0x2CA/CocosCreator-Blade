@@ -1,6 +1,6 @@
 import Tween from "../Libs/Tween/Tween";
 import ITicker from "./ITicker";
-import PopupService from "../../Blade/Services/PopupService";
+import PopupService from "../Services/PopupService";
 import { Ease } from "../Libs/Tween/Ease";
 
 const { ccclass, property } = cc._decorator;
@@ -24,6 +24,9 @@ abstract class IPopup extends cc.Component implements ITicker {
         tooltip: "取消按钮",
     })
     buttonCancel: cc.Button = null;
+
+    @property
+    isShowBanner: boolean = true;
 
     onLoad() {
         // 注册计时器
@@ -49,9 +52,11 @@ abstract class IPopup extends cc.Component implements ITicker {
             this.onRegister();
         }
     }
+
     onConfirm() {
         this.node.emit(PopupService.EventType.POPUP_CLICK, IPopup.EventType.Confirm, this)
     }
+
     onCancel() {
         this.node.emit(PopupService.EventType.POPUP_CLICK, IPopup.EventType.Cancel, this)
     }
@@ -66,6 +71,26 @@ abstract class IPopup extends cc.Component implements ITicker {
         blade.ticker.unregister(this);
     }
 
+    onEnable() {
+        if (this.isShowBanner) {
+            blade.platform.getPlatform().activeBanner(true);
+        }
+    }
+
+    private static closeCount: number = 0;
+
+    onDisable() {
+        if (this.isShowBanner) {
+            blade.platform.getPlatform().activeBanner(false);
+        }
+
+        IPopup.closeCount++;
+        if (IPopup.closeCount >= 5) {
+            IPopup.closeCount = 0;
+            blade.platform.getPlatform().showInterstitial();
+        }
+    }
+
 
     /**
     * 显示窗口动画
@@ -73,7 +98,6 @@ abstract class IPopup extends cc.Component implements ITicker {
     public appear(): Promise<any> {
         return new Promise((resolve, reject) => {
             this.node.y = 150;
-            this.node.active = true;
             Tween.get(this.node).to({ y: 0 }, 400, Ease.backOut).call(resolve);
         });
     }
@@ -86,7 +110,6 @@ abstract class IPopup extends cc.Component implements ITicker {
             Tween.get(this.node)
                 .to({ y: 250 }, 400, Ease.backIn)
                 .call(() => {
-                    this.node.active = false;
                     resolve();
                 })
         });

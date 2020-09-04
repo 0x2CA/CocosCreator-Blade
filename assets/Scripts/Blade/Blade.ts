@@ -24,34 +24,31 @@ export default class Blade extends IFrameWork {
      * @memberof Blade
      */
     public readonly model = ModelService.instance
-
     /**
      * 视图
      *
      * @memberof Blade
      */
     public readonly view = ViewService.instance
-
     /**
      * 控制器
      *
      * @memberof Blade
      */
     public readonly ctrl = ControllerService.instance
-
     /**
      * 通知
      *
      * @memberof Blade
      */
     public readonly notice = NotificationService.instance
-
     /**
      * 命令
      *
      * @memberof Blade
      */
     public readonly cmd = CommandService.instance
+
 
     /**
      *平台

@@ -562,6 +562,44 @@ declare namespace qq {
         offClose(callback: () => void);
     }
 
+    interface BlockAd {
+        style: {
+            /** banner 广告组件的左上角横坐标*/
+            left: number,
+            /** banner 广告组件的左上角纵坐标*/
+            top: number,
+            /** banner 广告组件的宽度。最小 300，最大至 屏幕宽度（屏幕宽度可以通过 qq.getSystemInfoSync() 获取）。*/
+            width: number,
+            /** banner 广告组件的高度*/
+            height: number,
+            /** banner 广告组件经过缩放后真实的宽度*/
+            realWidth: number,
+            /** banner 广告组件经过缩放后真实的高度*/
+            realHeight: number
+        };
+        /** 显示激励视频广告。激励视频广告将从屏幕下方推入。*/
+        show(): Promise<any>;
+        /** 销毁 banner 广告*/
+        destroy(): void;
+        /** 监听 banner 广告尺寸变化事件*/
+        onResize(callback: (res: { width: number, height: number }) => void): void;
+        /** 取消监听 banner 广告尺寸变化事件*/
+        offResize(callback: () => void): void;
+        /** 监听激励视频广告加载事件*/
+        onLoad(callback: () => void): void;
+        /** 取消监听激励视频广告加载事件*/
+        offLoad(callback: () => void): void;
+        /** 监听激励视频错误事件*/
+        onError(callback: (res: { errMsg: string, errCode: 1000 | 1001 | 1002 | 1003 | 1004 | 1005 | 1006 | 1007 | 1008 }) => void): void;
+        /** 取消监听激励视频错误事件*/
+        offError(callback: () => void): void;
+        /** 监听用户点击 关闭广告 按钮的事件*/
+        onClose(callback: (res: { isEnded: boolean }) => void);
+        /** 取消监听用户点击 关闭广告 按钮的事件*/
+        offClose(callback: () => void);
+    }
+
+
     /**
      * 创建激励视频广告组件。请通过 qq.getSystemInfoSync() 返回对象的 SDKVersion 判断基础库版本号 >= 2.0.4 后再使用该 API。同时，开发者工具上暂不支持调试该 API，请直接在真机上进行调试。
      */
@@ -571,6 +609,20 @@ declare namespace qq {
      * 创建广告盒子组件。基础库 1.7.1 版本开始支持广告盒子组件，开发者工具 0.1.28 版本开始支持调试。
      */
     function createAppBox(res: { adUnitId: string }): AppBoxAd;
+
+    /**
+     * 创建积木广告组件，基础库 1.15.0 版本开始支持积木广告组件，开发者工具暂不支持调试
+     */
+
+    function createBlockAd(res: {
+        adUnitId: string
+        style: {
+            left: number
+            top: number
+        }
+        size: number
+        orientation: "landscape" | "vertical"
+    }): BlockAd;
 
     /**
      * 创建 banner 广告组件。请通过 qq.getSystemInfoSync() 返回对象的 SDKVersion 判断基础库版本号 >= 2.0.4 后再使用该 API。同时，开发者工具上暂不支持调试该 API，请直接在真机上进行调试。

@@ -19,11 +19,11 @@ class ConfigService implements IService {
 
     private configPath = "Configs"
 
-    public initialize(): void {
-        this.loadFolder();
+    public async initialize() {
+        await this.loadFolder();
     }
 
-    public lazyInitialize(): void {
+    public async lazyInitialize() {
     }
 
 
@@ -32,14 +32,18 @@ class ConfigService implements IService {
     * 从目录加载配置
     */
     public loadFolder() {
-        cc.resources.loadDir(this.configPath, (err, resource) => {
-            for (let index = 0; index < resource.length; index++) {
-                const json = (resource as cc.JsonAsset[])[index];
-                this.register(json.name, json);
-            }
+        new Promise((resolve, reject) => {
+            cc.resources.loadDir(this.configPath, (err, resource) => {
+                for (let index = 0; index < resource.length; index++) {
+                    const json = (resource as cc.JsonAsset[])[index];
+                    this.register(json.name, json);
+                }
 
-            this.info();
-        });
+                this.info();
+
+                resolve();
+            });
+        })
     }
 
     async register(
@@ -115,9 +119,9 @@ class ConfigService implements IService {
     info(name?: string) {
         if (name) {
             if (this.list.has(name)) {
-                console.log(name + ":", this.list.get(name).jsonAsset);
+                cc.log(name + ":", this.list.get(name).jsonAsset);
             } else {
-                console.log(`没有${name}配置文件`);
+                cc.log(`没有${name}配置文件`);
             }
         } else {
             let info = "配置信息:\n"
@@ -130,7 +134,7 @@ class ConfigService implements IService {
             } else {
                 info += "   没有注册配置";
             }
-            console.log(info)
+            cc.log(info)
         }
     }
 }

@@ -13,11 +13,11 @@ export default class ControllerService implements IService {
 
     private list: Map<string, IController>
 
-    public initialize(): void {
+    public async initialize(){
         this.list = new Map<string, IController>();
     }
 
-    public lazyInitialize(): void {
+    public async lazyInitialize() {
     }
 
 
@@ -26,7 +26,7 @@ export default class ControllerService implements IService {
     */
     public register(controller: IController) {
         if (this.list.has(controller.alias)) {
-            console.error(`已经存在${controller.alias}控制器!`);
+            cc.error(`已经存在${controller.alias}控制器!`);
             this.unregister(this.list.get(controller.alias))
             this.register(controller);
         } else {
@@ -59,7 +59,7 @@ export default class ControllerService implements IService {
     public orderControllerById(alias: string, funcName: string, ...args: any[]): any {
         const controller: IController = this.getController(alias);
         if (controller == null) {
-            console.error(`控制器（${alias}）不存在`);
+            cc.error(`控制器（${alias}）不存在`);
             return;
         }
 

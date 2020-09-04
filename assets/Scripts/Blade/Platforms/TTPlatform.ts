@@ -1,16 +1,16 @@
-import IPlatform from "../../Blade/Interfaces/IPlatform";
+import IPlatform from "../Interfaces/IPlatform";
 import HttpHelper from "../Helpers/HttpHelper";
 import StringHelper from "../Helpers/StringHelper";
 import PromiseHelper from "../Helpers/PromiseHelper";
 import PlatformConfig from "../../Module/Defines/PlatformConfig";
 
 /**
- *  微信
+ *  字节跳动
  */
-export default class WxPlatform extends IPlatform {
+export default class TTPlatform extends IPlatform {
 
     // 启动参数
-    private launchOptions: wx.launchOption
+    private launchOptions: tt.launchOption
         = null;
 
     // 授权按钮
@@ -18,8 +18,9 @@ export default class WxPlatform extends IPlatform {
 
     // 菜单分享
     private shareMenuInfo: {
-        title: string,
-        imageUrl: string,
+        templateId?: string,
+        title?: string,
+        imageUrl?: string,
         query: string,
         success: Function
     } = null;
@@ -31,21 +32,21 @@ export default class WxPlatform extends IPlatform {
     /**
     * 激励视频实例
     */
-    private video: wx.RewardedVideoAd = null;
+    private video: tt.RewardedVideoAd = null;
 
-    private banner: wx.BannerAd = null;
+    private banner: tt.BannerAd = null;
 
-    private interstitial: wx.InterstitialAd = null;
+    private interstitial: tt.InterstitialAd = null;
 
     private bannerActive: boolean = false;
 
 
 
-    public async initialize(){
+    public async initialize() {
         // 获取尝试用户信息
         this.getUserInfoTry()
 
-        wx.onShow((res) => {
+        tt.onShow((res) => {
             // 更新启动参数
             this.setLaunchOptions(res);
             // 显示事件
@@ -62,16 +63,16 @@ export default class WxPlatform extends IPlatform {
 
 
     public getArchive(name: string): string {
-        return wx.getStorageSync(name) as string;
+        return tt.getStorageSync(name) as string;
     }
 
     public saveArchive(name: string, data: string) {
-        wx.setStorageSync(name, data);
+        tt.setStorageSync(name, data);
     }
 
     public getLaunchOptions() {
         if (!this.launchOptions) {
-            this.launchOptions = wx.getLaunchOptionsSync();
+            this.launchOptions = tt.getLaunchOptionsSync();
         }
         return this.launchOptions;
     }
@@ -80,7 +81,7 @@ export default class WxPlatform extends IPlatform {
      * 更新启动参数
      * @param value 
      */
-    private setLaunchOptions(value: wx.launchOption) {
+    private setLaunchOptions(value: tt.launchOption) {
         this.launchOptions = value;
     }
 
@@ -93,11 +94,11 @@ export default class WxPlatform extends IPlatform {
         }
         try {
             let result = await new Promise((resolve, reject) => {
-                wx.getUserInfo({
+                tt.getUserInfo({
                     success: (res) => {
                         if (res.rawData) {
                             const info = JSON.parse(res.rawData);
-                            const sysInfo = wx.getSystemInfoSync();
+                            const sysInfo = tt.getSystemInfoSync();
                             this.userInfo = {
                                 avatar: info.avatarUrl || "",
                                 nickname: info.nickName || "",
@@ -118,7 +119,7 @@ export default class WxPlatform extends IPlatform {
             });
             return result;
         } catch (error) {
-            cc.error(error);
+            cc.log(error);
             return null
         }
     }
@@ -127,19 +128,12 @@ export default class WxPlatform extends IPlatform {
     * 用户授权
     * left、top、width、height 为相对界面的比例，0~1
     */
-    public authorize(options?: {
-        left: number;
-        top: number;
-        width: number;
-        height: number;
-        callback?: Function;
-        caller?: any;
-    }): Promise<any> {
+    public authorize(): Promise<any> {
         return new Promise((resolve, reject) => {
             const handleInfo = (res) => {
                 if (res.rawData) {
                     const info = JSON.parse(res.rawData);
-                    const sysInfo = wx.getSystemInfoSync();
+                    const sysInfo = tt.getSystemInfoSync();
                     this.userInfo = {
                         avatar: info.avatarUrl || "",
                         nickname: info.nickName || "",
@@ -150,9 +144,6 @@ export default class WxPlatform extends IPlatform {
                         platform: sysInfo.platform,
                         device: sysInfo.model,
                     };
-                    if (options && options.callback) {
-                        options.callback.call(options.caller);
-                    }
                     resolve({
                         encryptedData: res.encryptedData,
                         iv: res.iv,
@@ -161,67 +152,123 @@ export default class WxPlatform extends IPlatform {
                     reject();
                 }
             };
-            wx.getUserInfo({
+            tt.getUserInfo({
                 success: handleInfo,
                 fail: (res: any) => {
-                    // 获取配置
-                    wx.getSetting({
-                        success: (res) => {
-                            wx.getSystemInfo({
-                                success: (res) => {
-                                    if (options) {
-                                        options.height *= res.screenHeight;
-                                        options.width *= res.screenWidth;
-                                        options.left *= res.screenWidth;
-                                        options.top *= res.screenHeight;
-                                    } else {
-                                        options = {
-                                            left: 0,
-                                            top: 0,
-                                            width: res.screenWidth,
-                                            height: res.screenHeight,
-                                        };
-                                    }
-                                    const button = wx.createUserInfoButton({
-                                        type: "text",
-                                        text: "",
-                                        style: {
-                                            left: options.left,
-                                            top: options.top,
-                                            width: options.width,
-                                            height: options.height,
-                                            backgroundColor: "rgba(252,255,255,0)",
-                                            borderColor: "rgba(250,250,250,0)",
-                                            borderWidth: 0,
-                                            borderRadius: 0,
-                                            textAlign: "center",
-                                            fontSize: 30,
-                                            lineHeight: 32,
-                                        },
-                                        withCredentials: false,
-                                    });
-                                    this.authorizeButton = button;
-                                    button.onTap((res: any) => {
-                                        if (res.rawData) {
-                                            button.destroy();
-                                            this.authorizeButton = null;
-                                            if (options && options.callback) {
-                                                options.callback.call(options.caller);
-                                            }
-                                        }
-                                        handleInfo(res);
-                                    });
-                                },
-                                fail: (res) => {
+                    tt.authorize({
+                        scope: "scope.userInfo",
+                        success() {
+                            tt.getUserInfo({
+                                success: handleInfo,
+                                fail: (res: any) => {
                                     reject();
                                 },
                             });
                         },
+                        fail() {
+                            reject();
+                        }
                     });
                 },
             });
         });
     }
+    // public authorize(options?: {
+    //     left: number;
+    //     top: number;
+    //     width: number;
+    //     height: number;
+    //     callback?: Function;
+    //     caller?: any;
+    // }): Promise<any> {
+    //     return new Promise((resolve, reject) => {
+    //         const handleInfo = (res) => {
+    //             if (res.rawData) {
+    //                 const info = JSON.parse(res.rawData);
+    //                 const sysInfo = tt.getSystemInfoSync();
+    //                 this.userInfo = {
+    //                     avatar: info.avatarUrl || "",
+    //                     nickname: info.nickName || "",
+    //                     gender: info.gender || 0,
+    //                     province: info.province,
+    //                     city: info.city,
+    //                     country: info.country,
+    //                     platform: sysInfo.platform,
+    //                     device: sysInfo.model,
+    //                 };
+    //                 if (options && options.callback) {
+    //                     options.callback.call(options.caller);
+    //                 }
+    //                 resolve({
+    //                     encryptedData: res.encryptedData,
+    //                     iv: res.iv,
+    //                 });
+    //             } else {
+    //                 reject();
+    //             }
+    //         };
+    //         tt.getUserInfo({
+    //             success: handleInfo,
+    //             fail: (res: any) => {
+    //                 // 获取配置
+    //                 tt.getSetting({
+    //                     success: (res) => {
+    //                         tt.getSystemInfo({
+    //                             success: (res) => {
+    //                                 if (options) {
+    //                                     options.height *= res.screenHeight;
+    //                                     options.width *= res.screenWidth;
+    //                                     options.left *= res.screenWidth;
+    //                                     options.top *= res.screenHeight;
+    //                                 } else {
+    //                                     options = {
+    //                                         left: 0,
+    //                                         top: 0,
+    //                                         width: res.screenWidth,
+    //                                         height: res.screenHeight,
+    //                                     };
+    //                                 }
+    //                                 const button = tt.createUserInfoButton({
+    //                                     type: "text",
+    //                                     text: "",
+    //                                     style: {
+    //                                         left: options.left,
+    //                                         top: options.top,
+    //                                         width: options.width,
+    //                                         height: options.height,
+    //                                         backgroundColor: "rgba(252,255,255,0)",
+    //                                         // backgroundColor: "#ff0000",
+    //                                         borderColor: "rgba(250,250,250,0)",
+    //                                         borderWidth: 0,
+    //                                         borderRadius: 0,
+    //                                         textAlign: "center",
+    //                                         fontSize: 30,
+    //                                         lineHeight: 32,
+    //                                     },
+    //                                     withCredentials: false,
+    //                                 });
+    //                                 this.authorizeButton = button;
+    //                                 button.onTap((res: any) => {
+    //                                     if (res.rawData) {
+    //                                         button.destroy();
+    //                                         this.authorizeButton = null;
+    //                                         if (options && options.callback) {
+    //                                             options.callback.call(options.caller);
+    //                                         }
+    //                                     }
+    //                                     handleInfo(res);
+    //                                 });
+    //                             },
+    //                             fail: (res) => {
+    //                                 reject();
+    //                             },
+    //                         });
+    //                     },
+    //                 });
+    //             },
+    //         });
+    //     });
+    // }
 
     /**
      * 取消授权
@@ -239,20 +286,44 @@ export default class WxPlatform extends IPlatform {
     */
     public async setShareMenuInfo(imageUrl: string, title: string, param: any, callback?: Function, caller?: any) {
         if (this.shareMenuInfo == null) {
-            wx.showShareMenu({
+            tt.showShareMenu({
                 withShareTicket: true,
             });
 
-            wx.onShareAppMessage(() => {
+            tt.onShareAppMessage(() => {
                 return this.shareMenuInfo
             });
         }
 
         param.shareTime = blade.timer.getTime();
-
         let query = HttpHelper.formatParams(param);
 
         this.shareMenuInfo = {
+            imageUrl, title, query, success: () => {
+                this.emit(IPlatform.EventType.OpenShare, imageUrl, title, param);
+                if (callback) {
+                    callback.call(caller, imageUrl, title, param);
+                }
+            }
+        }
+    }
+
+    public async setShareMenuInfoByID(id: string, imageUrl: string, title: string, param: any, callback?: Function, caller?: any) {
+        if (this.shareMenuInfo == null) {
+            tt.showShareMenu({
+                withShareTicket: true,
+            });
+
+            tt.onShareAppMessage(() => {
+                return this.shareMenuInfo
+            });
+        }
+
+        param.shareTime = blade.timer.getTime();
+        let query = HttpHelper.formatParams(param);
+
+        this.shareMenuInfo = {
+            templateId: id,
             imageUrl, title, query, success: () => {
                 this.emit(IPlatform.EventType.OpenShare, imageUrl, title, param);
                 if (callback) {
@@ -267,14 +338,18 @@ export default class WxPlatform extends IPlatform {
 	 * 判断是否支持视频
 	 */
     public isSupportRewardVideo(): boolean {
-        return StringHelper.compareVersion(wx.getSystemInfoSync().SDKVersion, "2.0.4") >= 0
+        return StringHelper.compareVersion(tt.getSystemInfoSync().SDKVersion, "0.0.0") >= 0
     }
 
     /**
 	 * 判断视频是否已经加载完成
 	 */
     public isVideoLoaded(): boolean {
-        return this.videoState == IPlatform.AdState.Loaded;
+        let result = this.videoState == IPlatform.AdState.Loaded;
+        if (result == false) {
+            this.preloadRewardVideo();
+        }
+        return result;
     }
 
     /**
@@ -299,11 +374,12 @@ export default class WxPlatform extends IPlatform {
 
         if (this.video == null) {
             // 初次创建会调load方法
-            this.video = wx.createRewardedVideoAd({
-                adUnitId: PlatformConfig.wx.videoId,
+            this.video = tt.createRewardedVideoAd({
+                adUnitId: PlatformConfig.tt.videoId,
             });
             // 加载成功
             this.video.onLoad(() => {
+                console.log("loaded")
                 this.videoState = IPlatform.AdState.Loaded;
             });
             // 加载失败
@@ -318,8 +394,6 @@ export default class WxPlatform extends IPlatform {
                 // 发送结果
                 this.emit(IPlatform.EventType.CloseVideo, result);
             })
-        } else {
-            this.video.load();
         }
 
         this.video.load();
@@ -343,19 +417,21 @@ export default class WxPlatform extends IPlatform {
                 };
                 this.once(IPlatform.EventType.CloseVideo, closeFunc);
                 try {
-                    await this.video.show()
+                    let result = await this.video.show()
+                    console.log(result);
                     this.emit(IPlatform.EventType.OpenVideo);
                 } catch (error) {
-                    blade.ticker.setPause(false);
-                    blade.audio.resumeAll();
-                    this.preloadRewardVideo();
+                    console.log(error);
                     this.off(IPlatform.EventType.CloseVideo, closeFunc);
                     resolve(false);
                 }
             })
-
+            blade.ticker.setPause(false);
+            blade.audio.resumeAll();
+            this.preloadRewardVideo();
             return result;
         } else {
+            this.preloadRewardVideo();
             return false;
         }
     }
@@ -365,7 +441,7 @@ export default class WxPlatform extends IPlatform {
     * 判断是否支持横幅广告
     */
     public isSupportBanner(): boolean {
-        return StringHelper.compareVersion(wx.getSystemInfoSync().SDKVersion, "2.0.4") >= 0
+        return StringHelper.compareVersion(tt.getSystemInfoSync().SDKVersion, "0.0.0") >= 0
     }
 
     /**
@@ -377,13 +453,13 @@ export default class WxPlatform extends IPlatform {
         }
 
         // 已经加载
-        if (this.bannerState == WxPlatform.AdState.Loaded) {
+        if (this.bannerState == IPlatform.AdState.Loaded) {
             return;
         }
 
         // 正在加载, 等待加载结束
-        if (this.bannerState == WxPlatform.AdState.Loading) {
-            return await PromiseHelper.waitUntil(() => this.bannerState != WxPlatform.AdState.Loading);
+        if (this.bannerState == IPlatform.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => this.bannerState != IPlatform.AdState.Loading);
         }
 
         if (this.banner) {
@@ -391,19 +467,19 @@ export default class WxPlatform extends IPlatform {
             this.banner = null
         }
 
-        const sysInfo: wx.systemInfo = wx.getSystemInfoSync();
-        this.banner = wx.createBannerAd({
-            adUnitId: PlatformConfig.wx.bannerId,
+        const sysInfo: tt.systemInfo = tt.getSystemInfoSync();
+        this.banner = tt.createBannerAd({
+            adUnitId: PlatformConfig.tt.bannerId,
             style: {
-                top: 0,
+                top: sysInfo.screenHeight,
                 left: 0,
                 height: 50,
-                width: 200,
+                width: sysInfo.screenWidth,
             },
         });
 
         this.banner.onLoad(async () => {
-            this.bannerState = WxPlatform.AdState.Loaded;
+            this.bannerState = IPlatform.AdState.Loaded;
             if (this.bannerActive) {
                 this.emit(IPlatform.EventType.OpenBanner);
                 this.banner.show();
@@ -411,15 +487,15 @@ export default class WxPlatform extends IPlatform {
         });
 
         this.banner.onError((err) => {
-            this.bannerState = WxPlatform.AdState.None;
+            this.bannerState = IPlatform.AdState.None;
         });
 
         this.banner.onResize((res) => {
             // 重设横幅位置
             this.banner.style.top =
-                sysInfo.windowHeight - this.banner.style.realHeight;
+                sysInfo.screenHeight - res.height;
             this.banner.style.left =
-                (sysInfo.windowWidth - this.banner.style.realWidth) / 2;
+                (sysInfo.screenWidth - res.width) / 2;
         });
 
         this.bannerState = IPlatform.AdState.Loading;
@@ -432,11 +508,13 @@ export default class WxPlatform extends IPlatform {
     */
     public activeBanner(active: boolean) {
         if (this.banner == null) {
+            this.preloadBanner();
             return false;
         }
 
         if (active) {
             if (this.bannerState != IPlatform.AdState.Loaded) {
+                this.preloadBanner();
                 return false;
             }
 
@@ -459,7 +537,7 @@ export default class WxPlatform extends IPlatform {
     }
 
     public isSupportInterstitial() {
-        return StringHelper.compareVersion(wx.getSystemInfoSync().SDKVersion, "2.6.0") >= 0
+        return StringHelper.compareVersion(tt.getSystemInfoSync().SDKVersion, "1.12.0") >= 0
     }
 
     public isInterstitialLoaded() {
@@ -483,7 +561,7 @@ export default class WxPlatform extends IPlatform {
 
         this.interstitialState = IPlatform.AdState.Loading;
         if (this.interstitial == null) {
-            this.interstitial = wx.createInterstitialAd({ adUnitId: PlatformConfig.wx.interstitialId });
+            this.interstitial = tt.createInterstitialAd({ adUnitId: PlatformConfig.tt.interstitialId });
 
             this.interstitial.onLoad(() => {
                 this.interstitialState = IPlatform.AdState.Loaded;
@@ -491,6 +569,7 @@ export default class WxPlatform extends IPlatform {
 
             this.interstitial.onError(async (error) => {
                 this.interstitialState = IPlatform.AdState.None;
+                cc.log(error)
             });
 
             this.interstitial.onClose(() => {
@@ -514,7 +593,7 @@ export default class WxPlatform extends IPlatform {
             this.interstitialState = IPlatform.AdState.Opening;
             this.emit(IPlatform.EventType.OpenInterstitial)
         } catch (error) {
-            cc.error(error);
+            cc.log(error);
         }
     }
 
@@ -523,7 +602,23 @@ export default class WxPlatform extends IPlatform {
 	 * 发送邀请
 	 */
     public async sendInvite(imageUrl: string, title: string, param: any): Promise<any> {
-        wx.shareAppMessage({
+        param.shareTime = blade.timer.getTime();
+
+        tt.shareAppMessage({
+            title: title,
+            imageUrl: imageUrl,
+            query: HttpHelper.formatParams(param),
+        });
+        await PromiseHelper.wait(1)
+
+        this.emit(IPlatform.EventType.OpenShare, imageUrl, title, param);
+    }
+
+    public async sendInviteByID(id: string, imageUrl: string, title: string, param: any): Promise<any> {
+        param.shareTime = blade.timer.getTime();
+
+        tt.shareAppMessage({
+            templateId: id,
             title: title,
             imageUrl: imageUrl,
             query: HttpHelper.formatParams(param),
@@ -540,13 +635,13 @@ export default class WxPlatform extends IPlatform {
 	 */
     public vibrate(short: boolean = true) {
         if (short) {
-            wx.vibrateShort({
+            tt.vibrateShort({
                 success: null,
                 fail: null,
                 complete: null,
             });
         } else {
-            wx.vibrateLong({
+            tt.vibrateLong({
                 success: null,
                 fail: null,
                 complete: null,
@@ -560,7 +655,7 @@ export default class WxPlatform extends IPlatform {
 	 */
     public linkGame(appid: string, path: string, extraData: any) {
         return new Promise((resolve, reject) => {
-            wx.navigateToMiniProgram({
+            tt.navigateToMiniProgram({
                 appId: appid,
                 path: path,
                 extraData: extraData,
@@ -574,5 +669,4 @@ export default class WxPlatform extends IPlatform {
     }
 
 }
-
 

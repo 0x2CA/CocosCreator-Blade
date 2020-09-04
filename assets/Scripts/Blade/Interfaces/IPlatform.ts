@@ -1,4 +1,4 @@
-import PlatformService from "../../Blade/Services/PlatformService";
+import PlatformService from "../Services/PlatformService";
 
 /**
  * 平台接口类
@@ -12,12 +12,12 @@ abstract class IPlatform extends cc.EventTarget {
 	/**
 	 * 平台初始化操作
 	 */
-    public abstract initialize(): void;
+    public abstract initialize(): Promise<void>;
 
     /**
      * 平台延迟初始化操作
      */
-    public abstract lazyInitialize(): void;
+    public abstract lazyInitialize(): Promise<void>;
 
 	/**
 	 * 调用类内方法, 适合调用平台不通用的方法

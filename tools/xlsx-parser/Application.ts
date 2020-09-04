@@ -82,7 +82,7 @@ export default class Application {
 
             // console.log(json)
             let col, row;
-            let keys: string[];
+            let keys: string[] = [];
             let types: string[] = [];
             let data: any[] = []
             let indexkey
@@ -100,32 +100,49 @@ export default class Application {
 
             // 获取类型
             for (let c = col; c < json[0].length; c++) {
-                let descArr = json[0][c].split('|');
-                if (descArr.length >= 2) {
-                    types.push(descArr[0]);
-                    if (indexkey && json[1][c] == indexkey) {
-                        indextype = descArr[0]
+                if (json[0][c] != "" && json[0][c].indexOf('|') != -1) {
+                    let descArr = json[0][c].split('|');
+                    if (descArr.length == 2) {
+                        types.push(descArr[0]);
+                        if (indexkey && json[1][c] == indexkey) {
+                            indextype = descArr[0]
+                        }
+                    } else {
+                        console.log("不符合声明类型格式", json[0][c]);
                     }
+                    // else {
+                    //     // 无数据格式，默认为string
+                    //     types.push('s');
+                    //     if (indexkey && json[1][c] == indexkey) {
+                    //         indextype = 's'
+                    //     }
+                    // }
+                } else {
+                    console.log("中断继续扫描key", json[0][c]);
+                    break;
                 }
-                else {
-                    // 无数据格式，默认为string
-                    types.push('s');
-                    if (indexkey && json[1][c] == indexkey) {
-                        indextype = 's'
-                    }
+            }
+            console.log("类型列表", ...types);
+
+
+            for (let c = col; c < col + types.length; c++) {
+                if (json[1][c] != null && json[1][c] != "") {
+                    keys.push(json[1][c])
                 }
             }
 
-            keys = json[1].slice(col, json[1].length) as any;
-
+            console.log("key列表", ...keys);
 
             for (let r = row; r < json.length; r++) {
-                let rowdata = []
-                for (let c = col; c < json[r].length; c++) {
-                    let item = Application.formatData(json[r][c], types[c - col])
-                    rowdata.push(item)
+                if (json[r][col] != null && json[r][col] != "") {
+                    let rowdata = []
+                    for (let c = col; c < col + keys.length; c++) {
+                        let item = Application.formatData(json[r][c], types[c - col])
+                        rowdata.push(item)
+                    }
+                    data.push(rowdata)
                 }
-                data.push(rowdata)
+
             }
 
             const filedata = { index: indexkey, keys, data }
@@ -155,7 +172,7 @@ export default class Application {
                     const type = types[index]
                     definitionItem += "\t\t\t" + Application.definitionFromFormat(name, type) + "\n";
                 }
-                definitionContent += `\n\tdeclare interface ${outputName} {\n\t\t[${Application.definitionFromFormat(indexkey, indextype).slice(0, Application.definitionFromFormat("key", indextype).length - 1)}]:{\n${definitionItem}\t\t}\n\t}`;
+                definitionContent += `\n\tdeclare interface ${outputName} {\n\t\t[${Application.definitionFromFormat(indexkey, indextype).slice(0, Application.definitionFromFormat(indexkey, indextype).length - 1)}]:{\n${definitionItem}\t\t}\n\t}`;
             } else {
                 let definitionItem = ""
                 for (let index = 0; index < keys.length; index++) {
@@ -211,10 +228,9 @@ export default class Application {
                 result = parseFloat(data) || 0;
                 break;
             case 'b': // 布尔值
-                result = data == 'true' || data != '0';
+                result = data == "" || data == 'TRUE' || data == 'true' || data != '0';
                 break;
             case 'j': // json
-                console.log('j');
                 try {
                     result = JSON.parse(data);
                 }
@@ -223,7 +239,7 @@ export default class Application {
                 }
                 break;
             case 's': // 字符串
-                result = data != null ? `${data}` : '';
+                result = data != null && data != "" ? `${data}` : '';
                 result = result.trim();
                 break;
             case '[i]': // 数组

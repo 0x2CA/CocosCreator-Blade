@@ -7,7 +7,7 @@ import PromiseHelper from "../Helpers/PromiseHelper";
  */
 export default class WebPlatform extends IPlatform {
 
-    public initialize(): void {
+    public async initialize(){
         this.userInfo = {
             avatar: 'https://img.readygo.yunyungquan.com/common/default_avatar.png',
             nickname: '测试用户',
@@ -20,7 +20,7 @@ export default class WebPlatform extends IPlatform {
         };
     }
 
-    public lazyInitialize(): void {
+    public async lazyInitialize() {
     }
 
     public getLaunchOptions(): any {
@@ -28,6 +28,10 @@ export default class WebPlatform extends IPlatform {
     }
 
     public isSupportRewardVideo() {
+        return true;
+    }
+
+    public isVideoLoaded() {
         return true;
     }
 
@@ -60,6 +64,10 @@ export default class WebPlatform extends IPlatform {
     }
 
     public isSupportInterstitial() {
+        return true;
+    }
+
+    public isInterstitialLoaded() {
         return true;
     }
 

@@ -64,7 +64,7 @@ export default class RandomHelper {
             totalWeight += weights[i];
         }
 
-        const currentWeight = RandomHelper.getInt(0, totalWeight);
+        const currentWeight = RandomHelper.getFloat(0, totalWeight);
         for (let i = len - 1; i >= 0; --i) {
             totalWeight -= weights[i];
             if (totalWeight <= currentWeight) {

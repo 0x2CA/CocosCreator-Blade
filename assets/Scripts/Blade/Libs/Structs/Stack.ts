@@ -84,7 +84,7 @@ export default class Stack<T> {
 		for (let index = this.items.length - 1; index >= 0; index--) {
 			tmp += JSON.stringify(this.items[index]) + "\n";
 		}
-		console.log(tmp);
+		cc.log(tmp);
 	}
 
 	has(item: T) {

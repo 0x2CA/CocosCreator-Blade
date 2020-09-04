@@ -80,7 +80,7 @@ export default class BigHelper {
             }
             return str + BigHelper.Unit[count - 1];
         } catch (error) {
-            console.log(error);
+            cc.log(error);
             return "0";
         }
     }
@@ -128,7 +128,7 @@ export default class BigHelper {
             let result = (parseInt(num.join("").substr(0, 3 * level - 1)) + Math.pow(10, 3 * level - 1) + "").substr(1);
             return parseInt(unitStr + result);
         } catch (error) {
-            console.log(error);
+            cc.log(error);
             return 0;
         }
     }

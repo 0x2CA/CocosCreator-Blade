@@ -27,6 +27,7 @@ export default class QQPlatform extends IPlatform {
     private videoState: IPlatform.AdState = IPlatform.AdState.None;
     private bannerState: IPlatform.AdState = IPlatform.AdState.None;
     private interstitialState: IPlatform.AdState = IPlatform.AdState.None;
+    private blockState: IPlatform.AdState = IPlatform.AdState.None;
 
     /**
     * 激励视频实例
@@ -39,12 +40,18 @@ export default class QQPlatform extends IPlatform {
 
     private appBox: qq.AppBoxAd = null;
 
+    private block: qq.BlockAd = null;
+
+
 
     private bannerActive: boolean = false;
 
+    private blockActive: boolean = false;
 
 
-    public initialize(): void {
+
+
+    public async initialize() {
         // 获取尝试用户信息
         this.getUserInfoTry()
 
@@ -59,9 +66,10 @@ export default class QQPlatform extends IPlatform {
         this.preloadInterstitial();
         this.preloadRewardVideo();
         this.preloadAppBox();
+        this.preloadBlockAd();
     }
 
-    public lazyInitialize(): void {
+    public async lazyInitialize() {
     }
 
 
@@ -122,7 +130,7 @@ export default class QQPlatform extends IPlatform {
             });
             return result;
         } catch (error) {
-            console.error(error);
+            cc.log(error);
             return null
         }
     }
@@ -195,6 +203,7 @@ export default class QQPlatform extends IPlatform {
                                             width: options.width,
                                             height: options.height,
                                             backgroundColor: "rgba(252,255,255,0)",
+                                            // backgroundColor: "#ff0000",
                                             borderColor: "rgba(250,250,250,0)",
                                             borderWidth: 0,
                                             borderRadius: 0,
@@ -252,6 +261,7 @@ export default class QQPlatform extends IPlatform {
             });
         }
 
+        param.shareTime = blade.timer.getTime();
         let query = HttpHelper.formatParams(param);
 
         this.shareMenuInfo = {
@@ -269,14 +279,18 @@ export default class QQPlatform extends IPlatform {
 	 * 判断是否支持视频
 	 */
     public isSupportRewardVideo(): boolean {
-        return StringHelper.compareVersion(qq.getSystemInfoSync().SDKVersion, "0.1.26") >= 0
+        return StringHelper.compareVersion(qq.getSystemInfoSync().SDKVersion, "0.0.0") >= 0
     }
 
     /**
 	 * 判断视频是否已经加载完成
 	 */
     public isVideoLoaded(): boolean {
-        return this.videoState == IPlatform.AdState.Loaded;
+        let result = this.videoState == IPlatform.AdState.Loaded;
+        if (result == false) {
+            this.preloadRewardVideo();
+        }
+        return result;
     }
 
     /**
@@ -348,16 +362,16 @@ export default class QQPlatform extends IPlatform {
                     await this.video.show()
                     this.emit(IPlatform.EventType.OpenVideo);
                 } catch (error) {
-                    blade.ticker.setPause(false);
-                    blade.audio.resumeAll();
-                    this.preloadRewardVideo();
                     this.off(IPlatform.EventType.CloseVideo, closeFunc);
                     resolve(false);
                 }
             })
-
+            blade.ticker.setPause(false);
+            blade.audio.resumeAll();
+            this.preloadRewardVideo();
             return result;
         } else {
+            this.preloadRewardVideo();
             return false;
         }
     }
@@ -367,8 +381,9 @@ export default class QQPlatform extends IPlatform {
     * 判断是否支持横幅广告
     */
     public isSupportBanner(): boolean {
-        return StringHelper.compareVersion(qq.getSystemInfoSync().SDKVersion, "0.1.26") >= 0
+        return StringHelper.compareVersion(qq.getSystemInfoSync().SDKVersion, "0.0.0") >= 0
     }
+
 
     /**
     * 预加载横幅
@@ -393,19 +408,26 @@ export default class QQPlatform extends IPlatform {
             this.banner = null
         }
 
+        console.log("banner", "开始加载");
+
         const sysInfo: qq.systemInfo = qq.getSystemInfoSync();
         this.banner = qq.createBannerAd({
             adUnitId: PlatformConfig.qq.bannerId,
             style: {
-                top: 0,
+                top: sysInfo.screenHeight,
                 left: 0,
                 height: 50,
-                width: 200,
+                width: sysInfo.screenWidth,
             },
         });
 
         this.banner.onLoad(async () => {
+            console.log("banner", "加载成功");
             this.bannerState = IPlatform.AdState.Loaded;
+            this.banner.style.top =
+                sysInfo.screenHeight - this.banner.style.realHeight;
+            this.banner.style.left =
+                (sysInfo.screenWidth - this.banner.style.realWidth) / 2;
             if (this.bannerActive) {
                 this.emit(IPlatform.EventType.OpenBanner);
                 this.banner.show();
@@ -413,16 +435,15 @@ export default class QQPlatform extends IPlatform {
         });
 
         this.banner.onError((err) => {
+            console.error("banner", "加载失败", err);
             this.bannerState = IPlatform.AdState.None;
         });
 
         this.banner.onResize((res) => {
             // 重设横幅位置
-            this.banner.style.top =
-                sysInfo.windowHeight - this.banner.style.realHeight;
-            this.banner.style.left =
-                (sysInfo.windowWidth - this.banner.style.realWidth) / 2;
         });
+
+        this.bannerState = IPlatform.AdState.Loading;
     }
 
 
@@ -432,11 +453,13 @@ export default class QQPlatform extends IPlatform {
     */
     public activeBanner(active: boolean) {
         if (this.banner == null) {
+            this.preloadBanner();
             return false;
         }
 
         if (active) {
             if (this.bannerState != IPlatform.AdState.Loaded) {
+                this.preloadBanner();
                 return false;
             }
 
@@ -449,11 +472,105 @@ export default class QQPlatform extends IPlatform {
             if (this.bannerState != IPlatform.AdState.Opening) {
                 return false;
             }
-            this.emit(IPlatform.EventType.CloseBanner);
-            this.banner.destroy();
-            this.banner = null;
-            this.bannerState = IPlatform.AdState.None;
-            this.preloadBanner();
+            // this.emit(IPlatform.EventType.CloseBanner);
+            // this.banner.destroy();
+            // this.banner = null;
+            // this.bannerState = IPlatform.AdState.None;
+            // this.preloadBanner();
+
+            // XXX: 不销毁
+            this.banner.hide();
+            this.bannerState = IPlatform.AdState.Loaded;
+            return true;
+        }
+    }
+
+
+    public isSupportBlockAd(): boolean {
+        return StringHelper.compareVersion(qq.getSystemInfoSync().SDKVersion, "1.15.0") >= 0
+    }
+
+    public async preloadBlockAd(): Promise<any> {
+        if (!this.isSupportBlockAd()) {
+            return;
+        }
+
+        // 已经加载
+        if (this.blockState == IPlatform.AdState.Loaded) {
+            return;
+        }
+
+        // 正在加载, 等待加载结束
+        if (this.blockState == IPlatform.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => this.blockState != IPlatform.AdState.Loading);
+        }
+
+        if (this.block) {
+            this.block.destroy();
+            this.block = null
+        }
+
+        console.log("block", "开始加载");
+
+        const sysInfo: qq.systemInfo = qq.getSystemInfoSync();
+        this.block = qq.createBlockAd({
+            adUnitId: PlatformConfig.qq.blockId,
+            style: {
+                top: sysInfo.screenHeight,
+                left: 0
+            },
+            orientation: "landscape",
+            size: 5
+        });
+
+        this.block.onLoad(async () => {
+            console.log("block", "加载成功");
+            this.blockState = IPlatform.AdState.Loaded;
+            this.block.style.top =
+                sysInfo.screenHeight - this.block.style.realHeight;
+            this.block.style.left =
+                (sysInfo.screenWidth - this.block.style.realWidth) / 2;
+            if (this.blockActive) {
+                this.block.show();
+            }
+        });
+
+        this.block.onError((err) => {
+            console.error("block", "加载失败", err);
+            this.blockState = IPlatform.AdState.None;
+        });
+
+        this.block.onResize((res) => {
+            // 重设横幅位置
+        });
+
+        this.blockState = IPlatform.AdState.Loading;
+    }
+
+    public activeBlockAd(active: boolean) {
+        if (this.block == null) {
+            this.preloadBlockAd();
+            return false;
+        }
+
+        if (active) {
+            if (this.blockState != IPlatform.AdState.Loaded) {
+                this.preloadBlockAd();
+                return false;
+            }
+
+            this.block.show();
+            this.blockState = IPlatform.AdState.Opening;
+            return true;
+        } else {
+            // 直接销毁重新创建banner, 刷新广告
+            if (this.blockState != IPlatform.AdState.Opening) {
+                return false;
+            }
+            this.block.destroy();
+            this.block = null;
+            this.blockState = IPlatform.AdState.None;
+            this.preloadBlockAd();
             return true;
         }
     }
@@ -491,6 +608,7 @@ export default class QQPlatform extends IPlatform {
 
             this.interstitial.onError(async (error) => {
                 this.interstitialState = IPlatform.AdState.None;
+                cc.log(error)
             });
 
             this.interstitial.onClose(() => {
@@ -514,13 +632,13 @@ export default class QQPlatform extends IPlatform {
             this.interstitialState = IPlatform.AdState.Opening;
             this.emit(IPlatform.EventType.OpenInterstitial)
         } catch (error) {
-            console.error(error);
+            cc.log(error);
         }
     }
 
 
     async isSupportAppBox() {
-        return StringHelper.compareVersion(qq.getSystemInfoSync().SDKVersion, "1.12.0") >= 0
+        return StringHelper.compareVersion(qq.getSystemInfoSync().SDKVersion, "1.7.1") >= 0
     }
 
     public async preloadAppBox() {
@@ -532,7 +650,13 @@ export default class QQPlatform extends IPlatform {
             this.appBox = qq.createAppBox({ adUnitId: PlatformConfig.qq.appBoxId });
         }
 
-        this.appBox.load();
+        try {
+            if (this.appBox != null) {
+                await this.appBox.load();
+            }
+        } catch (error) {
+            cc.log(JSON.stringify(error));
+        }
     }
 
     async showAppBox() {
@@ -541,9 +665,12 @@ export default class QQPlatform extends IPlatform {
         }
 
         try {
-            await this.appBox.show();
+            if (this.appBox != null) {
+                await this.appBox.show();
+            }
         } catch (error) {
-            console.error(error);
+            cc.log(error);
+            this.preloadAppBox();
         }
     }
 
@@ -552,8 +679,10 @@ export default class QQPlatform extends IPlatform {
 	 * 发送邀请
 	 */
     public async sendInvite(imageUrl: string, title: string, param: any): Promise<any> {
+        param.shareTime = blade.timer.getTime();
+
         qq.shareAppMessage({
-            title: imageUrl,
+            title: title,
             imageUrl: imageUrl,
             query: HttpHelper.formatParams(param),
         });
@@ -594,7 +723,7 @@ export default class QQPlatform extends IPlatform {
                 path: path,
                 extraData: extraData,
                 success: () => {
-                    console.log(`跳转 ${appid}`);
+                    cc.log(`跳转 ${appid}`);
                     resolve(true);
                 },
                 fail: reject,

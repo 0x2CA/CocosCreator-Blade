@@ -15,7 +15,14 @@ const PlatformConfig = {
         interstitialId: "",
         videoId: "",
         bannerId: "",
-        appBoxId: ""
+        appBoxId: "",
+        blockId: ""
+    },
+    tt: {
+        appId: "",
+        interstitialId: "",
+        videoId: "",
+        bannerId: "",
     },
     // Facebook
     fb: {

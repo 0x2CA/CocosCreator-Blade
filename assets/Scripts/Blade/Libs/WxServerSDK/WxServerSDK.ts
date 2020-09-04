@@ -3,7 +3,7 @@ import PromiseHelper from "../../Helpers/PromiseHelper";
 import RandomHelper from "../../Helpers/RandomHelper";
 import HttpHelper from "../../Helpers/HttpHelper";
 import WxPlatform from "../../Platforms/WxPlatform";
-
+import PlatformService from "../../Services/PlatformService";
 
 /**
  * 微信管理服务器SDK（在线参数、推广广告、信息记录等后台功能）
@@ -27,7 +27,8 @@ class WxServerSDK {
     static isInit = false;
 
     static getSocketUrl() {
-        if (WxServerSDK.deBug || CC_DEBUG) {
+        // if (WxServerSDK.deBug || CC_DEBUG) {
+        if (WxServerSDK.deBug) {
             return WxServerSDK.socketUrlDebug;
         } else {
             return WxServerSDK.socketUrl;
@@ -35,7 +36,8 @@ class WxServerSDK {
     }
 
     static getHttpUrl() {
-        if (WxServerSDK.deBug || CC_DEBUG) {
+        // if (WxServerSDK.deBug || CC_DEBUG) {
+        if (WxServerSDK.deBug) {
             return WxServerSDK.httpUrlDebug;
         } else {
             return WxServerSDK.httpUrl;
@@ -51,21 +53,57 @@ class WxServerSDK {
         });
     }
 
+
+    public static getOpenId() {
+        return this.openId;
+    }
+
+    public static getUserId() {
+        return this.userId;
+    }
+
+    public static getSysId() {
+        return this.sysId;
+    }
+
     static async init(appId: string, version: string, openId?: string) {
         WxServerSDK.tmp.clear();
         WxServerSDK.setAppId(appId);
         WxServerSDK.setVersion(version);
         await WxServerSDK.connectSocket(appId, openId);
-        if (this.deBug && cc.sys.WECHAT_GAME == cc.sys.platform) {
-            wx.showModal({
-                title: "提示",
-                content: "当前为测试环境！！!",
-                success: async (res) => {
-                    if (res.confirm) {
-                    } else if (res.cancel) {
-                    }
-                },
-            });
+        if (this.deBug) {
+            if (blade.platform.getType() == PlatformService.PlatformType.WX) {
+                wx.showModal({
+                    title: "提示",
+                    content: "当前为测试环境！！!",
+                    success: async (res) => {
+                        if (res.confirm) {
+                        } else if (res.cancel) {
+                        }
+                    },
+                });
+            } else if (blade.platform.getType() == PlatformService.PlatformType.QQ) {
+                qq.showModal({
+                    title: "提示",
+                    content: "当前为测试环境！！!",
+                    success: async (res) => {
+                        if (res.confirm) {
+                        } else if (res.cancel) {
+                        }
+                    },
+                });
+            } else if (blade.platform.getType() == PlatformService.PlatformType.BYTEDANCE) {
+                tt.showModal({
+                    title: "提示",
+                    content: "当前为测试环境！！!",
+                    success: async (res) => {
+                        if (res.confirm) {
+                        } else if (res.cancel) {
+                        }
+                    },
+                });
+            }
+
         }
         return true;
     }
@@ -91,7 +129,7 @@ class WxServerSDK {
                     WxServerSDK.sysId = result.data.sys_app_id;
                     WxServerSDK.userId = result.data.user_id;
                 }
-                console.log("Socket 登录", result);
+                cc.log("Socket 登录", result);
             });
             WxServerSDK.io.on(SocketHelper.EventType.DISCONNECT, async () => {
                 WxServerSDK.isInit = false;
@@ -101,6 +139,9 @@ class WxServerSDK {
                 return WxServerSDK.io.getStatus() != SocketHelper.LinkStatus.EMPTY;
             });
             if (WxServerSDK.io.getStatus() == SocketHelper.LinkStatus.SUCCEED) {
+                await PromiseHelper.waitUntil(() => {
+                    return WxServerSDK.isInit == true;
+                });
                 resolve();
             } else {
                 reject();
@@ -138,7 +179,7 @@ class WxServerSDK {
             );
             return result;
         } else {
-            console.warn("请先初始化Socket");
+            cc.warn("请先初始化Socket");
         }
     }
 
@@ -150,13 +191,19 @@ class WxServerSDK {
 	 */
     static async saveUserInfo(info: WxServerSDK.USER_INFO) {
         if (!this.isInit) {
-            console.warn("请先初始化socket");
+            cc.warn("请先初始化socket");
             await PromiseHelper.waitUntil(() => {
                 return this.isInit;
             });
         }
 
-        let result = await WxServerSDK.emitSync("saveUserInfo", info);
+        let data: WxServerSDK.USER_EMIT_INFO = {
+            user_id: WxServerSDK.userId,
+            authorize_type: 1,
+            user_data: info
+        }
+
+        let result = await WxServerSDK.emitSync("saveUserInfo", data);
         return result;
     }
 
@@ -171,7 +218,7 @@ class WxServerSDK {
         ...info: WxServerSDK.RECORD_ADVERT_INFO
     ) {
         if (!this.isInit) {
-            console.warn("请先初始化socket");
+            cc.warn("请先初始化socket");
             await PromiseHelper.waitUntil(() => {
                 return this.isInit;
             });
@@ -208,7 +255,7 @@ class WxServerSDK {
             event = "clickAdvertDeploy";
         }
         let result = await WxServerSDK.emitSync<WxServerSDK.RESULT_INFO>(event, data);
-        // console.log(WxServerSDK.RecordType[type], data, result);
+        // cc.log(WxServerSDK.RecordType[type], data, result);
         return result;
     }
 
@@ -223,7 +270,7 @@ class WxServerSDK {
         ...info: WxServerSDK.RECORD_SHARE_INFO
     ) {
         if (!this.isInit) {
-            console.warn("请先初始化socket");
+            cc.warn("请先初始化socket");
             await PromiseHelper.waitUntil(() => {
                 return this.isInit;
             });
@@ -259,7 +306,7 @@ class WxServerSDK {
             event = "clickSharePlace";
         }
         let result = await WxServerSDK.emitSync<WxServerSDK.RESULT_INFO>(event, data);
-        // console.log(WxServerSDK.RecordType[type], data, result);
+        // cc.log(WxServerSDK.RecordType[type], data, result);
         return result;
     }
 
@@ -279,7 +326,7 @@ class WxServerSDK {
         ...info: WxServerSDK.RECORD_SHARE_INFO
     ) {
         if (!this.isInit) {
-            console.warn("请先初始化socket");
+            cc.warn("请先初始化socket");
             await PromiseHelper.waitUntil(() => {
                 return this.isInit;
             });
@@ -317,7 +364,7 @@ class WxServerSDK {
         subtime?: number
     ) {
         if (!this.isInit) {
-            console.warn("请先初始化socket");
+            cc.warn("请先初始化socket");
             await PromiseHelper.waitUntil(() => {
                 return this.isInit;
             });
@@ -369,7 +416,7 @@ class WxServerSDK {
         info: WxServerSDK.BANNER_INFO
     ) {
         if (!this.isInit) {
-            console.warn("请先初始化socket");
+            cc.warn("请先初始化socket");
             await PromiseHelper.waitUntil(() => {
                 return this.isInit;
             });
@@ -397,7 +444,7 @@ class WxServerSDK {
         info: WxServerSDK.INTERSTITIAL_INFO
     ) {
         if (!this.isInit) {
-            console.warn("请先初始化socket");
+            cc.warn("请先初始化socket");
             await PromiseHelper.waitUntil(() => {
                 return this.isInit;
             });
@@ -432,7 +479,9 @@ class WxServerSDK {
     private static async getLoginInfo(appId: string, openId?: string) {
         let info: WxServerSDK.Login_QUERY_Info;
 
-        if (cc.sys.platform === cc.sys.WECHAT_GAME) {
+        if (blade.platform.getType() == PlatformService.PlatformType.QQ ||
+            blade.platform.getType() == PlatformService.PlatformType.WX ||
+            blade.platform.getType() == PlatformService.PlatformType.BYTEDANCE) {
             let systemInfo = wx.getSystemInfoSync();
             let openInfo = (<WxPlatform>blade.platform.getPlatform()).getLaunchOptions();
             let code = "";
@@ -454,10 +503,12 @@ class WxServerSDK {
             let share_open_id = "";
             let login_type;
 
-            if (window["qq"]) {
+            if (blade.platform.getType() == PlatformService.PlatformType.QQ) {
                 login_type = WxServerSDK.LoginType.QQ;
-            } else {
+            } else if (blade.platform.getType() == PlatformService.PlatformType.WX) {
                 login_type = WxServerSDK.LoginType.WX;
+            } else if (blade.platform.getType() == PlatformService.PlatformType.BYTEDANCE) {
+                login_type = WxServerSDK.LoginType.BYTEDANCE;
             }
 
             if (openInfo.referrerInfo) {
@@ -529,7 +580,7 @@ class WxServerSDK {
                 clerk_id: "",
                 login_type: WxServerSDK.LoginType.WX,
             };
-            console.warn("请在微信环境下使用SDK");
+            cc.warn("请在微信或者QQ或者字节跳动环境下使用SDK");
         }
         return info;
     }
@@ -539,14 +590,35 @@ class WxServerSDK {
 	 */
     private static getCode(): Promise<string> {
         return new Promise((resolve, reject) => {
-            wx.login({
-                success: async (res) => {
-                    return resolve(res.code);
-                },
-                fail(err) {
-                    return reject(err);
-                },
-            });
+            if (blade.platform.getType() == PlatformService.PlatformType.WX) {
+                wx.login({
+                    success: async (res) => {
+                        return resolve(res.code);
+                    },
+                    fail(err) {
+                        return reject(err);
+                    },
+                });
+            } else if (blade.platform.getType() == PlatformService.PlatformType.QQ) {
+                qq.login({
+                    success: async (res) => {
+                        return resolve(res.code);
+                    },
+                    fail(err) {
+                        return reject(err);
+                    },
+                });
+            } else if (blade.platform.getType() == PlatformService.PlatformType.BYTEDANCE) {
+                tt.login({
+                    success: async (res) => {
+                        return resolve(res.code);
+                    },
+                    fail(err) {
+                        return reject(err);
+                    },
+                });
+            }
+
         });
     }
 
@@ -559,7 +631,7 @@ class WxServerSDK {
 	 */
     private static async getParameterInfo() {
         if (!WxServerSDK.appId) {
-            console.warn("Http 请求未初始化");
+            cc.warn("Http 请求未初始化");
             await PromiseHelper.waitUntil(() => {
                 return WxServerSDK.appId;
             });
@@ -612,7 +684,7 @@ class WxServerSDK {
 	 */
     private static async getAdvertDeployInfo(): Promise<WxServerSDK.ADVERT_DEPLOY_INFO> {
         if (!WxServerSDK.appId) {
-            console.warn("Http 请求未初始化");
+            cc.warn("Http 请求未初始化");
             await PromiseHelper.waitUntil(() => {
                 return WxServerSDK.appId;
             });
@@ -728,7 +800,7 @@ class WxServerSDK {
 	 */
     private static async getShareClerkInfo(): Promise<WxServerSDK.SHARE_CLERK_INFO> {
         if (!WxServerSDK.appId) {
-            console.warn("Http 请求未初始化");
+            cc.warn("Http 请求未初始化");
             await PromiseHelper.waitUntil(() => {
                 return WxServerSDK.appId;
             });
@@ -793,7 +865,7 @@ class WxServerSDK {
 	 */
     static async getAllVideoInfo(): Promise<WxServerSDK.VIDEO_ON_INFO> {
         if (!WxServerSDK.appId) {
-            console.warn("Http 请求未初始化");
+            cc.warn("Http 请求未初始化");
             await PromiseHelper.waitUntil(() => {
                 return WxServerSDK.appId;
             });
@@ -837,7 +909,7 @@ class WxServerSDK {
 	 */
     static async getAllBannerInfo(): Promise<WxServerSDK.BANNER_ON_INFO> {
         if (!WxServerSDK.appId) {
-            console.warn("Http 请求未初始化");
+            cc.warn("Http 请求未初始化");
             await PromiseHelper.waitUntil(() => {
                 return WxServerSDK.appId;
             });
@@ -882,7 +954,7 @@ class WxServerSDK {
 	 */
     static async getAllInterstitialInfo(): Promise<WxServerSDK.INTERSTITIAL_ON_INFO> {
         if (!WxServerSDK.appId) {
-            console.warn("Http 请求未初始化");
+            cc.warn("Http 请求未初始化");
             await PromiseHelper.waitUntil(() => {
                 return WxServerSDK.appId;
             });
@@ -917,15 +989,38 @@ class WxServerSDK {
         }
     }
 
+
+    static async getRank<T>(key: string, mix: number, max: number) {
+        let result: WxServerSDK.RESULT_RANK_INFO<T> = await WxServerSDK.emitSync("getRankingList", {
+            user_id: WxServerSDK.userId,
+            sys_app_id: WxServerSDK.sysId,
+            rank_key: key,
+            num_start: mix,
+            num_end: max,
+        })
+        return result;
+    }
+
+    static async setRank(key: string, score: number, extData: any) {
+        let result = await WxServerSDK.emitSync("setRankingList", {
+            user_id: WxServerSDK.userId,
+            sys_app_id: WxServerSDK.sysId,
+            rank_key: key,
+            score: score,
+            infos: extData
+        })
+        return result;
+    }
+
     private static async emitSync<T>(targetEvent: string, data: any): Promise<T> {
         if (WxServerSDK.deBug || CC_DEBUG) {
-            console.warn(targetEvent, data);
+            cc.warn(targetEvent, data);
         }
         try {
             return await WxServerSDK.io.emitSync<T>(targetEvent, targetEvent, data);
         } catch (error) {
-            // await PromiseHelper.wait(3);
-            // return await this.emitSync(targetEvent, data);
+            await PromiseHelper.wait(3);
+            return await this.emitSync(targetEvent, data);
         }
     }
 }
@@ -1012,6 +1107,7 @@ namespace WxServerSDK {
     export enum LoginType {
         WX = 1,
         QQ = 2,
+        BYTEDANCE = 3
     }
 
     export interface Login_RESULT_Info {
@@ -1410,25 +1506,40 @@ namespace WxServerSDK {
 		 */
         place_key: string;
     }
+
+    export interface RESULT_RANK_INFO<T> {
+        readonly code: number;
+        readonly msg: string;
+        readonly data: {
+			/**
+			 *  排行榜列表
+			 */
+            readonly list: Array<WxServerSDK.RANK_INFO<T>>;
+
+            /**
+             * 我的位置
+             */
+            readonly me: WxServerSDK.RANK_INFO<T>;
+        };
+    }
+
+    export interface RANK_INFO<T> {
+        /**
+         * 分数
+         */
+        score: number;
+
+        /**
+         * 排名
+         */
+        rank: number;
+        /**
+         * 扩展数据
+         */
+        info: T;
+    }
+
 }
 
 export default WxServerSDK;
 
-if (CC_DEBUG && cc.sys.platform != cc.sys.WECHAT_GAME) {
-    (async () => {
-        try {
-            // await WxServerSDK.init("wxd0dcdb67f396fa81", "1.0.0");
-            // await WxServerSDK.init(PlatformConfig.wx.appid, "1.0.0");
-        } catch (error) {
-            console.warn(error);
-        }
-
-        // console.log(await WxServerSDK.getAdvertInfo("linkCenter"));
-        // console.log(await WxServerSDK.getAllAdvertInfo("linkCenter"));
-        // console.log(await WxServerSDK.getAllParameter());
-        // console.log(await WxServerSDK.getShareInfo("inviteFriend"));
-        // console.log(await WxServerSDK.getAllVideoInfo());
-        // console.log(await WxServerSDK.getVideoInfo("normalVideo"));
-        // console.log(await WxServerSDK.getAllBannerInfo());
-    })();
-}

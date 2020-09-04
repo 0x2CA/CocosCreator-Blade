@@ -14,14 +14,14 @@ export default class TweenService implements IService, ITicker {
     public static readonly instance: TweenService;
 
 
-    public initialize(): void {
+    public async initialize(){
         Tween.customTick = true;
 
         // 设置更新服务
         blade.ticker.register(this);
     }
 
-    public lazyInitialize(): void {
+    public async lazyInitialize() {
 
     }
 

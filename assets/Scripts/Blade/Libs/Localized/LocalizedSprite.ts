@@ -26,7 +26,7 @@ export class SpriteFrameSet {
  */
 @ccclass
 @executeInEditMode
-@requireComponent(cc.Label)
+@requireComponent(cc.Sprite)
 @executionOrder(999)
 @menu('Localized/LocalizedSprite')
 export default class LocalizedSprite extends cc.Component implements LocalizedItem {

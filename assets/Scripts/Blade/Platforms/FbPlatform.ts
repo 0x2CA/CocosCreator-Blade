@@ -1,6 +1,6 @@
 import IPlatform from "../../Blade/Interfaces/IPlatform";
-import PlatformConfig from "../../Module/Defines/PlatformConfig";
 import PromiseHelper from "../Helpers/PromiseHelper";
+import PlatformConfig from "../../Module/Defines/PlatformConfig";
 
 
 /**
@@ -27,7 +27,7 @@ export default class FbPlatform extends IPlatform {
     */
     private interstitialState: IPlatform.AdState = IPlatform.AdState.None;
 
-    public initialize(): void {
+    public async initialize(){
         const player = FBInstant.player;
         this.userInfo = {
             avatar: player.getPhoto(),
@@ -36,7 +36,7 @@ export default class FbPlatform extends IPlatform {
         };
     }
 
-    public lazyInitialize(): void {
+    public async lazyInitialize() {
     }
 
     getLaunchOptions() {
@@ -86,7 +86,7 @@ export default class FbPlatform extends IPlatform {
             await this.video.loadAsync();
             this.videoState = IPlatform.AdState.Loaded;
         } catch (error) {
-            console.log(error);
+            cc.log(error);
             this.videoState = IPlatform.AdState.None;
         }
     }
@@ -100,7 +100,7 @@ export default class FbPlatform extends IPlatform {
 
             // 未广告实例或者未加载完成
             if (this.video == null || this.videoState == IPlatform.AdState.None) {
-                console.log('未广告实例或者未加载完成');
+                cc.log('未广告实例或者未加载完成');
                 throw new Error();
             }
 
@@ -166,7 +166,7 @@ export default class FbPlatform extends IPlatform {
             this.interstitialState = IPlatform.AdState.Loaded;
         } catch (error) {
             this.interstitialState = IPlatform.AdState.None;
-            console.log(error);
+            cc.log(error);
         }
     }
 
@@ -177,7 +177,7 @@ export default class FbPlatform extends IPlatform {
         try {
             // 未广告实例或者未加载完成
             if (this.interstitial == null || this.interstitialState == IPlatform.AdState.None) {
-                console.log('未广告实例或者未加载完成');
+                cc.log('未广告实例或者未加载完成');
                 throw new Error();
             }
 

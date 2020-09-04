@@ -37,7 +37,7 @@ class TimerService implements IService, ITicker {
 
     private readonly list: Set<TimerService.Timer> = new Set<TimerService.Timer>()
 
-    public initialize(): void {
+    public async initialize() {
         this.list.clear();
 
         blade.ticker.register(this);
@@ -53,7 +53,7 @@ class TimerService implements IService, ITicker {
         })
     }
 
-    public lazyInitialize(): void {
+    public async lazyInitialize() {
     }
 
 	/**
@@ -71,7 +71,7 @@ class TimerService implements IService, ITicker {
             this.lastSyncTime = new Date().getTime();
             this.timeStamp = new Date().getTime();
             this.syncing = false;
-            console.log("同步时间", this.timeStamp)
+            cc.log("同步时间", this.timeStamp)
             resolve()
         })
     }

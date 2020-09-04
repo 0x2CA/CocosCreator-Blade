@@ -64,7 +64,7 @@ class ListView extends cc.Component {
                 this.content.y = this.content.getParent().height * this.content.getParent().anchorY;
             }
         } else {
-            console.error("ListView need a scrollView for showing.");
+            cc.error("ListView need a scrollView for showing.");
         }
         let itemOne = this._items.get() || cc.instantiate(this.itemTemplate);
         this._items.put(itemOne);
@@ -80,7 +80,7 @@ class ListView extends cc.Component {
                 this.content.getParent().height / (this._itemHeight + this.spacing)
             );
         }
-        console.log("可见区域的item数量为:", this._itemsVisible);
+        cc.log("可见区域的item数量为:", this._itemsVisible);
         this.adjustEvent();
     }
 
@@ -116,11 +116,11 @@ class ListView extends cc.Component {
     public setAdapter(adapter: ListView.AbstractAdapter) {
         this.adapter = adapter;
         if (this.adapter == null) {
-            console.warn("adapter 为空.");
+            cc.warn("adapter 为空.");
             return;
         }
         if (this.itemTemplate == null) {
-            console.error("Listview 未设置待显示的Item模板.");
+            cc.error("Listview 未设置待显示的Item模板.");
             return;
         }
 

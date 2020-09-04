@@ -36,7 +36,7 @@ class LocalizedService extends cc.EventTarget implements IService {
 
     }
 
-    public lazyInitialize(): void {
+    public async lazyInitialize() {
     }
 
     /**
@@ -107,7 +107,7 @@ class LocalizedService extends cc.EventTarget implements IService {
         if (lang != null && this.curLang != lang) {
             this.curLang = lang;
             blade.locale.emit(LocalizedService.EventType.LanguageChange, lang);
-            console.log("设置语言环境:", lang)
+            cc.log("设置语言环境:", lang)
             if (cc.sys.platform != cc.sys.EDITOR_PAGE) {
                 blade.platform.getPlatform().saveArchive(LocalizedService.CURRENT_LANG_KEY, lang)
             }
@@ -144,9 +144,9 @@ class LocalizedService extends cc.EventTarget implements IService {
     info(name?: string) {
         if (name) {
             if (this.langs[name] != null) {
-                console.log(name + ":", this.langs[name]);
+                cc.log(name + ":", this.langs[name]);
             } else {
-                console.log(`没有注册${name}语言`);
+                cc.log(`没有注册${name}语言`);
             }
         } else {
             let info = "多语言信息:\n"
@@ -161,7 +161,7 @@ class LocalizedService extends cc.EventTarget implements IService {
                 info += "   没有注册语言";
             }
 
-            console.log(info)
+            cc.log(info)
         }
     }
 }

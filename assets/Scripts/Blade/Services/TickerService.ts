@@ -12,10 +12,10 @@ export default class TickerService implements IService {
     public alias: string;
     public static readonly instance: TickerService
 
-    public initialize(): void {
+    public async initialize() {
     }
 
-    public lazyInitialize(): void {
+    public async lazyInitialize() {
         const appNode = cc.find('Blade');
         if (appNode.getComponent(TickerComponent) == null) {
             appNode.addComponent(TickerComponent);

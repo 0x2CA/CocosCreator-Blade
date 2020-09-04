@@ -11,10 +11,10 @@ export default class CommandService implements IService {
     public static readonly instance: CommandService;
 
 
-    public initialize(): void {
+    public async initialize() {
     }
 
-    public lazyInitialize(): void {
+    public async lazyInitialize() {
     }
 
 

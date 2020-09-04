@@ -1,4 +1,4 @@
-import ModelService from './../../Blade/Services/ModelService';
+import ModelService from './../Services/ModelService';
 
 
 export default abstract class IModel {

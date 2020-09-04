@@ -9,7 +9,7 @@ import PromiseHelper from "../Helpers/PromiseHelper";
 
 
 /**
- * 动画服务类
+ * 弹窗服务类
  */
 @Singleton
 @Service("PopupService")
@@ -28,31 +28,81 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
     private modal: cc.Node = null;
     private readonly prefabCache: Map<string, cc.Prefab> = new Map<string, cc.Prefab>()
 
-    public initialize(): void {
+    public async initialize() {
         this.list.clear();
         this.prefabCache.clear();
+        await this.loadFolder();
     }
 
-    public lazyInitialize(): void {
-        cc.resources.load(PopupService.ModalPrefabPath, cc.Prefab, (err: Error, res: any) => {
-            if (err) {
-                cc.error(`路径('${PopupService.ModalPrefabPath}')不存在模态层预制件`);
-                this.createModal();
-            } else {
-                // 添加模态层节点
-                const appNode = cc.find("Blade");
-                if (appNode == null) {
-                    throw new Error("没有Blade节点")
-                }
-                const modalNode: cc.Node = cc.instantiate(res);
-                modalNode.parent = appNode;
-                modalNode.active = false;
-                modalNode.zIndex = -1;
-                this.modal = modalNode;
-            }
-        });
+    public async lazyInitialize() {
 
+        new Promise((resolve, reject) => {
+            cc.resources.load(PopupService.ModalPrefabPath, cc.Prefab, (err: Error, res: any) => {
+                if (err) {
+                    cc.error(`路径('${PopupService.ModalPrefabPath}')不存在模态层预制件`);
+                    this.createModal();
+                } else {
+                    // 添加模态层节点
+                    const appNode = cc.find("Blade");
+                    if (appNode == null) {
+                        throw new Error("没有Blade节点")
+                    }
+                    const modalNode: cc.Node = cc.instantiate(res);
+                    modalNode.parent = appNode;
+                    modalNode.active = false;
+                    modalNode.zIndex = -1;
+                    this.modal = modalNode;
+                }
+
+                resolve();
+            });
+        })
         blade.ticker.register(this);
+    }
+
+    /**
+   * 从目录加载多国语言json文件
+   */
+    public loadFolder() {
+        return new Promise((resolve, reject) => {
+            cc.resources.loadDir("Prefabs/Panels", (err, resource) => {
+
+                const prefabResList = resource as cc.Prefab[];
+                for (const prefabRes of prefabResList) {
+                    this.prefabCache.set(prefabRes.name, prefabRes)
+                }
+
+                this.info();
+                resolve();
+            });
+        })
+
+    }
+
+    /**
+    * 打印信息
+    * @param name
+    */
+    info(name?: string) {
+        if (name) {
+            if (this.prefabCache.has(name)) {
+                cc.log(name + ":", this.prefabCache.get("name"));
+            } else {
+                cc.log(`没有注册${name}弹窗`);
+            }
+        } else {
+            let info = "弹窗信息:\n"
+
+            this.prefabCache.forEach((vaule, key) => {
+                info += "   " + key + "    ✔" + "\n";
+            })
+
+            if (info == "弹窗信息:\n") {
+                info += "   没有注册弹窗";
+            }
+
+            cc.log(info)
+        }
     }
 
     /**
@@ -86,7 +136,7 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
             // backgroundNode.color = cc.Color.BLACK;
             // backgroundNode.opacity = 150;
             // const backgroundSprite = backgroundNode.addComponent(cc.Sprite)
-            // cc.assetManager.loadRemote("db://internal/image/default_sprite_splash.png", (err: Error, res: any) => {
+            // cc.assetManager.load("db://internal/image/default_sprite_splash.png", (err: Error, res: any) => {
             //     if (err) {
             //         cc.error(err);
             //         backgroundNode.active = false;
@@ -115,7 +165,7 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
 
         //存在等待列表内
         if (info.name != null && info.name != "" && this.list.some((vaule) => {
-            console.log(vaule.name, info.name)
+            cc.log(vaule.name, info.name)
             return vaule.name == info.name
         })) {
             return Promise.reject("Panel已经在列表内");
@@ -169,7 +219,7 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
                 const panel: IPopup = panelNode.getComponent(IPopup);
 
                 // 填充文字
-                if (info.template) {
+                if (info.template != null) {
                     const viewsComponent = panelNode.getComponents(IPopup);
                     if (viewsComponent && viewsComponent.length > 0) {
                         for (const v of viewsComponent) {
@@ -304,10 +354,11 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
     */
     private showPanel() {
         const panel = this.list.front().element;
+        this.list.front().element.node.active = true;
         panel.appear().catch((err) => {
             // 弹出失败, 直接移除
             this.list.dequeue()
-            console.warn(err);
+            cc.warn(err);
         });
         // 发送模态层弹出通知
         blade.popup.emit(PopupService.EventType.PANEL_ENABLE);

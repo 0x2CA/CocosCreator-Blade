@@ -13,10 +13,10 @@ class SceneService implements IService {
     // 场景记录栈堆
     private stack: Stack<SceneService.SceneRecord> = new Stack<SceneService.SceneRecord>();
 
-    public initialize(): void {
+    public async initialize() {
     }
 
-    public lazyInitialize(): void {
+    public async lazyInitialize(){
         this.stack.push({ name: cc.director.getScene().name, params: blade.platform.getPlatform().getLaunchOptions() });
     }
 
@@ -77,7 +77,7 @@ class SceneService implements IService {
             let info = this.stack.peek();
             cc.director.loadScene(info.name);
         } else {
-            console.error("该场景为第一个,无法返回上一个场景！")
+            cc.error("该场景为第一个,无法返回上一个场景！")
         }
     }
 }

@@ -1,4 +1,4 @@
-import PopupService from "../../Blade/Services/PopupService";
+import PopupService from "../Services/PopupService";
 import Tween from "../Libs/Tween/Tween";
 
 const { ccclass, property } = cc._decorator;

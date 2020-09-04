@@ -13,10 +13,10 @@ export default class ViewService implements IService {
 
     private list: Map<string, IView>
 
-    public initialize(): void {
+    public async initialize() {
         this.list = new Map<string, IView>();
     }
-    public lazyInitialize(): void {
+    public async lazyInitialize() {
     }
 
     /**
@@ -24,7 +24,7 @@ export default class ViewService implements IService {
     */
     public register(view: IView) {
         if (this.list.has(view.alias)) {
-            console.error(`已经存在${view.alias}视图!`);
+            cc.error(`已经存在${view.alias}视图!`);
             this.unregister(this.list.get(view.alias))
             this.register(view);
         } else {
@@ -60,7 +60,7 @@ export default class ViewService implements IService {
     public orderViewById(alias: string, funcName: string, ...args: any[]): any {
         const view: IView = this.getView(alias);
         if (view == null) {
-            console.error(`视图（${alias}）不存在`);
+            cc.error(`视图（${alias}）不存在`);
             return;
         }
 

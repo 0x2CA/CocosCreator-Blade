@@ -73,10 +73,10 @@ namespace SocketHelper {
         connect(url: string) {
             if (url != null) {
                 if (this.url && url != this.url) {
-                    console.warn("Socket 连接地址改变，请先执行disConnect");
+                    cc.warn("Socket 连接地址改变，请先执行disConnect");
                 } else {
                     if (this.status == SocketHelper.LinkStatus.SUCCEED) {
-                        console.warn("Socket 已经处于连接状态");
+                        cc.warn("Socket 已经处于连接状态");
                     } else {
                         if (this.io == null) {
                             this.setStatus(SocketHelper.LinkStatus.EMPTY);
@@ -92,7 +92,7 @@ namespace SocketHelper {
                     }
                 }
             } else {
-                console.warn("Socket 无连接地址");
+                cc.warn("Socket 无连接地址");
             }
         }
 
@@ -111,7 +111,7 @@ namespace SocketHelper {
                 this.io = null;
                 this.setStatus(SocketHelper.LinkStatus.EMPTY);
             } else {
-                console.warn("Socket 已经断开连接");
+                cc.warn("Socket 已经断开连接");
             }
         }
 
@@ -149,11 +149,11 @@ namespace SocketHelper {
         }
 
         private onConnect() {
-            console.log("Socket 连接成功!");
+            cc.log("Socket 连接成功!");
             this.setStatus(SocketHelper.LinkStatus.SUCCEED);
         }
         private onDisConnect() {
-            console.log("Socket 已断开!");
+            cc.log("Socket 已断开!");
             this.setStatus(SocketHelper.LinkStatus.FAILED);
         }
 

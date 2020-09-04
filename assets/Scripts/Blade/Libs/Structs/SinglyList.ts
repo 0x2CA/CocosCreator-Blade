@@ -272,7 +272,7 @@ export default class SinglyList<T> {
 			tmp += JSON.stringify(currNode.value) + "\n";
 			currNode = currNode.next;
 		}
-		console.log(tmp);
+		cc.log(tmp);
 	}
 
 	/**

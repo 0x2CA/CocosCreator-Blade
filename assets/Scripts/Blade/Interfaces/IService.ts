@@ -9,14 +9,13 @@ export default abstract class IService {
 
     public static readonly instance: IService
 
-
     /**
      * 初始化
      */
-    public abstract initialize(): void;
+    public abstract initialize(): Promise<void>;
 
     /**
      *  延迟初始化
      */
-    public abstract lazyInitialize(): void;
+    public abstract lazyInitialize(): Promise<void>;
 }

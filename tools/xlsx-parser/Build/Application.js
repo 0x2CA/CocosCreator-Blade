@@ -74,7 +74,7 @@ var Application = /** @class */ (function () {
             var json = xlsx_1.default.utils.sheet_to_json(worksheet, { header: 1, defval: false, raw: false });
             // console.log(json)
             var col = void 0, row = void 0;
-            var keys = void 0;
+            var keys = [];
             var types = [];
             var data = [];
             var indexkey = void 0;
@@ -92,29 +92,46 @@ var Application = /** @class */ (function () {
             }
             // 获取类型
             for (var c = col; c < json[0].length; c++) {
-                var descArr = json[0][c].split('|');
-                if (descArr.length >= 2) {
-                    types.push(descArr[0]);
-                    if (indexkey && json[1][c] == indexkey) {
-                        indextype = descArr[0];
+                if (json[0][c] != "" && json[0][c].indexOf('|') != -1) {
+                    var descArr = json[0][c].split('|');
+                    if (descArr.length == 2) {
+                        types.push(descArr[0]);
+                        if (indexkey && json[1][c] == indexkey) {
+                            indextype = descArr[0];
+                        }
                     }
+                    else {
+                        console.log("不符合声明类型格式", json[0][c]);
+                    }
+                    // else {
+                    //     // 无数据格式，默认为string
+                    //     types.push('s');
+                    //     if (indexkey && json[1][c] == indexkey) {
+                    //         indextype = 's'
+                    //     }
+                    // }
                 }
                 else {
-                    // 无数据格式，默认为string
-                    types.push('s');
-                    if (indexkey && json[1][c] == indexkey) {
-                        indextype = 's';
-                    }
+                    console.log("中断继续扫描key", json[0][c]);
+                    break;
                 }
             }
-            keys = json[1].slice(col, json[1].length);
-            for (var r = row; r < json.length; r++) {
-                var rowdata = [];
-                for (var c = col; c < json[r].length; c++) {
-                    var item = Application.formatData(json[r][c], types[c - col]);
-                    rowdata.push(item);
+            console.log.apply(console, ["类型列表"].concat(types));
+            for (var c = col; c < col + types.length; c++) {
+                if (json[1][c] != null && json[1][c] != "") {
+                    keys.push(json[1][c]);
                 }
-                data.push(rowdata);
+            }
+            console.log.apply(console, ["key列表"].concat(keys));
+            for (var r = row; r < json.length; r++) {
+                if (json[r][col] != null && json[r][col] != "") {
+                    var rowdata = [];
+                    for (var c = col; c < col + keys.length; c++) {
+                        var item = Application.formatData(json[r][c], types[c - col]);
+                        rowdata.push(item);
+                    }
+                    data.push(rowdata);
+                }
             }
             var filedata = { index: indexkey, keys: keys, data: data };
             var outputPath = path_1.default.join(folder, outputFileName);
@@ -138,7 +155,7 @@ var Application = /** @class */ (function () {
                     var type = types[index_1];
                     definitionItem += "\t\t\t" + Application.definitionFromFormat(name_1, type) + "\n";
                 }
-                definitionContent += "\n\tdeclare interface " + outputName + " {\n\t\t[" + Application.definitionFromFormat(indexkey, indextype).slice(0, Application.definitionFromFormat("key", indextype).length - 1) + "]:{\n" + definitionItem + "\t\t}\n\t}";
+                definitionContent += "\n\tdeclare interface " + outputName + " {\n\t\t[" + Application.definitionFromFormat(indexkey, indextype).slice(0, Application.definitionFromFormat(indexkey, indextype).length - 1) + "]:{\n" + definitionItem + "\t\t}\n\t}";
             }
             else {
                 var definitionItem = "";
@@ -191,10 +208,9 @@ var Application = /** @class */ (function () {
                 result = parseFloat(data) || 0;
                 break;
             case 'b': // 布尔值
-                result = data == 'true' || data != '0';
+                result = data == "" || data == 'TRUE' || data == 'true' || data != '0';
                 break;
             case 'j': // json
-                console.log('j');
                 try {
                     result = JSON.parse(data);
                 }
@@ -203,7 +219,7 @@ var Application = /** @class */ (function () {
                 }
                 break;
             case 's': // 字符串
-                result = data != null ? "" + data : '';
+                result = data != null && data != "" ? "" + data : '';
                 result = result.trim();
                 break;
             case '[i]': // 数组

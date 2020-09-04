@@ -1,6 +1,6 @@
 import HttpHelper from "../../Helpers/HttpHelper";
-import PlatformService from "../../../Blade/Services/PlatformService";
-import TimerService from "../../../Blade/Services/TimerService";
+import TimerService from "../../Services/TimerService";
+import PlatformService from "../../Services/PlatformService";
 
 /**
  * 数据服务器
@@ -104,6 +104,9 @@ class ArchiveServerSDK {
                 case PlatformService.PlatformType.WX:
                     data = await ArchiveServerSDK.wxLogin();
                     break;
+                case PlatformService.PlatformType.QQ:
+                    data = await ArchiveServerSDK.qqLogin();
+                    break;
                 case PlatformService.PlatformType.FACEBOOK:
                     data = await ArchiveServerSDK.fbLogin();
                     break;
@@ -127,7 +130,7 @@ class ArchiveServerSDK {
 
             // 同步数据
             ArchiveServerSDK.data = ArchiveServerSDK.loadLocal()
-            console.log("游戏数据：", ArchiveServerSDK.data);
+            cc.log("游戏数据：", ArchiveServerSDK.data);
 
             // 定时保存
             if (ArchiveServerSDK.autoSave) {
@@ -158,6 +161,35 @@ class ArchiveServerSDK {
     private static async wxLogin() {
         return new Promise((resolve, reject) => {
             wx.login({
+                success: async (res) => {
+                    try {
+                        const data = await ArchiveServerSDK.remoteCall(
+                            "/wxapi/login",
+                            {
+                                game: ArchiveServerSDK.GameName,
+                                code: res.code,
+                            },
+                            "GET"
+                        );
+                        if (data && data.token) {
+                            return resolve(data);
+                        }
+
+                        throw new Error();
+                    } catch (e) {
+                        return reject(e);
+                    }
+                },
+                fail(err) {
+                    return reject(err);
+                },
+            });
+        });
+    }
+
+    private static async qqLogin() {
+        return new Promise((resolve, reject) => {
+            qq.login({
                 success: async (res) => {
                     try {
                         const data = await ArchiveServerSDK.remoteCall(
@@ -334,13 +366,13 @@ class ArchiveServerSDK {
         ) {
             try {
                 await ArchiveServerSDK.remoteCall("/user/record", userInfo, "POST");
-                console.log("上传用户成功！", userInfo);
+                cc.log("上传用户成功！", userInfo);
             } catch (error) {
-                console.error("无法上传用户数据！", error)
+                cc.error("无法上传用户数据！", error)
 
             }
         } else {
-            console.error("暂无用户信息！无法上传用户数据！")
+            cc.error("暂无用户信息！无法上传用户数据！")
         }
     }
 
@@ -413,7 +445,7 @@ class ArchiveServerSDK {
         const localData = ArchiveServerSDK.data;
         //本地无存档
         if (localData == null) {
-            console.log("本地无存档!")
+            cc.log("本地无存档!")
             ArchiveServerSDK.data = remoteData;
             return;
         }
@@ -422,12 +454,12 @@ class ArchiveServerSDK {
         const remoteTime = remoteData && remoteData.alterTime || 0;
         if (localTime < remoteTime) {
             // 网络覆盖本地
-            console.log("更新本地存档")
+            cc.log("更新本地存档")
             ArchiveServerSDK.data = remoteData;
             await ArchiveServerSDK.saveLocal(ArchiveServerSDK.data)
         }
         else {
-            console.log("更新云存档")
+            cc.log("更新云存档")
             ArchiveServerSDK.data.alterTime = blade.timer.getTime();
             // 本地覆盖网络
             await ArchiveServerSDK.saveRemote(ArchiveServerSDK.data);
@@ -442,7 +474,7 @@ class ArchiveServerSDK {
      */
     public static save(force: boolean = false) {
         if (force) {
-            // console.log("强制保存!")
+            // cc.log("强制保存!")
             ArchiveServerSDK.data.alterTime = blade.timer.getTime();
             // 通过调用平台本地存档接口进行保存
             ArchiveServerSDK.saveLocal(ArchiveServerSDK.data)
@@ -473,9 +505,9 @@ class ArchiveServerSDK {
             throw new Error("请先同步数据！")
         }
         const oldValue = ArchiveServerSDK.data[key];
-        if (oldValue && typeof oldValue != typeof newValue) {
-            throw new Error('存档新值和旧值类型不一致, 忽略存入');
-        }
+        // if (oldValue && typeof oldValue != typeof newValue) {
+        //     throw new Error('存档新值和旧值类型不一致, 忽略存入');
+        // }
         // 旧值和新值不是同一个
         if (oldValue !== newValue) {
             this.data[key] = newValue;
@@ -512,7 +544,7 @@ namespace ArchiveServerSDK {
 //         try {
 //             await ArchiveServerSDK.login("leek");
 //         } catch (error) {
-//             console.warn(error);
+//             cc.warn(error);
 //         }
 
 //     })();

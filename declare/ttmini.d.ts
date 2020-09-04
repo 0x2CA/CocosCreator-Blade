@@ -57,7 +57,7 @@ declare function setInterval(callback: () => void, delay: number, ...rest): numb
 /**
  * 微信小游戏命名空间
  */
-declare namespace wx {
+declare namespace tt {
 
     type ENV = {
         USER_DATA_PATH: string;
@@ -118,7 +118,7 @@ declare namespace wx {
     }
 
     /**
-     * UpdateManager 对象，用来管理更新，可通过 wx.getUpdateManager 接口获取实例。
+     * UpdateManager 对象，用来管理更新，可通过 tt.getUpdateManager 接口获取实例。
      */
     type UpdateManager = {
         /**
@@ -233,7 +233,7 @@ declare namespace wx {
     function getSystemInfo(object: { success: (res: systemInfo) => void, fail: (err: any) => void, complete?: (res?: any) => void }): void;
 
     /**
-     * wx.getSystemInfo 的同步版本
+     * tt.getSystemInfo 的同步版本
      */
     function getSystemInfoSync(): systemInfo;
 
@@ -461,7 +461,7 @@ declare namespace wx {
             left: number,
             /** banner 广告组件的左上角纵坐标*/
             top: number,
-            /** banner 广告组件的宽度。最小 300，最大至 屏幕宽度（屏幕宽度可以通过 wx.getSystemInfoSync() 获取）。*/
+            /** banner 广告组件的宽度。最小 300，最大至 屏幕宽度（屏幕宽度可以通过 tt.getSystemInfoSync() 获取）。*/
             width: number,
             /** banner 广告组件的高度*/
             height: number,
@@ -533,12 +533,12 @@ declare namespace wx {
     }
 
     /**
-     * 创建激励视频广告组件。请通过 wx.getSystemInfoSync() 返回对象的 SDKVersion 判断基础库版本号 >= 2.0.4 后再使用该 API。同时，开发者工具上暂不支持调试该 API，请直接在真机上进行调试。
+     * 创建激励视频广告组件。请通过 tt.getSystemInfoSync() 返回对象的 SDKVersion 判断基础库版本号 >= 2.0.4 后再使用该 API。同时，开发者工具上暂不支持调试该 API，请直接在真机上进行调试。
      */
     function createRewardedVideoAd(res: { adUnitId: string }): RewardedVideoAd;
 
     /**
-     * 创建 banner 广告组件。请通过 wx.getSystemInfoSync() 返回对象的 SDKVersion 判断基础库版本号 >= 2.0.4 后再使用该 API。同时，开发者工具上暂不支持调试该 API，请直接在真机上进行调试。
+     * 创建 banner 广告组件。请通过 tt.getSystemInfoSync() 返回对象的 SDKVersion 判断基础库版本号 >= 2.0.4 后再使用该 API。同时，开发者工具上暂不支持调试该 API，请直接在真机上进行调试。
      */
     function createBannerAd(res: {
         adUnitId: string, style: {
@@ -550,7 +550,7 @@ declare namespace wx {
     }): BannerAd;
 
     /**
-     * 创建 banner 广告组件。请通过 wx.getSystemInfoSync() 返回对象的 SDKVersion 判断基础库版本号 >= 2.6.0 后再使用该 API。
+     * 创建 banner 广告组件。请通过 tt.getSystemInfoSync() 返回对象的 SDKVersion 判断基础库版本号 >= 2.6.0 后再使用该 API。
      * @param Option 
      */
     function createInterstitialAd(Option: { adUnitId: string }): InterstitialAd;
@@ -562,7 +562,7 @@ declare namespace wx {
 
     /** 隐藏 loading 提示框*/
     function hideLoading(object: { success?: (res?: any) => void, fail?: (res?: any) => void, complete?: (res?: any) => void }): void;
-    /** 显示 loading 提示框。需主动调用 wx.hideLoading 才能关闭提示框*/
+    /** 显示 loading 提示框。需主动调用 tt.hideLoading 才能关闭提示框*/
     function showLoading(object: { title: string, mask?: boolean, success?: (res?: any) => void, fail?: (res?: any) => void, complete?: (res?: any) => void }): void;
 
     /** 隐藏消息提示框*/
@@ -805,7 +805,7 @@ declare namespace wx {
      */
     function onSocketMessage(callback: (res: { data: string | ArrayBuffer }) => void): void;
     /**
-     * 通过 WebSocket 连接发送数据，需要先 wx.connectSocket，并在 wx.onSocketOpen 回调之后才能发送。
+     * 通过 WebSocket 连接发送数据，需要先 tt.connectSocket，并在 tt.onSocketOpen 回调之后才能发送。
      */
     function sendSocketMessage(object: { data: string | ArrayBuffer, success?: (res?: any) => void, fail?: (res?: any) => void, complete?: (res?: any) => void }): void;
 
@@ -874,7 +874,18 @@ declare namespace wx {
     /**
      * 主动拉起转发，进入选择通讯录界面。
      */
-    function shareAppMessage(object: { title?: string, imageUrl?: string, query?: string, imageUrlId?: string }): void;
+    function shareAppMessage(object:
+        {
+            channel?: "article" | "video" | "token",
+            templateId?: string,
+            title?: string,
+            desc?: string,
+            imageUrl?: string,
+            query?: string,
+            extra?: object,
+            success?: () => void;
+            fail?: (error) => void;
+        }): void;
 
     /**
      * 取消监听用户点击右上角菜单的“转发”按钮时触发的事件
@@ -906,7 +917,7 @@ declare namespace wx {
     }): void;
 
     /**
-     * wx.getStorageInfo 的同步版本
+     * tt.getStorageInfo 的同步版本
      */
     function getStorageInfoSync(): { keys: Array<string>, currentSize: number, limitSize: number };
 
@@ -916,7 +927,7 @@ declare namespace wx {
     function getStorageInfo(object: { success?: (res: { keys: Array<string>, currentSize: number, limitSize: number }) => void, fail?: (res?: any) => void, complete?: (res?: any) => void }): void;
 
     /**
-     * wx.clearStorage 的同步版本
+     * tt.clearStorage 的同步版本
      */
     function clearStorageSync(): void;
 
@@ -926,7 +937,7 @@ declare namespace wx {
     function clearStorage(object: { success?: (res?: any) => void, fail?: (res?: any) => void, complete?: (res?: any) => void }): void;
 
     /**
-     * wx.removeStorage 的同步版本
+     * tt.removeStorage 的同步版本
      */
     function removeStorageSync(key: string): void;
 
@@ -936,7 +947,7 @@ declare namespace wx {
     function removeStorage(object: { key: string, success?: (res?: any) => void, fail?: (res?: any) => void, complete?: (res?: any) => void }): void;
 
     /**
-     * wx.setStorage 的同步版本
+     * tt.setStorage 的同步版本
      */
     function setStorageSync(key: string, data: any): void;
 
@@ -946,7 +957,7 @@ declare namespace wx {
     function setStorage(object: { key: string, data: any, success?: (res?: any) => void, fail?: (res?: any) => void, complete?: (res?: any) => void }): void;
 
     /**
-     * wx.getStorage 的同步版本
+     * tt.getStorage 的同步版本
      */
     function getStorageSync(key: string): any;
 
@@ -966,7 +977,7 @@ declare namespace wx {
     function getAvailableAudioSources(success?: (res: { audioSources: Array<'auto' | 'buildInMic' | 'headsetMic' | 'mic' | 'camcorder' | 'voice_communication' | 'voice_recognition'> }) => void, fail?: (res?: any) => void, complete?: (res?: any) => void): void;
 
     /**
-     * InnerAudioContext 实例，可通过 wx.createInnerAudioContext 接口获取实例。
+     * InnerAudioContext 实例，可通过 tt.createInnerAudioContext 接口获取实例。
      */
     interface InnerAudioContext {
         /** 音频资源的地址，用于直接播放。2.2.3 开始支持云文件ID*/
@@ -1623,7 +1634,7 @@ declare namespace wx {
     }): UserInfoButton;
 
     /**
-     * 通过 wx.login 接口获得的用户登录态拥有一定的时效性。用户越久未使用小程序，用户登录态越有可能失效。反之如果用户一直在使用小程序，则用户登录态一直保持有效。具体时效逻辑由微信维护，对开发者透明。开发者只需要调用 wx.checkSession 接口检测当前用户登录态是否有效。登录态过期后开发者可以再调用 wx.login 获取新的用户登录态。
+     * 通过 tt.login 接口获得的用户登录态拥有一定的时效性。用户越久未使用小程序，用户登录态越有可能失效。反之如果用户一直在使用小程序，则用户登录态一直保持有效。具体时效逻辑由微信维护，对开发者透明。开发者只需要调用 tt.checkSession 接口检测当前用户登录态是否有效。登录态过期后开发者可以再调用 tt.login 获取新的用户登录态。
      */
     function checkSession(object: { success?: (res?: any) => void, fail?: (res?: any) => void, complete?: (res?: any) => void }): void;
 
@@ -1639,6 +1650,37 @@ declare namespace wx {
      * 只有开放数据域能调用，获取主域和开放数据域共享的 sharedCanvas
      */
     function getSharedCanvas(): Canvas;
+
+
+    /**
+     * 获取全局唯一的 GameRecorderManager。注意，开发者工具不支持录屏调试，请在真机上调试录屏相关功能.
+     */
+    function getGameRecorderManager(): GameRecorderManager;
+
+
+    interface GameRecorderManager {
+        start: (opttion: {
+            duration?: number,
+            isMarkOpen?: boolean,
+            locTop?: number,
+            locLeft?: number
+        }) => void;
+        onStart: (callback: (res) => void) => void;
+        recordClip: (opttion: {
+            timeRange?: Array<number>,
+            success?: () => void,
+            fail?: () => void,
+            complete?: () => void
+        }) => void;
+        onError: (callback: (res: { videoPath: string }) => void) => void;
+        pause: () => void;
+        onPause: (callback: (res) => void) => void;
+        resume: () => void;
+        onResume: (callback: (res) => void) => void;
+        stop: () => void;
+        onStop: (callback: (res: { videoPath: string }) => void) => void;
+    }
+
 
     /** 托管的 KV 数据*/
     interface KVData {
@@ -1794,13 +1836,13 @@ declare namespace wx {
 
     /** 用户授权设置信息，详情参考权限*/
     interface AuthSetting {
-        /** 是否授权用户信息，对应接口 wx.getUserInfo*/
+        /** 是否授权用户信息，对应接口 tt.getUserInfo*/
         userInfo: boolean;
-        /** 是否授权地理位置，对应接口 wx.getLocation*/
+        /** 是否授权地理位置，对应接口 tt.getLocation*/
         userLocation: boolean;
-        /** 是否授权微信运动步数，对应接口 wx.getWeRunData*/
+        /** 是否授权微信运动步数，对应接口 tt.getWeRunData*/
         werun: boolean;
-        /** 是否授权保存到相册 wx.saveImageToPhotosAlbum*/
+        /** 是否授权保存到相册 tt.saveImageToPhotosAlbum*/
         writePhotosAlbum: boolean;
     }
 
@@ -1931,7 +1973,7 @@ declare namespace wx {
         complete?: (res?: any) => void
     }): void;
 
-    /** 获取用户过去三十天微信运动步数。需要先调用 wx.login 接口。步数信息会在用户主动进入小程序时更新。*/
+    /** 获取用户过去三十天微信运动步数。需要先调用 tt.login 接口。步数信息会在用户主动进入小程序时更新。*/
     function getWeRunData(object: {
         success?: (res: { encryptedData: string, iv: string }) => void,
         fail?: (res?: any) => void,
@@ -1944,7 +1986,7 @@ declare namespace wx {
     /** 监听横竖屏切换事件*/
     function onDeviceOrientationChange(callback: (res: { value: 'portrait' | 'landscape' | 'landscapeReverse' }) => void): void;
 
-    /** 监听加速度数据事件。频率根据 wx.startAccelerometer() 的 interval 参数。可使用 wx.stopAccelerometer() 停止监听。*/
+    /** 监听加速度数据事件。频率根据 tt.startAccelerometer() 的 interval 参数。可使用 tt.stopAccelerometer() 停止监听。*/
     function onAccelerometerChange(callback: (res: { x: number, y: number, z: number }) => void): void;
 
     /** 停止监听加速度数据。*/
@@ -1972,7 +2014,7 @@ declare namespace wx {
     }): void;
 
     /**
-     * wx.getBatteryInfo 的同步版本
+     * tt.getBatteryInfo 的同步版本
      */
     function getBatteryInfoSync(): { level: string, isCharging: boolean };
 
@@ -1992,7 +2034,7 @@ declare namespace wx {
     }): void;
 
     /**
-     * 监听罗盘数据，频率：5 次/秒，接口调用后会自动开始监听，可使用 wx.stopCompass 停止监听。
+     * 监听罗盘数据，频率：5 次/秒，接口调用后会自动开始监听，可使用 tt.stopCompass 停止监听。
      * accuracy 在 iOS/Android 的差异
      * 由于平台差异，accuracy 在 iOS/Android 的值不同。
      * iOS：accuracy 是一个 number 类型的值，表示相对于磁北极的偏差。0 表示设备指向磁北，90 表示指向东，180 表示指向南，依此类推。
@@ -2020,7 +2062,7 @@ declare namespace wx {
     }): void;
 
     /**
-     * 监听设备方向变化事件。频率根据 wx.startDeviceMotionListening() 的 interval 参数。可以使用 wx.stopDeviceMotionListening() 停止监听。
+     * 监听设备方向变化事件。频率根据 tt.startDeviceMotionListening() 的 interval 参数。可以使用 tt.stopDeviceMotionListening() 停止监听。
      */
     function onDeviceMotionChange(callback: (res: {
         alpha: number,
@@ -2446,5 +2488,5 @@ interface AggregationOperators {
 //      * @param texture WebGL 的纹理类型枚举值
 //      * @param canvas 需要绑定为 Texture 的 Canvas
 //      */
-//     wxBindCanvasTexture: (texture: number, canvas: wx.Canvas) => void
+//     ttBindCanvasTexture: (texture: number, canvas: tt.Canvas) => void
 // }

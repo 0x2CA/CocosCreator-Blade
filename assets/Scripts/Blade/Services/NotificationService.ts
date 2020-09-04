@@ -9,9 +9,9 @@ export default class NotificationService extends cc.EventTarget implements IServ
     public static readonly instance: NotificationService;
 
 
-    public initialize(): void {
+    public async initialize() {
     }
-    public lazyInitialize(): void {
+    public async lazyInitialize() {
     }
 
 }

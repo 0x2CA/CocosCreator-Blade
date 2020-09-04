@@ -42,7 +42,7 @@ export default class PriorityQueue<T> {
         }
         let added = false;
         for (var i = 0; i < this.items.length; i++) {
-            if (queueElement.priority < this.items[i].priority) {
+            if (queueElement.priority > this.items[i].priority) {
                 this.items.splice(i, 0, queueElement);
                 added = true;
                 break;
@@ -120,7 +120,7 @@ export default class PriorityQueue<T> {
         for (let index = 0; index < this.items.length; index++) {
             tmp += JSON.stringify(this.items[index].element) + "\n";
         }
-        console.log(tmp);
+        cc.log(tmp);
     }
 
 	/**

@@ -662,8 +662,8 @@ export default class Tween extends cc.EventTarget {
 	 * @example
 	 * <pre>
 	 *  Tween.get(display).call(function (a:number, b:string) {
-	 *      console.log("a: " + a); //对应传入的第一个参数 233
-	 *      console.log("b: " + b); //对应传入的第二个参数 “hello”
+	 *      cc.log("a: " + a); //对应传入的第一个参数 233
+	 *      cc.log("b: " + b); //对应传入的第二个参数 “hello”
 	 *  }, this, [233, "hello"]);
 	 * </pre>
 	 */

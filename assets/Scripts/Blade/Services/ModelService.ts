@@ -18,10 +18,10 @@ class ModelService implements IService {
     // Model列表
     private list: { [name: string]: { model: any, event: cc.EventTarget } };
 
-    public initialize(): void {
+    public async initialize() {
         this.list = {}
     }
-    public lazyInitialize(): void {
+    public async lazyInitialize() {
     }
 
 

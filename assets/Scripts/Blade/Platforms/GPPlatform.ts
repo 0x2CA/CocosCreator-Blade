@@ -25,7 +25,7 @@ export default class GPPlatform extends IPlatform {
     private interstitialPreloadState: IPlatform.AdState = IPlatform.AdState.None;
 
 
-    public initialize(): void {
+    public async initialize() {
         if (CC_DEBUG) {
             this.callNative('initialize', "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V",
                 "ca-app-pub-3940256099942544~1458002511",
@@ -41,7 +41,7 @@ export default class GPPlatform extends IPlatform {
         }
     }
 
-    public lazyInitialize(): void {
+    public async lazyInitialize() {
 
     }
 

@@ -119,9 +119,9 @@ export default class PromiseHelper {
     * 加载一个远程资源
     * @param url
     */
-    public static loadRemote(url: string): Promise<any> {
+    public static loadRemote(url: string, opttion = {}): Promise<any> {
         return new Promise((resolve, reject) => {
-            cc.assetManager.loadRemote(url,
+            cc.assetManager.loadRemote(url, opttion,
                 (err: Error, res: any) => {
                     if (err) {
                         reject(err);
