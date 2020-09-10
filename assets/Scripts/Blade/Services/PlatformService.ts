@@ -126,7 +126,11 @@ class PlatformService implements IService {
     loadLocal() {
         try {
             const result = JSON.parse(blade.platform.getPlatform().getArchive('Archive'));
-            return result;
+            if (result != null) {
+                return result;
+            } else {
+                return { alterTime: blade.timer.getTime() };
+            }
         } catch (e) {
             return { alterTime: blade.timer.getTime() };
         }
