@@ -32,17 +32,25 @@ export default class QQPlatform extends IPlatform {
     /**
     * 激励视频实例
     */
-    private video: qq.RewardedVideoAd = null;
+    public video: qq.RewardedVideoAd = null;
 
-    private banner: qq.BannerAd = null;
+    public banner: qq.BannerAd = null;
 
-    private interstitial: qq.InterstitialAd = null;
+    public bannerStyle: {
+        height: number,
+        width: number
+    } = { height: 0, width: 0 };
 
-    private appBox: qq.AppBoxAd = null;
+    public interstitial: qq.InterstitialAd = null;
 
-    private block: qq.BlockAd = null;
+    public appBox: qq.AppBoxAd = null;
 
+    public block: qq.BlockAd = null;
 
+    public blockStyle: {
+        height: number,
+        width: number
+    } = { height: 0, width: 0 };
 
     private bannerActive: boolean = false;
 
@@ -424,10 +432,6 @@ export default class QQPlatform extends IPlatform {
         this.banner.onLoad(async () => {
             console.log("banner", "加载成功");
             this.bannerState = IPlatform.AdState.Loaded;
-            this.banner.style.top =
-                sysInfo.screenHeight - this.banner.style.realHeight;
-            this.banner.style.left =
-                (sysInfo.screenWidth - this.banner.style.realWidth) / 2;
             if (this.bannerActive) {
                 this.emit(IPlatform.EventType.OpenBanner);
                 this.banner.show();
@@ -440,7 +444,16 @@ export default class QQPlatform extends IPlatform {
         });
 
         this.banner.onResize((res) => {
+            console.log(res);
+
             // 重设横幅位置
+            this.bannerStyle.height = res.height;
+            this.bannerStyle.width = res.width;
+
+            this.banner.style.top =
+                sysInfo.screenHeight - this.bannerStyle.height;
+            this.banner.style.left =
+                (sysInfo.screenWidth - this.bannerStyle.width) / 2;
         });
 
         this.bannerState = IPlatform.AdState.Loading;
@@ -526,23 +539,28 @@ export default class QQPlatform extends IPlatform {
         this.block.onLoad(async () => {
             console.log("block", "加载成功");
             this.blockState = IPlatform.AdState.Loaded;
-            this.block.style.top =
-                sysInfo.screenHeight - this.block.style.realHeight;
-            this.block.style.left =
-                (sysInfo.screenWidth - this.block.style.realWidth) / 2;
             if (this.blockActive) {
                 this.block.show();
             }
         });
 
         this.block.onError((err) => {
-            console.error("block", "加载失败", err);
+            console.error("block", "错误", err);
             this.blockState = IPlatform.AdState.None;
         });
 
         this.block.onResize((res) => {
+            console.log(res);
             // 重设横幅位置
+            this.blockStyle.height = res.height;
+            this.blockStyle.width = res.width;
+
+            this.block.style.top =
+                sysInfo.screenHeight - this.blockStyle.height;
+            this.block.style.left =
+                (sysInfo.screenWidth - this.blockStyle.width) / 2;
         });
+
 
         this.blockState = IPlatform.AdState.Loading;
     }
