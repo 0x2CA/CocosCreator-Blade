@@ -24,6 +24,12 @@ const PlatformConfig = {
         videoId: "",
         bannerId: "",
     },
+    qg: {
+        appId: "",
+        videoId: "",
+        bannerId: "",
+        nativeId: ""
+    },
     // Facebook
     fb: {
         appId: "",

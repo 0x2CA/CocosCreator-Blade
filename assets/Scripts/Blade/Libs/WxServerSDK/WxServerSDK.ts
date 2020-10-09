@@ -67,6 +67,9 @@ class WxServerSDK {
     }
 
     static async init(appId: string, version: string, openId?: string) {
+        if (WxServerSDK.isInit) {
+            return;
+        }
         WxServerSDK.tmp.clear();
         WxServerSDK.setAppId(appId);
         WxServerSDK.setVersion(version);
@@ -118,11 +121,17 @@ class WxServerSDK {
 
             WxServerSDK.io.on(SocketHelper.EventType.CONNECT, async () => {
                 let result;
-                if (openId) {
-                    result = await WxServerSDK.login(appId, openId);
-                } else {
-                    result = await WxServerSDK.login(appId, WxServerSDK.openId);
+                try {
+                    if (openId) {
+                        result = await WxServerSDK.login(appId, openId);
+                    } else {
+                        result = await WxServerSDK.login(appId, WxServerSDK.openId);
+                    }
+                } catch (error) {
+                    WxServerSDK.io.disConnect();
+                    reject(error);
                 }
+
                 if (result.code == 0) {
                     WxServerSDK.isInit = true;
                     WxServerSDK.openId = result.data.open_id;
@@ -163,14 +172,14 @@ class WxServerSDK {
 
 
 
-	/**
-	 * Socket登录
-	 *
-	 * @static
-	 * @param {string} appId
-	 * @returns
-	 * @memberof WxServerSDK
-	 */
+    /**
+     * Socket登录
+     *
+     * @static
+     * @param {string} appId
+     * @returns
+     * @memberof WxServerSDK
+     */
     private static async login(appId: string, openId?: string) {
         if (WxServerSDK.io && WxServerSDK.io.getStatus() == SocketHelper.LinkStatus.SUCCEED) {
             let result: WxServerSDK.Login_RESULT_Info = await WxServerSDK.emitSync(
@@ -183,12 +192,12 @@ class WxServerSDK {
         }
     }
 
-	/**
-	 * 保存用户数据
-	 *
-	 * @static
-	 * @memberof WxServerSDK
-	 */
+    /**
+     * 保存用户数据
+     *
+     * @static
+     * @memberof WxServerSDK
+     */
     static async saveUserInfo(info: WxServerSDK.USER_INFO) {
         if (!this.isInit) {
             cc.warn("请先初始化socket");
@@ -207,12 +216,12 @@ class WxServerSDK {
         return result;
     }
 
-	/**
-	 * 记录广告位置情况
-	 *
-	 * @static
-	 * @memberof WxServerSDK
-	 */
+    /**
+     * 记录广告位置情况
+     *
+     * @static
+     * @memberof WxServerSDK
+     */
     static async recordAdvert(
         type: WxServerSDK.RecordType,
         ...info: WxServerSDK.RECORD_ADVERT_INFO
@@ -259,11 +268,11 @@ class WxServerSDK {
         return result;
     }
 
-	/**
-	 * 记录分享文案情况
-	 * @param type
-	 * @param info
-	 */
+    /**
+     * 记录分享文案情况
+     * @param type
+     * @param info
+     */
     static async recordShare(
         type: WxServerSDK.RecordType,
         time: number,
@@ -310,16 +319,16 @@ class WxServerSDK {
         return result;
     }
 
-	/**
-	 * 分享進入記錄
-	 *
-	 * @static
-	 * @param {string} share_open_id
-	 * @param {number} time
-	 * @param {...WxServerSDK.RECORD_SHARE_INFO} info
-	 * @returns
-	 * @memberof WxServerSDK
-	 */
+    /**
+     * 分享進入記錄
+     *
+     * @static
+     * @param {string} share_open_id
+     * @param {number} time
+     * @param {...WxServerSDK.RECORD_SHARE_INFO} info
+     * @returns
+     * @memberof WxServerSDK
+     */
     static async recordShareEntry(
         share_open_id: string,
         time: number,
@@ -346,17 +355,17 @@ class WxServerSDK {
         return result;
     }
 
-	/**
-	 * 记录看视频
-	 *
-	 * @static
-	 * @param {WxServerSDK.RECORD_VIDEO_TYPE} recordType
-	 * @param {WxServerSDK.VIDEO_INFO} info
-	 * @param {WxServerSDK.VIDEO_TYPE} [type]
-	 * @param {number} [time]
-	 * @returns
-	 * @memberof WxServerSDK
-	 */
+    /**
+     * 记录看视频
+     *
+     * @static
+     * @param {WxServerSDK.RECORD_VIDEO_TYPE} recordType
+     * @param {WxServerSDK.VIDEO_INFO} info
+     * @param {WxServerSDK.VIDEO_TYPE} [type]
+     * @param {number} [time]
+     * @returns
+     * @memberof WxServerSDK
+     */
     static async recordVideo(
         recordType: WxServerSDK.RECORD_VIDEO_TYPE,
         info: WxServerSDK.VIDEO_INFO,
@@ -402,15 +411,15 @@ class WxServerSDK {
         return result;
     }
 
-	/**
-	 * 记录banner
-	 *
-	 * @static
-	 * @param {WxServerSDK.RECORD_BANNER_TYPE} recordType
-	 * @param {WxServerSDK.BANNER_INFO} info
-	 * @returns
-	 * @memberof WxServerSDK
-	 */
+    /**
+     * 记录banner
+     *
+     * @static
+     * @param {WxServerSDK.RECORD_BANNER_TYPE} recordType
+     * @param {WxServerSDK.BANNER_INFO} info
+     * @returns
+     * @memberof WxServerSDK
+     */
     static async recordBanner(
         recordType: WxServerSDK.RECORD_BANNER_TYPE,
         info: WxServerSDK.BANNER_INFO
@@ -467,15 +476,15 @@ class WxServerSDK {
         return result;
     }
 
-	/**
-	 * 获取登录必要信息
-	 *
-	 * @private
-	 * @static
-	 * @param {string} appId
-	 * @returns
-	 * @memberof WxServerSDK
-	 */
+    /**
+     * 获取登录必要信息
+     *
+     * @private
+     * @static
+     * @param {string} appId
+     * @returns
+     * @memberof WxServerSDK
+     */
     private static async getLoginInfo(appId: string, openId?: string) {
         let info: WxServerSDK.Login_QUERY_Info;
 
@@ -585,9 +594,9 @@ class WxServerSDK {
         return info;
     }
 
-	/**
-	 * 获取登录令牌
-	 */
+    /**
+     * 获取登录令牌
+     */
     private static getCode(): Promise<string> {
         return new Promise((resolve, reject) => {
             if (blade.platform.getType() == PlatformService.PlatformType.WX) {
@@ -622,13 +631,13 @@ class WxServerSDK {
         });
     }
 
-	/**
-	 * 获取游戏在线参数信息
-	 *
-	 * @static
-	 * @returns
-	 * @memberof WxServerSDK
-	 */
+    /**
+     * 获取游戏在线参数信息
+     *
+     * @static
+     * @returns
+     * @memberof WxServerSDK
+     */
     private static async getParameterInfo() {
         if (!WxServerSDK.appId) {
             cc.warn("Http 请求未初始化");
@@ -647,13 +656,13 @@ class WxServerSDK {
         return result;
     }
 
-	/**
-	 * 获取指定名称参数配置
-	 *
-	 * @static
-	 * @param {string} key
-	 * @memberof WxServerSDK
-	 */
+    /**
+     * 获取指定名称参数配置
+     *
+     * @static
+     * @param {string} key
+     * @memberof WxServerSDK
+     */
     static async getParameter(key: string) {
         let params = await WxServerSDK.getAllParameter();
         if (params && params[key]) {
@@ -661,13 +670,13 @@ class WxServerSDK {
         }
     }
 
-	/**
-	 * 获取所有参数
-	 *
-	 * @static
-	 * @returns
-	 * @memberof WxServerSDK
-	 */
+    /**
+     * 获取所有参数
+     *
+     * @static
+     * @returns
+     * @memberof WxServerSDK
+     */
     static async getAllParameter() {
         let Info = await WxServerSDK.getParameterInfo();
         if (Info && Info.code == 0) {
@@ -675,13 +684,13 @@ class WxServerSDK {
         }
     }
 
-	/**
-	 * 获取广告配置信息
-	 *
-	 * @static
-	 * @returns
-	 * @memberof WxServerSDK
-	 */
+    /**
+     * 获取广告配置信息
+     *
+     * @static
+     * @returns
+     * @memberof WxServerSDK
+     */
     private static async getAdvertDeployInfo(): Promise<WxServerSDK.ADVERT_DEPLOY_INFO> {
         if (!WxServerSDK.appId) {
             cc.warn("Http 请求未初始化");
@@ -706,14 +715,14 @@ class WxServerSDK {
         return result;
     }
 
-	/**
-	 *
-	 * 获取指定名称的广告配置
-	 * @static
-	 * @param {string} key
-	 * @returns {Promise<WxServerSDK.ADVERT_INFO>}
-	 * @memberof WxServerSDK
-	 */
+    /**
+     *
+     * 获取指定名称的广告配置
+     * @static
+     * @param {string} key
+     * @returns {Promise<WxServerSDK.ADVERT_INFO>}
+     * @memberof WxServerSDK
+     */
     static async getAdvertInfo(key: string): Promise<WxServerSDK.ADVERT_INFO> {
         let list = await WxServerSDK.getAllAdvertInfo(key);
         if (list && list.length > 0) {
@@ -760,14 +769,14 @@ class WxServerSDK {
         }
     }
 
-	/**
-	 *获取指定名称的全部广告配置
-	 *
-	 * @static
-	 * @param {string} key
-	 * @returns {Promise<Array<WxServerSDK.ADVERT_INFO>>}
-	 * @memberof WxServerSDK
-	 */
+    /**
+     *获取指定名称的全部广告配置
+     *
+     * @static
+     * @param {string} key
+     * @returns {Promise<Array<WxServerSDK.ADVERT_INFO>>}
+     * @memberof WxServerSDK
+     */
     static async getAllAdvertInfo(key: string): Promise<Array<WxServerSDK.ADVERT_INFO>> {
         let Info = await WxServerSDK.getAdvertDeployInfo();
         if (Info.code == 0 && Info.data[key]) {
@@ -791,13 +800,13 @@ class WxServerSDK {
         }
     }
 
-	/**
-	 * 获取分享文案信息
-	 *
-	 * @static
-	 * @returns
-	 * @memberof WxServerSDK
-	 */
+    /**
+     * 获取分享文案信息
+     *
+     * @static
+     * @returns
+     * @memberof WxServerSDK
+     */
     private static async getShareClerkInfo(): Promise<WxServerSDK.SHARE_CLERK_INFO> {
         if (!WxServerSDK.appId) {
             cc.warn("Http 请求未初始化");
@@ -821,14 +830,14 @@ class WxServerSDK {
         return result;
     }
 
-	/**
-	 * 获取指定名称的文案
-	 *
-	 * @static
-	 * @param {string} key
-	 * @returns {Promise<WxServerSDK.SHARE_INFO>}
-	 * @memberof WxServerSDK
-	 */
+    /**
+     * 获取指定名称的文案
+     *
+     * @static
+     * @param {string} key
+     * @returns {Promise<WxServerSDK.SHARE_INFO>}
+     * @memberof WxServerSDK
+     */
     static async getShareInfo(key: string): Promise<WxServerSDK.SHARE_INFO> {
         let list = await WxServerSDK.getAllShareInfo(key);
         if (list) {
@@ -840,14 +849,14 @@ class WxServerSDK {
         }
     }
 
-	/**
-	 * 获取指定名称的全部文案
-	 *
-	 * @static
-	 * @param {string} key
-	 * @returns {Promise<Array<WxServerSDK.SHARE_INFO>>}
-	 * @memberof WxServerSDK
-	 */
+    /**
+     * 获取指定名称的全部文案
+     *
+     * @static
+     * @param {string} key
+     * @returns {Promise<Array<WxServerSDK.SHARE_INFO>>}
+     * @memberof WxServerSDK
+     */
     static async getAllShareInfo(key: string): Promise<Array<WxServerSDK.SHARE_INFO>> {
         let Info = await WxServerSDK.getShareClerkInfo();
         if (Info.code == 0 && Info.data[key]) {
@@ -856,13 +865,13 @@ class WxServerSDK {
         }
     }
 
-	/**
-	 * 获取所有的视频配置消息
-	 *
-	 * @static
-	 * @returns {Promise<WxServerSDK.VIDEO_ON_INFO>}
-	 * @memberof WxServerSDK
-	 */
+    /**
+     * 获取所有的视频配置消息
+     *
+     * @static
+     * @returns {Promise<WxServerSDK.VIDEO_ON_INFO>}
+     * @memberof WxServerSDK
+     */
     static async getAllVideoInfo(): Promise<WxServerSDK.VIDEO_ON_INFO> {
         if (!WxServerSDK.appId) {
             cc.warn("Http 请求未初始化");
@@ -885,14 +894,14 @@ class WxServerSDK {
         }
         return result;
     }
-	/**
-	 * 获取指定位置视频配置
-	 *
-	 * @static
-	 * @param {string} key
-	 * @returns
-	 * @memberof WxServerSDK
-	 */
+    /**
+     * 获取指定位置视频配置
+     *
+     * @static
+     * @param {string} key
+     * @returns
+     * @memberof WxServerSDK
+     */
     static async getVideoInfo(key: string) {
         let result = await WxServerSDK.getAllVideoInfo();
         if (result && result.code == 0 && result.data[key]) {
@@ -900,13 +909,13 @@ class WxServerSDK {
         }
     }
 
-	/**
-	 * 获取所有的banner配置消息
-	 *
-	 * @static
-	 * @returns {Promise<WxServerSDK.BANNER_ON_INFO>}
-	 * @memberof WxServerSDK
-	 */
+    /**
+     * 获取所有的banner配置消息
+     *
+     * @static
+     * @returns {Promise<WxServerSDK.BANNER_ON_INFO>}
+     * @memberof WxServerSDK
+     */
     static async getAllBannerInfo(): Promise<WxServerSDK.BANNER_ON_INFO> {
         if (!WxServerSDK.appId) {
             cc.warn("Http 请求未初始化");
@@ -930,14 +939,14 @@ class WxServerSDK {
         return result;
     }
 
-	/**
-	 * 获取指定banner配置
-	 *
-	 * @static
-	 * @param {string} key
-	 * @returns
-	 * @memberof WxServerSDK
-	 */
+    /**
+     * 获取指定banner配置
+     *
+     * @static
+     * @param {string} key
+     * @returns
+     * @memberof WxServerSDK
+     */
     static async getBannerInfo(key: string) {
         let result = await WxServerSDK.getAllBannerInfo();
         if (result && result.code == 0 && result.data[key]) {
@@ -945,13 +954,13 @@ class WxServerSDK {
         }
     }
 
-	/**
-	 * 获取所有的插屏配置消息
-	 *
-	 * @static
-	 * @returns {Promise<WxServerSDK.INTERSTITIAL_ON_INFO>}
-	 * @memberof WxServerSDK
-	 */
+    /**
+     * 获取所有的插屏配置消息
+     *
+     * @static
+     * @returns {Promise<WxServerSDK.INTERSTITIAL_ON_INFO>}
+     * @memberof WxServerSDK
+     */
     static async getAllInterstitialInfo(): Promise<WxServerSDK.INTERSTITIAL_ON_INFO> {
         if (!WxServerSDK.appId) {
             cc.warn("Http 请求未初始化");
@@ -974,14 +983,14 @@ class WxServerSDK {
         return result;
     }
 
-	/**
-	 * 获取指定位置插屏配置
-	 *
-	 * @static
-	 * @param {string} key
-	 * @returns
-	 * @memberof WxServerSDK
-	 */
+    /**
+     * 获取指定位置插屏配置
+     *
+     * @static
+     * @param {string} key
+     * @returns
+     * @memberof WxServerSDK
+     */
     static async getInterstitialInfo(key: string) {
         let result = await WxServerSDK.getAllInterstitialInfo();
         if (result && result.code == 0 && result.data[key]) {
@@ -1031,76 +1040,76 @@ namespace WxServerSDK {
     }
 
     export interface Login_QUERY_Info {
-		/**
-		 * 登录令牌
-		 */
+        /**
+         * 登录令牌
+         */
         readonly code: string;
-		/**
-		 * 小程序app_id
-		 */
+        /**
+         * 小程序app_id
+         */
         readonly app_id: string;
-		/**
-		 * 用户id
-		 *
-		 * @type {string}
-		 * @memberof Login_QUERY_Info
-		 */
+        /**
+         * 用户id
+         *
+         * @type {string}
+         * @memberof Login_QUERY_Info
+         */
         readonly open_id: string;
-		/**
-		 * 渠道类型
-		 */
+        /**
+         * 渠道类型
+         */
         readonly channel: string;
-		/**
-		 * 从别的小程序跳入的app_id
-		 */
+        /**
+         * 从别的小程序跳入的app_id
+         */
         readonly srcAppId: string;
-		/**
-		 * 设备品牌
-		 */
+        /**
+         * 设备品牌
+         */
         readonly brand: string;
-		/**
-		 * 设备型号
-		 */
+        /**
+         * 设备型号
+         */
         readonly model: string;
-		/**
-		 * 微信版本号
-		 */
+        /**
+         * 微信版本号
+         */
         readonly version: string;
-		/**
-		 * 操作系统及版本
-		 */
+        /**
+         * 操作系统及版本
+         */
         readonly system: string;
-		/**
-		 * 客户端平台
-		 */
+        /**
+         * 客户端平台
+         */
         readonly platform: string;
-		/**
-		 * 场景值
-		 */
+        /**
+         * 场景值
+         */
         readonly scene: number;
-		/*
-		 * 分享人的open_id
-		 */
+        /*
+         * 分享人的open_id
+         */
         readonly share_open_id: string;
 
-		/**
-		 * 分享時間
-		 */
+        /**
+         * 分享時間
+         */
         readonly share_time: number | string;
-		/**
-		 * 分享位置id
-		 */
+        /**
+         * 分享位置id
+         */
         readonly place_id: number | string;
-		/**
-		 * 分享文案id
-		 */
+        /**
+         * 分享文案id
+         */
         readonly clerk_id: number | string;
-		/**
-		 * 登录类型
-		 *
-		 * @type {LoginType}
-		 * @memberof Login_QUERY_Info
-		 */
+        /**
+         * 登录类型
+         *
+         * @type {LoginType}
+         * @memberof Login_QUERY_Info
+         */
         login_type: LoginType;
     }
 
@@ -1114,22 +1123,22 @@ namespace WxServerSDK {
         readonly code: number;
         readonly msg: string;
         readonly data: {
-			/**
-			 * 用户在系统中的主键Id
-			 */
+            /**
+             * 用户在系统中的主键Id
+             */
             readonly user_id: number;
-			/**
-			 * 用户open_id
-			 */
+            /**
+             * 用户open_id
+             */
             readonly open_id: string;
 
-			/**
-			 * 系统APP id
-			 */
+            /**
+             * 系统APP id
+             */
             readonly sys_app_id: number;
-			/**
-			 * 标记是否为新用户
-			 */
+            /**
+             * 标记是否为新用户
+             */
             readonly flag: boolean;
         };
     }
@@ -1141,29 +1150,29 @@ namespace WxServerSDK {
     }
 
     export interface PARAMETER {
-		/**
-		 * 参数的主键
-		 */
+        /**
+         * 参数的主键
+         */
         readonly id: number;
-		/**
-		 * 后台系统小游戏的id
-		 */
+        /**
+         * 后台系统小游戏的id
+         */
         readonly sys_app_id: number;
-		/**
-		 * 参数名称
-		 */
+        /**
+         * 参数名称
+         */
         readonly name: string;
-		/**
-		 * 参数key
-		 */
+        /**
+         * 参数key
+         */
         readonly parameter_key: string;
-		/**
-		 * 参数值-自定义的
-		 */
+        /**
+         * 参数值-自定义的
+         */
         readonly parameter_value: number;
-		/**
-		 * 版本控制
-		 */
+        /**
+         * 版本控制
+         */
         readonly version_restriction: string;
     }
 
@@ -1171,80 +1180,80 @@ namespace WxServerSDK {
         readonly code: number;
         readonly msg: string;
         readonly data: {
-			/**
-			 * 位置的键值
-			 */
+            /**
+             * 位置的键值
+             */
             readonly [key: string]: Array<WxServerSDK.ADVERT_INFO>;
         };
     }
 
     export interface ADVERT_INFO {
-		/**
-		 * 广告位置主键id
-		 */
+        /**
+         * 广告位置主键id
+         */
         readonly place_id: number;
-		/**
-		 * 广告配置主键id
-		 */
+        /**
+         * 广告配置主键id
+         */
         readonly deploy_id: number;
-		/**
-		 * 后台系统小游戏的id
-		 */
+        /**
+         * 后台系统小游戏的id
+         */
         readonly sys_app_id: number;
-		/**
-		 * 广告的位置名称
-		 */
+        /**
+         * 广告的位置名称
+         */
         readonly place_name: string;
-		/**
-		 * 广告位置的键值
-		 */
+        /**
+         * 广告位置的键值
+         */
         readonly place_key: string;
-		/**
-		 * 广告的轮播方法 1-权重随机轮播 2-权重智能轮播 3-权重平均轮播
-		 */
+        /**
+         * 广告的轮播方法 1-权重随机轮播 2-权重智能轮播 3-权重平均轮播
+         */
         readonly strategy: WxServerSDK.ADVERT_STRATEGY;
-		/**
-		 * 当前广告在该广告的权重
-		 */
+        /**
+         * 当前广告在该广告的权重
+         */
         readonly weight: number;
-		/**
-		 * 广告的名称
-		 */
+        /**
+         * 广告的名称
+         */
         readonly name: string;
-		/**
-		 * 广告的描述
-		 */
+        /**
+         * 广告的描述
+         */
         readonly describe: string;
-		/**
-		 * 广告icon地址
-		 */
+        /**
+         * 广告icon地址
+         */
         readonly icon_url: string;
-		/**
-		 * 广告二维码地址
-		 */
+        /**
+         * 广告二维码地址
+         */
         readonly code_url: string;
-		/**
-		 * 广告appid
-		 */
+        /**
+         * 广告appid
+         */
         readonly app_id: string;
-		/**
-		 * 广告的参数
-		 */
+        /**
+         * 广告的参数
+         */
         readonly url_parameter: string;
     }
 
     export enum ADVERT_STRATEGY {
-		/**
-		 * 权重随机轮播
-		 */
+        /**
+         * 权重随机轮播
+         */
         WEIGHT_RANDOM = 1,
-		/**
-		 * 权重智能轮播
-		 */
+        /**
+         * 权重智能轮播
+         */
         SORT = 2,
-		/**
-		 * 权重平均轮播
-		 */
+        /**
+         * 权重平均轮播
+         */
         RANDOM = 3,
     }
 
@@ -1252,136 +1261,136 @@ namespace WxServerSDK {
         readonly code: number;
         readonly msg: string;
         readonly data: {
-			/**
-			 *  文案地址键名
-			 */
+            /**
+             *  文案地址键名
+             */
             readonly [key: string]: Array<WxServerSDK.SHARE_INFO>;
         };
     }
 
     export interface SHARE_INFO {
-		/**
-		 * 文案地址的主键id
-		 */
+        /**
+         * 文案地址的主键id
+         */
         readonly place_id: number;
-		/**
-		 * 文案的主键id
-		 */
+        /**
+         * 文案的主键id
+         */
         readonly clerk_id: number;
-		/**
-		 * 后台系统小游戏的id
-		 */
+        /**
+         * 后台系统小游戏的id
+         */
         readonly sys_app_id: number;
-		/**
-		 * 文案地址的名称
-		 */
+        /**
+         * 文案地址的名称
+         */
         readonly place_name: string;
-		/**
-		 * 文案地址的键名
-		 */
+        /**
+         * 文案地址的键名
+         */
         readonly place_key: string;
-		/**
-		 * 文案名称
-		 */
+        /**
+         * 文案名称
+         */
         readonly title: string;
-		/**
-		 * 文案的图案URL
-		 */
+        /**
+         * 文案的图案URL
+         */
         readonly design_url: string;
-		/**
-		 * 文案的权重
-		 */
+        /**
+         * 文案的权重
+         */
         readonly weight: number;
     }
 
     export interface USER_EMIT_INFO {
-		/**
-		 * 当前登陆人的系统主键ID
-		 */
+        /**
+         * 当前登陆人的系统主键ID
+         */
         user_id: number;
-		/**
-		 * 授权类型 1-已授权 2-未授权 3-未知
-		 */
+        /**
+         * 授权类型 1-已授权 2-未授权 3-未知
+         */
         authorize_type: number;
-		/**
-		 * 用户数据
-		 */
+        /**
+         * 用户数据
+         */
         user_data: WxServerSDK.USER_INFO;
     }
 
     export interface USER_INFO {
-		/**
-		 * 昵称
-		 */
+        /**
+         * 昵称
+         */
         nickName: string;
-		/**
-		 * 性别
-		 */
+        /**
+         * 性别
+         */
         gender: string;
-		/**
-		 * 头像地址
-		 */
+        /**
+         * 头像地址
+         */
         avatarUrl: string;
-		/**
-		 * 语言
-		 */
+        /**
+         * 语言
+         */
         language: string;
-		/**
-		 * 国家
-		 */
+        /**
+         * 国家
+         */
         country: string;
-		/**
-		 * 省份
-		 */
+        /**
+         * 省份
+         */
         province: string;
-		/**
-		 * 城市
-		 */
+        /**
+         * 城市
+         */
         city: string;
     }
 
     export interface RESULT_INFO {
-		/**
-		 * 标志 0-成功 1-参数缺少 2-参数错误
-		 */
+        /**
+         * 标志 0-成功 1-参数缺少 2-参数错误
+         */
         code: number;
         msg: string;
         data: Object;
     }
 
     export enum RecordType {
-		/**
-		 * 曝光内容
-		 */
+        /**
+         * 曝光内容
+         */
         EXPOSURECONENT,
-		/**
-		 * 曝光位置
-		 */
+        /**
+         * 曝光位置
+         */
         EXPOSUREPLACE,
-		/**
-		 * 点击
-		 */
+        /**
+         * 点击
+         */
         CLICK,
     }
 
     export type RECORD_SHARE_INFO = Array<{
-		/**
-		 * 分享位置ID
-		 */
+        /**
+         * 分享位置ID
+         */
         place_id: Number;
-		/**
-		 * 分享文案ID
-		 */
+        /**
+         * 分享文案ID
+         */
         clerk_id: Number;
     }>;
     export type RECORD_ADVERT_INFO = Array<{
-		/**
-		 *位置ID
-		 */
+        /**
+         *位置ID
+         */
         place_id: Number;
-		/**
-		 * 配置ID
-		 */
+        /**
+         * 配置ID
+         */
         deploy_id: Number;
     }>;
 
@@ -1389,33 +1398,33 @@ namespace WxServerSDK {
         readonly code: number;
         readonly msg: string;
         readonly data: {
-			/**
-			 *  视频展示的位置键名
-			 */
+            /**
+             *  视频展示的位置键名
+             */
             readonly [key: string]: WxServerSDK.VIDEO_INFO;
         };
     }
 
     export interface VIDEO_INFO {
-		/**
-		 * 视频的主键id
-		 */
+        /**
+         * 视频的主键id
+         */
         id: number;
-		/**
-		 * 后台系统小游戏的id
-		 */
+        /**
+         * 后台系统小游戏的id
+         */
         sys_app_id: number;
-		/**
-		 * 视频名称
-		 */
+        /**
+         * 视频名称
+         */
         name: string;
-		/**
-		 * 微信提供视频id
-		 */
+        /**
+         * 微信提供视频id
+         */
         ad_unit_id: string;
-		/**
-		 * 视频展示的位置键名
-		 */
+        /**
+         * 视频展示的位置键名
+         */
         place_key: string;
     }
 
@@ -1443,33 +1452,33 @@ namespace WxServerSDK {
         readonly code: number;
         readonly msg: string;
         readonly data: {
-			/**
-			 *  视频展示的位置键名
-			 */
+            /**
+             *  视频展示的位置键名
+             */
             readonly [key: string]: WxServerSDK.BANNER_INFO;
         };
     }
 
     export interface BANNER_INFO {
-		/**
-		 * banner的主键id
-		 */
+        /**
+         * banner的主键id
+         */
         id: number;
-		/**
-		 * 后台系统小游戏的id
-		 */
+        /**
+         * 后台系统小游戏的id
+         */
         sys_app_id: number;
-		/**
-		 *  banner名称
-		 */
+        /**
+         *  banner名称
+         */
         name: string;
-		/**
-		 * 微信提供banner的id
-		 */
+        /**
+         * 微信提供banner的id
+         */
         ad_unit_id: string;
-		/**
-		 * banner展示的位置键名
-		 */
+        /**
+         * banner展示的位置键名
+         */
         place_key: string;
     }
 
@@ -1477,33 +1486,33 @@ namespace WxServerSDK {
         readonly code: number;
         readonly msg: string;
         readonly data: {
-			/**
-			 *  插屏展示的位置键名
-			 */
+            /**
+             *  插屏展示的位置键名
+             */
             readonly [key: string]: WxServerSDK.INTERSTITIAL_INFO;
         };
     }
 
     export interface INTERSTITIAL_INFO {
-		/**
-		 * 插屏的主键id
-		 */
+        /**
+         * 插屏的主键id
+         */
         id: number;
-		/**
-		 * 后台系统小游戏的id
-		 */
+        /**
+         * 后台系统小游戏的id
+         */
         sys_app_id: number;
-		/**
-		 * 插屏名称
-		 */
+        /**
+         * 插屏名称
+         */
         name: string;
-		/**
-		 * 微信提供插屏的id
-		 */
+        /**
+         * 微信提供插屏的id
+         */
         ad_unit_id: string;
-		/**
-		 * 插屏展示的位置键名
-		 */
+        /**
+         * 插屏展示的位置键名
+         */
         place_key: string;
     }
 
@@ -1511,9 +1520,9 @@ namespace WxServerSDK {
         readonly code: number;
         readonly msg: string;
         readonly data: {
-			/**
-			 *  排行榜列表
-			 */
+            /**
+             *  排行榜列表
+             */
             readonly list: Array<WxServerSDK.RANK_INFO<T>>;
 
             /**

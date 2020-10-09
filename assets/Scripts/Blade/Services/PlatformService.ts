@@ -8,6 +8,7 @@ import QQPlatform from "../Platforms/QQPlatform";
 import GPPlatform from "../Platforms/GPPlatform";
 import TimerService from "./TimerService";
 import TTPlatform from "../Platforms/TTPlatform";
+import OPPOPlatform from "../Platforms/OPPOPlatform";
 
 @Singleton
 @Service("PlatformService")
@@ -40,6 +41,9 @@ class PlatformService implements IService {
                 break;
             case PlatformService.PlatformType.BYTEDANCE:
                 this.platform = new TTPlatform();
+                break;
+            case PlatformService.PlatformType.OPPO:
+                this.platform = new OPPOPlatform();
                 break;
             default:
                 this.platform = new WebPlatform();
@@ -106,6 +110,9 @@ class PlatformService implements IService {
         } else if (window["FBInstant"] != null) {
             // Facebook instant game
             return PlatformService.PlatformType.FACEBOOK
+        } else if (cc.sys.platform == cc.sys.OPPO_GAME) {
+            // OPPO 小游戏
+            return PlatformService.PlatformType.OPPO
         } else {
             // web
             return PlatformService.PlatformType.WEB
@@ -234,7 +241,8 @@ namespace PlatformService {
         ANDROID,
         IOS,
         WEB,
-        BYTEDANCE
+        BYTEDANCE,
+        OPPO
     }
 
     /**

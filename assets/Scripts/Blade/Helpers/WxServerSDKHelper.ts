@@ -42,12 +42,12 @@ export default class WxServerSDKHelper {
         );
     }
 
-	/**
-	 * 更新分享
-	 *
-	 * @returns
-	 * @memberof WXPlatform
-	 */
+    /**
+     * 更新分享
+     *
+     * @returns
+     * @memberof WXPlatform
+     */
     public static async updateMenuShareInfo(key: string, shareData = {}) {
         let inviteInfo = await WxServerSDK.getShareInfo(key);
         if (inviteInfo) {
@@ -76,6 +76,11 @@ export default class WxServerSDKHelper {
     public static async sendInvite(key: string, param: any = {}) {
         let inviteInfo = await WxServerSDK.getShareInfo(key);
         if (inviteInfo) {
+            if (blade.platform.getType() == PlatformService.PlatformType.BYTEDANCE) {
+                let ttPlatform = blade.platform.getPlatform() as TTPlatform;
+                await ttPlatform.sendInviteByID("541je52l53422qbib1", inviteInfo.design_url, inviteInfo.title, param)
+                return;
+            }
             await WxServerSDK.recordShare(
                 WxServerSDK.RecordType.EXPOSUREPLACE,
                 blade.timer.getTime(),
@@ -94,9 +99,6 @@ export default class WxServerSDKHelper {
             } else if (blade.platform.getType() == PlatformService.PlatformType.WX) {
                 let wxPlatform = blade.platform.getPlatform() as WxPlatform;
                 await wxPlatform.sendInvite(inviteInfo.design_url, inviteInfo.title, param)
-            } else if (blade.platform.getType() == PlatformService.PlatformType.BYTEDANCE) {
-                let ttPlatform = blade.platform.getPlatform() as TTPlatform;
-                await ttPlatform.sendInviteByID("541je52l53422qbib1", inviteInfo.design_url, inviteInfo.title, param)
             }
             await WxServerSDK.recordShare(
                 WxServerSDK.RecordType.EXPOSUREPLACE,
