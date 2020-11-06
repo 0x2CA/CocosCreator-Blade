@@ -27,6 +27,7 @@ export default class WxPlatform extends IPlatform {
     private videoState: IPlatform.AdState = IPlatform.AdState.None;
     private bannerState: IPlatform.AdState = IPlatform.AdState.None;
     private interstitialState: IPlatform.AdState = IPlatform.AdState.None;
+    private gridAdState: IPlatform.AdState = IPlatform.AdState.None;
 
     /**
     * 激励视频实例
@@ -37,11 +38,14 @@ export default class WxPlatform extends IPlatform {
 
     private interstitial: wx.InterstitialAd = null;
 
+    private gridAd: wx.GridAd = null;
+
+
     private bannerActive: boolean = false;
 
 
 
-    public async initialize(){
+    public async initialize() {
         // 获取尝试用户信息
         this.getUserInfoTry()
 
@@ -55,6 +59,7 @@ export default class WxPlatform extends IPlatform {
         this.preloadBanner();
         this.preloadInterstitial();
         this.preloadRewardVideo();
+        this.preloadGridAd();
     }
 
     public async lazyInitialize() {
@@ -264,15 +269,15 @@ export default class WxPlatform extends IPlatform {
 
 
     /**
-	 * 判断是否支持视频
-	 */
+     * 判断是否支持视频
+     */
     public isSupportRewardVideo(): boolean {
         return StringHelper.compareVersion(wx.getSystemInfoSync().SDKVersion, "2.0.4") >= 0
     }
 
     /**
-	 * 判断视频是否已经加载完成
-	 */
+     * 判断视频是否已经加载完成
+     */
     public isVideoLoaded(): boolean {
         return this.videoState == IPlatform.AdState.Loaded;
     }
@@ -328,9 +333,9 @@ export default class WxPlatform extends IPlatform {
         return await PromiseHelper.waitUntil(() => this.videoState != IPlatform.AdState.Loading);
     }
 
-	/**
-	 * 播放激励视频
-	 */
+    /**
+     * 播放激励视频
+     */
     public async playRewardVideo(): Promise<boolean> {
         if (this.video != null && this.videoState == IPlatform.AdState.Loaded) {
             this.videoState = IPlatform.AdState.None;
@@ -506,6 +511,7 @@ export default class WxPlatform extends IPlatform {
         }
 
         if (!this.isInterstitialLoaded()) {
+            this.preloadInterstitial();
             return;
         }
 
@@ -519,9 +525,87 @@ export default class WxPlatform extends IPlatform {
     }
 
 
+    public isSupportGridAd() {
+        return StringHelper.compareVersion(wx.getSystemInfoSync().SDKVersion, "2.9.2") >= 0
+    }
+
+
+    public isGridAdLoaded() {
+        return this.gridAdState == IPlatform.AdState.Loaded;
+    }
+
+    public async preloadGridAd() {
+        if (!this.isSupportGridAd()) {
+            return;
+        }
+
+        if (this.gridAdState == IPlatform.AdState.Loaded) {
+            return;
+        }
+
+        if (this.gridAdState == IPlatform.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => {
+                return this.gridAdState != IPlatform.AdState.Loading;
+            });
+        }
+
+        const sysInfo: wx.systemInfo = wx.getSystemInfoSync();
+        this.gridAdState = IPlatform.AdState.Loading;
+        if (this.gridAd == null) {
+            this.gridAd = wx.createGridAd({
+                adUnitId: PlatformConfig.wx.gridId,
+                adTheme: "white",
+                gridCount: 8,
+                style: {
+                    height: sysInfo.screenWidth * 0.8,
+                    width: sysInfo.screenWidth * 0.8,
+                    left: sysInfo.screenWidth * 0.1,
+                    top: (sysInfo.screenHeight - sysInfo.screenWidth * 0.8) / 2,
+                }
+            });
+
+            this.gridAd.onLoad(() => {
+                this.gridAdState = IPlatform.AdState.Loaded;
+            });
+
+            this.gridAd.onError(async (error) => {
+                this.gridAdState = IPlatform.AdState.None;
+            });
+
+            this.gridAd.onResize((res) => {
+                // 重设横幅位置
+                this.gridAd.style.top =
+                    (sysInfo.windowHeight - this.gridAd.style.realHeight) / 2;
+                this.gridAd.style.left =
+                    (sysInfo.windowWidth - this.gridAd.style.realWidth) / 2;
+            });
+
+        }
+    }
+
+    public activeGridAd(active: boolean) {
+        if (!this.isSupportGridAd()) {
+            return;
+        }
+
+        if (!this.isGridAdLoaded()) {
+            this.preloadGridAd();
+            return;
+        }
+
+        if (active) {
+            this.gridAd.show();
+            return true;
+        } else {
+            this.gridAd.hide();
+            return true;
+        }
+    }
+
+
     /**
-	 * 发送邀请
-	 */
+     * 发送邀请
+     */
     public async sendInvite(imageUrl: string, title: string, param: any): Promise<any> {
         wx.shareAppMessage({
             title: title,
@@ -535,9 +619,9 @@ export default class WxPlatform extends IPlatform {
 
 
     /**
-	 * 设备震动
-	 * @param short
-	 */
+     * 设备震动
+     * @param short
+     */
     public vibrate(short: boolean = true) {
         if (short) {
             wx.vibrateShort({
@@ -555,9 +639,9 @@ export default class WxPlatform extends IPlatform {
     }
 
     /**
-	 * 跳转到其他小游戏
-	 * @param appid
-	 */
+     * 跳转到其他小游戏
+     * @param appid
+     */
     public linkGame(appid: string, path: string, extraData: any) {
         return new Promise((resolve, reject) => {
             wx.navigateToMiniProgram({

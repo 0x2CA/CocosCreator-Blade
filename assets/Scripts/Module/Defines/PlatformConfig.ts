@@ -8,6 +8,7 @@ const PlatformConfig = {
         interstitialId: "",
         videoId: "",
         bannerId: "",
+        gridId: ""
     },
     //手Q
     qq: {

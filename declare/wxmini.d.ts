@@ -504,6 +504,33 @@ declare namespace wx {
         show(): Promise<any>;
     }
 
+    interface GridAd {
+        style: {
+            /** banner 广告组件的左上角横坐标*/
+            left: number,
+            /** banner 广告组件的左上角纵坐标*/
+            top: number,
+            /** banner 广告组件的宽度。最小 300，最大至 屏幕宽度（屏幕宽度可以通过 wx.getSystemInfoSync() 获取）。*/
+            width: number,
+            /** banner 广告组件的高度*/
+            height: number,
+            /** banner 广告组件经过缩放后真实的宽度*/
+            realWidth: number,
+            /** banner 广告组件经过缩放后真实的高度*/
+            realHeight: number
+        };
+
+        offError(callback: Function);
+        onError(callback: Function);
+        offLoad(callback: Function);
+        onLoad(callback: Function);
+        onResize(callback: (res: { width: number, height: number }) => void): void;
+        offResize(callback: () => void): void;
+        show(): Promise<any>;
+        hide(): void;
+        destroy(): void;
+    }
+
     /**
      * 激励视频广告组件。激励视频广告组件是一个原生组件，并且是一个全局单例。层级比上屏 Canvas 高，会覆盖在上屏 Canvas 上。激励视频 广告组件默认是隐藏的，需要调用 RewardedVideoAd.show() 将其显示。
      */
@@ -554,6 +581,19 @@ declare namespace wx {
      * @param Option 
      */
     function createInterstitialAd(Option: { adUnitId: string }): InterstitialAd;
+
+    function createGridAd(Option: {
+        adUnitId: string,
+        adIntervals?: number,
+        style: {
+            left: number,
+            top: number,
+            width: number,
+            height: number
+        },
+        adTheme: "white" | "black",
+        gridCount: number = 5
+    }): GridAd;
 
     /**
      * 显示操作菜单
