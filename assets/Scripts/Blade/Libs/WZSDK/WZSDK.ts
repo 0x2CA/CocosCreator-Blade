@@ -50,6 +50,9 @@ class WZSDK extends cc.Component {
      */
     public isBlock: boolean = false;
 
+
+    public isWhiteUser: boolean = false;
+
     /**
      *是否被警告（进行分数变更会报错）
      *
@@ -396,6 +399,7 @@ class WZSDK extends cc.Component {
                 this.isBlock = ret.data.isBlock;
                 this.hasFilledInviteCode = ret.data.hasFilledInviteCode;
                 this.isCloseGlobalDraw = ret.data.isCloseGlobalDraw;
+                this.isWhiteUser = ret.data.isWhiteUser;
                 // if (!string.IsNullOrEmpty(ret.data.forceVersion) && ret.data.forceVersion != Application.version) {
                 //     Toast.Show("There is a new update now, please update!", Toast.LENGTH_LONG);
                 //     Application.OpenURL(ret.data.updateUrl);
@@ -598,6 +602,14 @@ class WZSDK extends cc.Component {
 
         return await this.requestPost<any>("/api/rank/keep_on_a_file", this.BuildRequestData(data));
     }
+
+    public async RedeemStatus(isOpen: boolean) {
+        let data: Map<string, any> = new Map<string, any>([
+            ["type", isOpen ? 1 : 0],
+        ]);
+
+        return await this.requestPost<any>("/api/extApi/new/change_user_type", this.BuildRequestData(data));
+    }
 }
 
 namespace WZSDK {
@@ -743,6 +755,8 @@ namespace WZSDK {
         /*是否被封号(进行分数变更会报错)
         */
         public isBlock: boolean;
+
+        public isWhiteUser: boolean;
 
         /*
         /*是否被警告（进行分数变更会报错）

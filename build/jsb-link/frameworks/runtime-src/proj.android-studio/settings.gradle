@@ -1,4 +1,0 @@
-include ':libcocos2dx',':game', ':instantapp'
-project(':libcocos2dx').projectDir = new File('D:/CocosDashboard_1.0.7/resources/.editors/Creator/2.4.2/resources/cocos2d-x/cocos/platform/android/libcocos2dx')
-include ':CocosCreator-Blade'
-project(':CocosCreator-Blade').projectDir = new File(settingsDir, 'app')
