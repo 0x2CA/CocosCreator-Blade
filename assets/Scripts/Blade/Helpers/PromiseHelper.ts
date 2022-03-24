@@ -18,9 +18,9 @@ export default class PromiseHelper {
     }
 
     /**
-	 * Until条件达成才退出
-	 */
-    public static waitUntil(untilFunc: Function, thisObj?: any, ...args: any[]): Promise<any> {
+     * Until条件达成才退出
+     */
+    public static waitUntil(untilFunc: Function, thisObj?: any, ...args: any[]): Promise<void> {
         if (untilFunc.call(thisObj, ...args)) {
             return Promise.resolve();
         }
@@ -44,10 +44,10 @@ export default class PromiseHelper {
         });
     }
 
-	/**
-	 * While提交达成前一直等待
-	 */
-    public static waitWhile(whileFunc: Function, thisObj?: any, ...args: any[]): Promise<any> {
+    /**
+     * While提交达成前一直等待
+     */
+    public static waitWhile(whileFunc: Function, thisObj?: any, ...args: any[]): Promise<void> {
         if (!whileFunc.call(thisObj, ...args)) {
             return Promise.resolve();
         }
@@ -71,9 +71,9 @@ export default class PromiseHelper {
         });
     }
 
-	/**
-	 * 等待下一帧
-	 */
+    /**
+     * 等待下一帧
+     */
     public static nextFrame() {
         return new Promise((resolve, reject) => {
             cc.director.once(cc.Director.EVENT_BEFORE_UPDATE, resolve);
@@ -81,9 +81,9 @@ export default class PromiseHelper {
     }
 
     /**
-	 * 加载一个资源
-	 * @param url
-	 */
+     * 加载一个资源
+     * @param url
+     */
     public static loadRes<T extends cc.Asset>(url: string, type: typeof cc.Asset): Promise<T> {
         return new Promise((resolve, reject) => {
             cc.resources.load(url, type, (err: Error, res: any) => {
@@ -96,10 +96,10 @@ export default class PromiseHelper {
         });
     }
 
-	/**
-	 * 加载一组资源
-	 * @param url
-	 */
+    /**
+     * 加载一组资源
+     * @param url
+     */
     public static loadResArray<T extends cc.Asset>(
         url: string[],
         type: typeof cc.Asset

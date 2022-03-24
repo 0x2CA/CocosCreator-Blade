@@ -13,7 +13,7 @@ export default class ControllerService implements IService {
 
     private list: Map<string, IController>
 
-    public async initialize(){
+    public async initialize() {
         this.list = new Map<string, IController>();
     }
 
@@ -45,7 +45,7 @@ export default class ControllerService implements IService {
 
     /**
      * 获取指定控制器
-     * @param alias 
+     * @param alias
      */
     public getController(alias: string): IController {
         if (this.list.has(alias)) {

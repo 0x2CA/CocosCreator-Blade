@@ -95,17 +95,17 @@ abstract class IPopup extends cc.Component implements ITicker {
     /**
     * 显示窗口动画
     */
-    public appear(): Promise<any> {
+    public appear(): Promise<void> {
         return new Promise((resolve, reject) => {
             this.node.y = 150;
             Tween.get(this.node).to({ y: 0 }, 400, Ease.backOut).call(resolve);
         });
     }
 
-	/**
-	 * 隐藏窗口动画
-	 */
-    public disappear(): Promise<any> {
+    /**
+     * 隐藏窗口动画
+     */
+    public disappear(): Promise<void> {
         return new Promise((resolve, reject) => {
             Tween.get(this.node)
                 .to({ y: 250 }, 400, Ease.backIn)
@@ -125,15 +125,15 @@ abstract class IPopup extends cc.Component implements ITicker {
     }
 
     /**
-	 * 模版参数, 传入打开参数
-	 * @param tpl
-	 */
+     * 模版参数, 传入打开参数
+     * @param tpl
+     */
     public applyTemplate?(tpl: any);
 
-	/**
-	 * 发送用户点击结果, 发送后将关闭弹窗
-	 * @param result
-	 */
+    /**
+     * 发送用户点击结果, 发送后将关闭弹窗
+     * @param result
+     */
     protected submit(result: string) {
         this.node.emit(PopupService.EventType.POPUP_CLICK, result, this.node);
     }

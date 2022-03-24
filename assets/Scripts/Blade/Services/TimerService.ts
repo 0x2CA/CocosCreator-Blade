@@ -25,13 +25,13 @@ class TimerService implements IService, ITicker {
     private timeStamp: number = new Date().getTime();
 
     /**
-	 * 最后同步的时间
-	 */
+     * 最后同步的时间
+     */
     private lastSyncTime: number = new Date().getTime();
 
-	/**
-	 * 是否正在同步时间
-	 */
+    /**
+     * 是否正在同步时间
+     */
     private syncing: boolean = false;
 
 
@@ -56,12 +56,13 @@ class TimerService implements IService, ITicker {
     public async lazyInitialize() {
     }
 
-	/**
-	 * 网络同步时间
-	 */
-    public syncTime(): Promise<any> {
+    /**
+     * 网络同步时间
+     */
+    public syncTime(): Promise<void> {
         if (this.syncing) {
-            return Promise.resolve("正在同步时间!");
+            cc.log("正在同步时间!");
+            return Promise.resolve();
         }
 
         this.syncing = true;
@@ -84,9 +85,9 @@ class TimerService implements IService, ITicker {
         return Math.floor(this.timeStamp);
     }
 
-	/**
-	 * 获取当时网络时间(秒)
-	 */
+    /**
+     * 获取当时网络时间(秒)
+     */
     public getSecond() {
         return Math.floor(this.timeStamp / 1000);
     }
@@ -94,10 +95,10 @@ class TimerService implements IService, ITicker {
 
     /**
      * 开始一个定时器
-     * @param seconds 
-     * @param callback 
-     * @param thisArgs 
-     * @param args 
+     * @param seconds
+     * @param callback
+     * @param thisArgs
+     * @param args
      */
     public startTimer(seconds: number, callback: Function, thisArgs?: any, ...args: any[]): TimerService.Timer {
         let timer = {
@@ -115,7 +116,7 @@ class TimerService implements IService, ITicker {
 
     /**
      * 停止一个定时器
-     * @param timer 
+     * @param timer
      */
     public stopTimer(timer: TimerService.Timer) {
         this.list.delete(timer)
@@ -147,7 +148,7 @@ class TimerService implements IService, ITicker {
 
     /**
      * 下一帧执行
-     * @param func 
+     * @param func
      */
     public runNextFrame(func: Function, target?: any) {
         cc.director.once(cc.Director.EVENT_BEFORE_UPDATE, func as any, target);

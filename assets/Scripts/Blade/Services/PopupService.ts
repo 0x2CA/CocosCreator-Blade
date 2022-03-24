@@ -36,7 +36,7 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
 
     public async lazyInitialize() {
 
-        new Promise((resolve, reject) => {
+        await new Promise<void>((resolve, reject) => {
             cc.resources.load(PopupService.ModalPrefabPath, cc.Prefab, (err: Error, res: any) => {
                 if (err) {
                     cc.error(`路径('${PopupService.ModalPrefabPath}')不存在模态层预制件`);
@@ -64,7 +64,7 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
    * 从目录加载多国语言json文件
    */
     public loadFolder() {
-        return new Promise((resolve, reject) => {
+        return new Promise<void>((resolve, reject) => {
             cc.resources.loadDir("Prefabs/Panels", (err, resource) => {
 
                 const prefabResList = resource as cc.Prefab[];
@@ -295,10 +295,10 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
 
     /**
      * 显示弹窗，强行插队
-     * @param node 
-     * @param template 
-     * @param callback 
-     * @param thisTarget 
+     * @param node
+     * @param template
+     * @param callback
+     * @param thisTarget
      */
     public popNodeTop(
         node: cc.Node | cc.Prefab | string,
@@ -322,9 +322,9 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
         return this.list.size() > 0
     }
 
-	/**
-	 * 显示模态层
-	 */
+    /**
+     * 显示模态层
+     */
     private showModal() {
         if (this.modal == null || this.modal.active) {
             return;
@@ -337,9 +337,9 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
     }
 
 
-	/**
-	 * 隐藏模态层
-	 */
+    /**
+     * 隐藏模态层
+     */
     private hideModal(): Promise<any> {
         if (this.modal == null) {
             return Promise.reject();
