@@ -1,17 +1,41 @@
-import IService from "../../Blade/Interfaces/IService";
-import Singleton from "../../Blade/Decorators/Singleton";
-import Service from "../../Blade/Decorators/Service";
+import SingletonBase from "../Bases/SingletonBase";
 
-@Singleton
-@Service("NotificationService")
-export default class NotificationService extends cc.EventTarget implements IService {
-    public alias: string;
-    public static readonly instance: NotificationService;
+export default class NotificationService extends SingletonBase {
 
+    private event: cc.EventTarget = new cc.EventTarget();
 
-    public async initialize() {
+    public onInitialize() {
+        this.event.clear();
     }
-    public async lazyInitialize() {
+
+    public onDispose() {
+    }
+
+    public hasEventListener(type: string): boolean {
+        return this.event.hasEventListener(type);
+    }
+
+    public emit(key: string, arg1?: any, arg2?: any, arg3?: any, arg4?: any, arg5?: any): void {
+        this.event.emit(key, arg1, arg2, arg3, arg4, arg5);
+    }
+    public on<T extends Function>(type: string, callback: T, target?: any, useCapture?: boolean): T {
+        return this.event.on(type, callback, target, useCapture);
+    }
+
+    public off(type: string, callback?: Function, target?: any): void {
+        this.event.off(type, callback, target);
+    }
+
+    public targetOff(target: any): void {
+        this.event.targetOff(target);
+    }
+
+    public once(type: string, callback: (arg1?: any, arg2?: any, arg3?: any, arg4?: any, arg5?: any) => void, target?: any): void {
+        this.on(type, callback, target, true);
+    }
+
+    public clear(): void {
+        this.event.clear();
     }
 
 }

@@ -1,31 +1,30 @@
-import Singleton from "../../Blade/Decorators/Singleton";
-import Service from "../../Blade/Decorators/Service";
-import IService from "../../Blade/Interfaces/IService";
 import ITicker from "../../Blade/Interfaces/ITicker";
+import SingletonBase from "../Bases/SingletonBase";
 
 /**
  * 计时管理类
  */
-@Singleton
-@Service("TickerService")
-export default class TickerService implements IService {
-    public alias: string;
-    public static readonly instance: TickerService
+export default class TickerService extends SingletonBase {
 
-    public async initialize() {
-    }
-
-    public async lazyInitialize() {
+    public onInitialize() {
         const appNode = cc.find('Blade');
+
+        // if (appNode == null) {
+        //     throw new Error("没有Blade节点")
+        // }
+
         if (appNode.getComponent(TickerComponent) == null) {
             appNode.addComponent(TickerComponent);
         }
     }
 
+    public onDispose() {
+
+    }
 
     private _timeScale: number = 1;
     private _pause: boolean = false;
-    private tickList: Set<ITicker> = new Set<ITicker>();
+    private _tickList: Set<ITicker> = new Set<ITicker>();
 
     public get timeScale() {
         return this._timeScale;
@@ -47,22 +46,20 @@ export default class TickerService implements IService {
         }
     }
 
-    public setPause(pause: boolean) {
-        this.pause = pause;
-    }
-
     public tick(delta: number) {
         delta *= this._timeScale;
-        this.tickList.forEach((item) => {
-            if (!this._pause) {
-                item.onTick(delta);
+        this._tickList.forEach((item) => {
+            if (item.onTick) {
+                if (!this._pause) {
+                    item.onTick(delta);
+                }
             }
         })
     }
 
     public fixedTick(delta: number) {
         let fixedDelta = 1 / cc.game.getFrameRate() * this._timeScale;
-        this.tickList.forEach((item) => {
+        this._tickList.forEach((item) => {
             if (item.onFixedTick) {
                 if (!this._pause) {
                     item.onFixedTick(fixedDelta);
@@ -73,7 +70,7 @@ export default class TickerService implements IService {
 
     public lateTick() {
 
-        this.tickList.forEach((item) => {
+        this._tickList.forEach((item) => {
             if (item.onLateTick) {
                 if (!this._pause) {
                     item.onLateTick();
@@ -85,21 +82,21 @@ export default class TickerService implements IService {
 
     /**
      * 注册绑定计时器
-     * @param ticker 
+     * @param ticker
      */
-    public register(ticker: ITicker) {
-        if (this.tickList.has(ticker) == false) {
-            this.tickList.add(ticker);
+    public on(ticker: ITicker) {
+        if (this._tickList.has(ticker) == false) {
+            this._tickList.add(ticker);
         }
     }
 
     /**
      * 取消绑定计时器
-     * @param ticker 
+     * @param ticker
      */
-    public unregister(ticker: ITicker) {
-        if (this.tickList.has(ticker)) {
-            this.tickList.delete(ticker);
+    public off(ticker: ITicker) {
+        if (this._tickList.has(ticker)) {
+            this._tickList.delete(ticker);
         }
     }
 }
@@ -110,13 +107,22 @@ export default class TickerService implements IService {
 class TickerComponent extends cc.Component {
     private tickerService: TickerService;
 
+    private fixedFrame: number = 60;
+    private fixedTime: number = 0;
+
     onLoad() {
-        this.tickerService = TickerService.instance;
+        this.tickerService = TickerService.getInstance();
     }
 
     update(dt: number) {
+        this.fixedTime += dt;
+
+        while (this.fixedTime >= 1 / this.fixedFrame) {
+            this.fixedTime -= 1 / this.fixedFrame;
+            this.tickerService.fixedTick(1 / this.fixedFrame);
+        }
+
         this.tickerService.tick(dt);
-        this.tickerService.fixedTick(dt);
     }
 
     lateUpdate() {

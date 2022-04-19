@@ -1,13 +1,15 @@
-import IPlatform from "../Interfaces/IPlatform";
+import PlatformBase from "../Bases/PlatformBase";
 import HttpHelper from "../Helpers/HttpHelper";
 import StringHelper from "../Helpers/StringHelper";
 import PromiseHelper from "../Helpers/PromiseHelper";
 import PlatformConfig from "../../Module/Defines/PlatformConfig";
+import AudioService from "../Services/AudioService";
+import TickerService from "../Services/TickerService";
 
 /**
  *  QQ
  */
-export default class QQPlatform extends IPlatform {
+export default class QQPlatform extends PlatformBase {
 
     // 启动参数
     private launchOptions: qq.launchOption
@@ -24,10 +26,10 @@ export default class QQPlatform extends IPlatform {
         success: Function
     } = null;
 
-    private videoState: IPlatform.AdState = IPlatform.AdState.None;
-    private bannerState: IPlatform.AdState = IPlatform.AdState.None;
-    private interstitialState: IPlatform.AdState = IPlatform.AdState.None;
-    private blockState: IPlatform.AdState = IPlatform.AdState.None;
+    private videoState: PlatformBase.AdState = PlatformBase.AdState.None;
+    private bannerState: PlatformBase.AdState = PlatformBase.AdState.None;
+    private interstitialState: PlatformBase.AdState = PlatformBase.AdState.None;
+    private blockState: PlatformBase.AdState = PlatformBase.AdState.None;
 
     /**
     * 激励视频实例
@@ -59,7 +61,7 @@ export default class QQPlatform extends IPlatform {
 
 
 
-    public async initialize() {
+    public onInitialize() {
         // 获取尝试用户信息
         this.getUserInfoTry()
 
@@ -67,7 +69,7 @@ export default class QQPlatform extends IPlatform {
             // 更新启动参数
             this.setLaunchOptions(res);
             // 显示事件
-            this.emit(IPlatform.EventType.OnShow, res)
+            this.emit(PlatformBase.EventType.OnShow, res)
         });
 
         this.preloadBanner();
@@ -76,10 +78,6 @@ export default class QQPlatform extends IPlatform {
         this.preloadAppBox();
         this.preloadBlockAd();
     }
-
-    public async lazyInitialize() {
-    }
-
 
     public getArchive(name: string): string {
         return qq.getStorageSync(name) as string;
@@ -98,7 +96,7 @@ export default class QQPlatform extends IPlatform {
 
     /**
      * 更新启动参数
-     * @param value 
+     * @param value
      */
     private setLaunchOptions(value: qq.launchOption) {
         this.launchOptions = value;
@@ -274,7 +272,7 @@ export default class QQPlatform extends IPlatform {
 
         this.shareMenuInfo = {
             imageUrl, title, query, success: () => {
-                this.emit(IPlatform.EventType.OpenShare, imageUrl, title, param);
+                this.emit(PlatformBase.EventType.OpenShare, imageUrl, title, param);
                 if (callback) {
                     callback.call(caller, imageUrl, title, param);
                 }
@@ -284,17 +282,17 @@ export default class QQPlatform extends IPlatform {
 
 
     /**
-	 * 判断是否支持视频
-	 */
+     * 判断是否支持视频
+     */
     public isSupportRewardVideo(): boolean {
         return StringHelper.compareVersion(qq.getSystemInfoSync().SDKVersion, "0.0.0") >= 0
     }
 
     /**
-	 * 判断视频是否已经加载完成
-	 */
+     * 判断视频是否已经加载完成
+     */
     public isVideoLoaded(): boolean {
-        let result = this.videoState == IPlatform.AdState.Loaded;
+        let result = this.videoState == PlatformBase.AdState.Loaded;
         if (result == false) {
             this.preloadRewardVideo();
         }
@@ -310,16 +308,16 @@ export default class QQPlatform extends IPlatform {
         }
 
         // 已经加载
-        if (this.videoState == IPlatform.AdState.Loaded) {
+        if (this.videoState == PlatformBase.AdState.Loaded) {
             return;
         }
 
         // 正在加载, 等待加载结束
-        if (this.videoState == IPlatform.AdState.Loading) {
-            return await PromiseHelper.waitUntil(() => this.videoState != IPlatform.AdState.Loading);
+        if (this.videoState == PlatformBase.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => this.videoState != PlatformBase.AdState.Loading);
         }
 
-        this.videoState = IPlatform.AdState.Loading;
+        this.videoState = PlatformBase.AdState.Loading;
 
         if (this.video == null) {
             // 初次创建会调load方法
@@ -328,19 +326,19 @@ export default class QQPlatform extends IPlatform {
             });
             // 加载成功
             this.video.onLoad(() => {
-                this.videoState = IPlatform.AdState.Loaded;
+                this.videoState = PlatformBase.AdState.Loaded;
             });
             // 加载失败
             this.video.onError((err) => {
-                this.videoState = IPlatform.AdState.None;
+                this.videoState = PlatformBase.AdState.None;
             });
             this.video.onClose((res) => {
                 let result = (res && res.isEnded) || res === undefined;
-                blade.ticker.setPause(false);
-                blade.audio.resumeAll();
+                TickerService.getInstance().pause = false;
+                AudioService.getInstance().resumeAll();
                 this.preloadRewardVideo();
                 // 发送结果
-                this.emit(IPlatform.EventType.CloseVideo, result);
+                this.emit(PlatformBase.EventType.CloseVideo, result);
             })
         } else {
             this.video.load();
@@ -349,33 +347,33 @@ export default class QQPlatform extends IPlatform {
         this.video.load();
 
         // 正在加载, 等待加载结束
-        return await PromiseHelper.waitUntil(() => this.videoState != IPlatform.AdState.Loading);
+        return await PromiseHelper.waitUntil(() => this.videoState != PlatformBase.AdState.Loading);
     }
 
-	/**
-	 * 播放激励视频
-	 */
+    /**
+     * 播放激励视频
+     */
     public async playRewardVideo(): Promise<boolean> {
-        if (this.video != null && this.videoState == IPlatform.AdState.Loaded) {
-            this.videoState = IPlatform.AdState.None;
-            blade.ticker.setPause(true);
-            blade.audio.pauseAll();
+        if (this.video != null && this.videoState == PlatformBase.AdState.Loaded) {
+            this.videoState = PlatformBase.AdState.None;
+            TickerService.getInstance().pause = true;
+            AudioService.getInstance().pauseAll();
 
             let result: boolean = await new Promise(async (resolve, reject) => {
                 const closeFunc = (result) => {
                     resolve(result);
                 };
-                this.once(IPlatform.EventType.CloseVideo, closeFunc);
+                this.once(PlatformBase.EventType.CloseVideo, closeFunc);
                 try {
                     await this.video.show()
-                    this.emit(IPlatform.EventType.OpenVideo);
+                    this.emit(PlatformBase.EventType.OpenVideo);
                 } catch (error) {
-                    this.off(IPlatform.EventType.CloseVideo, closeFunc);
+                    this.off(PlatformBase.EventType.CloseVideo, closeFunc);
                     resolve(false);
                 }
             })
-            blade.ticker.setPause(false);
-            blade.audio.resumeAll();
+            TickerService.getInstance().pause = false;
+            AudioService.getInstance().resumeAll();
             this.preloadRewardVideo();
             return result;
         } else {
@@ -402,13 +400,13 @@ export default class QQPlatform extends IPlatform {
         }
 
         // 已经加载
-        if (this.bannerState == IPlatform.AdState.Loaded) {
+        if (this.bannerState == PlatformBase.AdState.Loaded) {
             return;
         }
 
         // 正在加载, 等待加载结束
-        if (this.bannerState == IPlatform.AdState.Loading) {
-            return await PromiseHelper.waitUntil(() => this.bannerState != IPlatform.AdState.Loading);
+        if (this.bannerState == PlatformBase.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => this.bannerState != PlatformBase.AdState.Loading);
         }
 
         if (this.banner) {
@@ -431,16 +429,16 @@ export default class QQPlatform extends IPlatform {
 
         this.banner.onLoad(async () => {
             console.log("banner", "加载成功");
-            this.bannerState = IPlatform.AdState.Loaded;
+            this.bannerState = PlatformBase.AdState.Loaded;
             if (this.bannerActive) {
-                this.emit(IPlatform.EventType.OpenBanner);
+                this.emit(PlatformBase.EventType.OpenBanner);
                 this.banner.show();
             }
         });
 
         this.banner.onError((err) => {
             console.error("banner", "加载失败", err);
-            this.bannerState = IPlatform.AdState.None;
+            this.bannerState = PlatformBase.AdState.None;
         });
 
         this.banner.onResize((res) => {
@@ -456,7 +454,7 @@ export default class QQPlatform extends IPlatform {
                 (sysInfo.screenWidth - this.bannerStyle.width) / 2;
         });
 
-        this.bannerState = IPlatform.AdState.Loading;
+        this.bannerState = PlatformBase.AdState.Loading;
     }
 
 
@@ -471,18 +469,18 @@ export default class QQPlatform extends IPlatform {
         }
 
         if (active) {
-            if (this.bannerState != IPlatform.AdState.Loaded) {
+            if (this.bannerState != PlatformBase.AdState.Loaded) {
                 this.preloadBanner();
                 return false;
             }
 
-            this.emit(IPlatform.EventType.OpenBanner);
+            this.emit(PlatformBase.EventType.OpenBanner);
             this.banner.show();
-            this.bannerState = IPlatform.AdState.Opening;
+            this.bannerState = PlatformBase.AdState.Opening;
             return true;
         } else {
             // 直接销毁重新创建banner, 刷新广告
-            if (this.bannerState != IPlatform.AdState.Opening) {
+            if (this.bannerState != PlatformBase.AdState.Opening) {
                 return false;
             }
             // this.emit(IPlatform.EventType.CloseBanner);
@@ -493,7 +491,7 @@ export default class QQPlatform extends IPlatform {
 
             // XXX: 不销毁
             this.banner.hide();
-            this.bannerState = IPlatform.AdState.Loaded;
+            this.bannerState = PlatformBase.AdState.Loaded;
             return true;
         }
     }
@@ -509,13 +507,13 @@ export default class QQPlatform extends IPlatform {
         }
 
         // 已经加载
-        if (this.blockState == IPlatform.AdState.Loaded) {
+        if (this.blockState == PlatformBase.AdState.Loaded) {
             return;
         }
 
         // 正在加载, 等待加载结束
-        if (this.blockState == IPlatform.AdState.Loading) {
-            return await PromiseHelper.waitUntil(() => this.blockState != IPlatform.AdState.Loading);
+        if (this.blockState == PlatformBase.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => this.blockState != PlatformBase.AdState.Loading);
         }
 
         if (this.block) {
@@ -538,7 +536,7 @@ export default class QQPlatform extends IPlatform {
 
         this.block.onLoad(async () => {
             console.log("block", "加载成功");
-            this.blockState = IPlatform.AdState.Loaded;
+            this.blockState = PlatformBase.AdState.Loaded;
             if (this.blockActive) {
                 this.block.show();
             }
@@ -546,7 +544,7 @@ export default class QQPlatform extends IPlatform {
 
         this.block.onError((err) => {
             console.error("block", "错误", err);
-            this.blockState = IPlatform.AdState.None;
+            this.blockState = PlatformBase.AdState.None;
         });
 
         this.block.onResize((res) => {
@@ -562,7 +560,7 @@ export default class QQPlatform extends IPlatform {
         });
 
 
-        this.blockState = IPlatform.AdState.Loading;
+        this.blockState = PlatformBase.AdState.Loading;
     }
 
     public activeBlockAd(active: boolean) {
@@ -572,22 +570,22 @@ export default class QQPlatform extends IPlatform {
         }
 
         if (active) {
-            if (this.blockState != IPlatform.AdState.Loaded) {
+            if (this.blockState != PlatformBase.AdState.Loaded) {
                 this.preloadBlockAd();
                 return false;
             }
 
             this.block.show();
-            this.blockState = IPlatform.AdState.Opening;
+            this.blockState = PlatformBase.AdState.Opening;
             return true;
         } else {
             // 直接销毁重新创建banner, 刷新广告
-            if (this.blockState != IPlatform.AdState.Opening) {
+            if (this.blockState != PlatformBase.AdState.Opening) {
                 return false;
             }
             this.block.destroy();
             this.block = null;
-            this.blockState = IPlatform.AdState.None;
+            this.blockState = PlatformBase.AdState.None;
             this.preloadBlockAd();
             return true;
         }
@@ -598,7 +596,7 @@ export default class QQPlatform extends IPlatform {
     }
 
     public isInterstitialLoaded() {
-        return this.interstitialState == IPlatform.AdState.Loaded;
+        return this.interstitialState == PlatformBase.AdState.Loaded;
     }
 
     public async preloadInterstitial() {
@@ -606,32 +604,32 @@ export default class QQPlatform extends IPlatform {
             return;
         }
 
-        if (this.interstitialState == IPlatform.AdState.Loaded) {
+        if (this.interstitialState == PlatformBase.AdState.Loaded) {
             return;
         }
 
-        if (this.interstitialState == IPlatform.AdState.Loading) {
+        if (this.interstitialState == PlatformBase.AdState.Loading) {
             return await PromiseHelper.waitUntil(() => {
-                return this.interstitialState != IPlatform.AdState.Loading;
+                return this.interstitialState != PlatformBase.AdState.Loading;
             });
         }
 
-        this.interstitialState = IPlatform.AdState.Loading;
+        this.interstitialState = PlatformBase.AdState.Loading;
         if (this.interstitial == null) {
             this.interstitial = qq.createInterstitialAd({ adUnitId: PlatformConfig.qq.interstitialId });
 
             this.interstitial.onLoad(() => {
-                this.interstitialState = IPlatform.AdState.Loaded;
+                this.interstitialState = PlatformBase.AdState.Loaded;
             });
 
             this.interstitial.onError(async (error) => {
-                this.interstitialState = IPlatform.AdState.None;
+                this.interstitialState = PlatformBase.AdState.None;
                 cc.log(error)
             });
 
             this.interstitial.onClose(() => {
-                this.interstitialState = IPlatform.AdState.None;
-                this.emit(IPlatform.EventType.CloseInterstitial);
+                this.interstitialState = PlatformBase.AdState.None;
+                this.emit(PlatformBase.EventType.CloseInterstitial);
             });
         }
     }
@@ -647,8 +645,8 @@ export default class QQPlatform extends IPlatform {
 
         try {
             await this.interstitial.show();
-            this.interstitialState = IPlatform.AdState.Opening;
-            this.emit(IPlatform.EventType.OpenInterstitial)
+            this.interstitialState = PlatformBase.AdState.Opening;
+            this.emit(PlatformBase.EventType.OpenInterstitial)
         } catch (error) {
             cc.log(error);
         }
@@ -694,8 +692,8 @@ export default class QQPlatform extends IPlatform {
 
 
     /**
-	 * 发送邀请
-	 */
+     * 发送邀请
+     */
     public async sendInvite(imageUrl: string, title: string, param: any): Promise<any> {
         param.shareTime = blade.timer.getTime();
 
@@ -706,14 +704,14 @@ export default class QQPlatform extends IPlatform {
         });
         await PromiseHelper.wait(1)
 
-        this.emit(IPlatform.EventType.OpenShare, imageUrl, title, param);
+        this.emit(PlatformBase.EventType.OpenShare, imageUrl, title, param);
     }
 
 
     /**
-	 * 设备震动
-	 * @param short
-	 */
+     * 设备震动
+     * @param short
+     */
     public vibrate(short: boolean = true) {
         if (short) {
             qq.vibrateShort({
@@ -731,9 +729,9 @@ export default class QQPlatform extends IPlatform {
     }
 
     /**
-	 * 跳转到其他小游戏
-	 * @param appid
-	 */
+     * 跳转到其他小游戏
+     * @param appid
+     */
     public linkGame(appid: string, path: string, extraData: any) {
         return new Promise((resolve, reject) => {
             qq.navigateToMiniProgram({

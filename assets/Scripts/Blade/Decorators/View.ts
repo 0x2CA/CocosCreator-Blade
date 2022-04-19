@@ -1,12 +1,12 @@
-import IView from "../../Blade/Interfaces/IView"
+import ViewBase from "../Bases/ViewBase"
 
 
 /**
  * 视图装饰器
- * @param viewName 
+ * @param viewName
  */
 export default function View(viewName: string) {
-    return function (target: typeof IView) {
+    return function (target: typeof ViewBase) {
         Reflect.defineProperty(target.prototype, "alias", {
             value: viewName
         })

@@ -1,31 +1,22 @@
-import IService from "../../Blade/Interfaces/IService";
-import Service from "../../Blade/Decorators/Service";
-import Singleton from "../../Blade/Decorators/Singleton";
-import ICommand from "../../Blade/Interfaces/ICommand";
+import SingletonBase from "../Bases/SingletonBase";
 import TimerService from "./TimerService";
+import CommandBase from "../Bases/CommandBase";
 
-@Singleton
-@Service("CommandService")
-export default class CommandService implements IService {
-    public alias: string;
-    public static readonly instance: CommandService;
+export default class CommandService extends SingletonBase {
+    public onInitialize() {
 
-
-    public async initialize() {
     }
 
-    public async lazyInitialize() {
+    public onDispose() {
+
     }
-
-
-
 
     /**
      * 执行命令
-     * @param cmd 
-     * @param args 
+     * @param cmd
+     * @param args
      */
-    public exec(cmd: typeof ICommand, ...args: any[]) {
+    public exec(cmd: typeof CommandBase, ...args: any[]) {
         (new (cmd as any)()).exec(...args);
     }
 
@@ -37,20 +28,20 @@ export default class CommandService implements IService {
      * @param {...any[]} args
      * @memberof CommandService
      */
-    public execNextFrame(cmd: typeof ICommand, ...args: any[]) {
-        TimerService.instance.runNextFrame(() => {
+    public execNextFrame(cmd: typeof CommandBase, ...args: any[]) {
+        TimerService.getInstance().runNextFrame(() => {
             (new (cmd as any)()).exec(...args);
         })
     }
 
     /**
      * 异步执行命令
-     * 
-     * @param cmd 
-     * @param args 
+     *
+     * @param cmd
+     * @param args
      */
-    public execAsync(cmd: typeof ICommand, ...args: any[]) {
-        new Promise((resolve, reject) => {
+    public execAsync(cmd: typeof CommandBase, ...args: any[]) {
+        new Promise<void>((resolve, reject) => {
             (new (cmd as any)()).exec(...args);
             resolve();
         })

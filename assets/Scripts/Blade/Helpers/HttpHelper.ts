@@ -38,7 +38,7 @@ class HttpHelper {
                 options.headers = null;
             }
 
-            if (blade.platform.getType() == PlatformService.PlatformType.WX) {
+            if (PlatformService.getInstance().getType() == PlatformService.PlatformType.WX) {
                 if (options.contentType != "JSON") {
                     options.headers = options.headers || {};
                     options.headers["Content-Type"] =
@@ -122,7 +122,7 @@ class HttpHelper {
 
     /**
     * 格式化为地址栏参数
-    * @param params 
+    * @param params
     * @param withQuest 是否包含问号
     */
     public static formatParams(params: {}, withQuest: boolean = false) {
@@ -132,7 +132,7 @@ class HttpHelper {
 
     /**
      * 格式化键值对为FormData
-     * @param params 
+     * @param params
      */
     public static formatParams2FromData(params: {}): FormData {
         const formData = new FormData();
@@ -144,7 +144,7 @@ class HttpHelper {
 
     /**
     * 获取地址栏指定参数
-    * @param name 
+    * @param name
     */
     public static getUrlParam(name: string) {
         if (typeof window != undefined) {
@@ -204,7 +204,7 @@ class HttpHelper {
 
     /**
      * SHA1计算
-     * @param content 
+     * @param content
      */
     public static sha1(content) {
         let data = new Uint8Array(this.encodeUTF8(content))

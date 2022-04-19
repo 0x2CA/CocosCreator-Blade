@@ -1,13 +1,13 @@
-import IPlatform from "../../Blade/Interfaces/IPlatform";
+import PlatformBase from "../Bases/PlatformBase";
 import HttpHelper from "../Helpers/HttpHelper";
 import PromiseHelper from "../Helpers/PromiseHelper";
 
 /**
  * 网页
  */
-export default class WebPlatform extends IPlatform {
+export default class WebPlatform extends PlatformBase {
 
-    public async initialize(){
+    public onInitialize() {
         this.userInfo = {
             avatar: 'https://img.readygo.yunyungquan.com/common/default_avatar.png',
             nickname: '测试用户',
@@ -18,9 +18,6 @@ export default class WebPlatform extends IPlatform {
             province: "GuangDong",
             city: "GuangZhou"
         };
-    }
-
-    public async lazyInitialize() {
     }
 
     public getLaunchOptions(): any {
@@ -40,9 +37,9 @@ export default class WebPlatform extends IPlatform {
     }
 
     public async playRewardVideo() {
-        this.emit(IPlatform.EventType.OpenVideo)
+        this.emit(PlatformBase.EventType.OpenVideo)
         await PromiseHelper.wait(3)
-        this.emit(IPlatform.EventType.CloseVideo)
+        this.emit(PlatformBase.EventType.CloseVideo)
         return true;
     }
 
@@ -56,9 +53,9 @@ export default class WebPlatform extends IPlatform {
 
     public activeBanner(active: boolean) {
         if (active) {
-            this.emit(IPlatform.EventType.OpenBanner)
+            this.emit(PlatformBase.EventType.OpenBanner)
         } else {
-            this.emit(IPlatform.EventType.CloseBanner)
+            this.emit(PlatformBase.EventType.CloseBanner)
         }
         return;
     }
@@ -76,15 +73,15 @@ export default class WebPlatform extends IPlatform {
     }
 
     public showInterstitial() {
-        this.emit(IPlatform.EventType.OpenInterstitial)
+        this.emit(PlatformBase.EventType.OpenInterstitial)
         PromiseHelper.wait(3).then(() => {
-            this.emit(IPlatform.EventType.CloseInterstitial)
+            this.emit(PlatformBase.EventType.CloseInterstitial)
         })
         return;
     }
 
     public sendInvite(imageUrl: string, title: string, param: any): Promise<any> {
-        this.emit(IPlatform.EventType.OpenShare)
+        this.emit(PlatformBase.EventType.OpenShare)
         return Promise.resolve();
     }
 }

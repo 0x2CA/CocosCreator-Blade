@@ -1,126 +1,119 @@
-import IService from "../../Blade/Interfaces/IService";
-import IModel from "../../Blade/Interfaces/IModel";
-import Service from "../../Blade/Decorators/Service";
-import Singleton from "../../Blade/Decorators/Singleton";
-
-
+import ModelBase from "../Bases/ModelBase";
+import SingletonBase from "../Bases/SingletonBase";
 
 
 /**
  * Model服务
  */
-@Singleton
-@Service("ModelService")
-class ModelService implements IService {
-    public alias: string;
-    public static readonly instance: ModelService;
+
+class ModelService extends SingletonBase {
 
     // Model列表
-    private list: { [name: string]: { model: any, event: cc.EventTarget } };
+    private modelInfos: Map<any, ModelService.ModelInfo> = new Map<any, ModelService.ModelInfo>();
 
-    public async initialize() {
-        this.list = {}
-    }
-    public async lazyInitialize() {
+    public onInitialize() {
+        this.modelInfos.clear();
     }
 
+    public onDispose() {
+    }
 
     /**
      *  监听数据变化
-     * @param modelType 
-     * @param watchField 
-     * @param onFieldChangeFn 
-     * @param target 
+     * @param modelType
+     * @param watchField
+     * @param onFieldChangeFn
+     * @param target
      */
-    public on<T extends IModel>(modelType: (new () => T) | T, watchField: Array<keyof T>, onFieldChangeFn: ModelService.WatchCallback, target: any) {
-        const model = typeof modelType === 'function' ? this.getModel(modelType) : modelType;
+    public on<T extends ModelBase>(modelType: (new () => T), watchField: Array<keyof T>, onFieldChangeFn: ModelService.WatchCallback, target: any) {
+        const info = this.modelInfos.get(modelType);
 
-        if (model == null) {
+        if (info == null) {
             return;
         }
 
         for (const field of watchField) {
             if (typeof field === "string") {
-                this.list[model.alias].event.on(field, onFieldChangeFn, target)
+                info.event.on(field, onFieldChangeFn, target)
             }
         }
 
         // 发送一次通知
         for (const field of watchField) {
             if (typeof field === "string") {
-                this.noticeModelFieldUpdate(modelType, field, model[field], model[field])
+                info.event.emit(field, info.model, (info.model as any)[field], (info.model as any)[field])
             }
         }
     }
 
-
     /**
      *  取消监听
-     * @param modelType 
-     * @param watchField 
-     * @param onFieldChangeFn 
-     * @param target 
+     * @param modelType
+     * @param watchField
+     * @param onFieldChangeFn
+     * @param target
      */
-    public off<T extends IModel>(modelType: (new () => T) | T, watchField: Array<keyof T>, onFieldChangeFn: ModelService.WatchCallback, target: any) {
-        const model = typeof modelType === 'function' ? this.getModel(modelType) : modelType;
+    public off<T extends ModelBase>(modelType: (new () => T), watchField: Array<keyof T>, onFieldChangeFn: ModelService.WatchCallback, target: any) {
+        const info = this.modelInfos.get(modelType);
 
-        if (model == null) {
+        if (info == null) {
             return;
         }
 
         for (const field of watchField) {
             if (typeof field === "string") {
-                this.list[model.alias].event.off(field, onFieldChangeFn, target)
+                info.event.off(field, onFieldChangeFn, target)
             }
         }
-    }
-
-
-    /**
-     * 变更通知
-     * @param modelType 
-     * @param field 
-     * @param newVal 
-     * @param oldVal 
-     */
-    private noticeModelFieldUpdate<T extends IModel>(modelType: (new () => T) | T, field: string, newVal: any, oldVal: any) {
-        const model = typeof modelType === 'function' ? this.getModel(modelType) : modelType;
-
-        if (model == null) {
-            return;
-        }
-
-        this.list[model.alias].event.emit(field, model, field, newVal, oldVal);
     }
 
 
     /**
      * 获取Model
-     * @param modelType 
+     * @param modelType
      */
-    public getModel<T extends IModel>(modelType: new () => T): T {
-        for (const key in this.list) {
-            if (this.list[key].model instanceof modelType) {
-                return this.list[key].model;
-            }
+    public getModel<T extends ModelBase>(modelType: new () => T): T {
+        let model = this.modelInfos.get(modelType)?.model as T;
+
+        if (model == null) {
+            model = this.createModel(modelType);
         }
 
-        return this.createModel(modelType);
+        return model;
+    }
+
+
+    public getModelByAlias(alias) {
+        let model = null;
+
+        this.modelInfos.forEach((info) => {
+            if (info.alias == alias) {
+                model = info.model;
+            }
+        });
+
+        return model;
     }
 
     /**
      * 创建Model
-     * @param modelType 
+     * @param modelType
      */
-    private createModel<T extends IModel>(modelType: new () => T): T {
+    private createModel<T extends ModelBase>(modelType: new () => T): T {
         let model: T = new modelType();
+        let event = new cc.EventTarget();
 
-        this.list[model.alias] = {
+        this.modelInfos.set(modelType, {
             event: new cc.EventTarget(),
+            alias: (model as any).alias,
             model
+        });
+
+        if ((model as any).alias == null || (model as any).alias == "") {
+            console.warn("Model的名称是空的，请检查是否使用了Model装饰器");
         }
 
-        this.bindProxy(model);
+        this.bindProxy(model, event);
 
         return model
     }
@@ -128,10 +121,9 @@ class ModelService implements IService {
 
     /**
      * 设置代理
-     * @param model 
+     * @param model
      */
-    private bindProxy<T extends IModel>(model: T) {
-        const self = this;
+    private bindProxy<T extends ModelBase>(model: T, event: cc.EventTarget = null) {
 
         const fields = Object.getOwnPropertyNames(model).filter((field) => {
             return typeof model[field] !== "function";
@@ -150,16 +142,10 @@ class ModelService implements IService {
                     const oldVal = model[ModelService.INNER_DATA_FIELD][field];
                     model[ModelService.INNER_DATA_FIELD][field] = value;
                     // 通知更新
-                    self.noticeModelFieldUpdate(
-                        model,
-                        field,
-                        value,
-                        oldVal
-                    );
+                    event.emit(field, model, field, value, oldVal);
                 },
             });
         });
-
 
         // 保存原属性到INNER_DATA_FIELD中
         Object.defineProperty(model, ModelService.INNER_DATA_FIELD, {
@@ -174,8 +160,15 @@ class ModelService implements IService {
 
 namespace ModelService {
     export interface WatchCallback {
-        (model: IModel, field: string, newVal: any, oldVal?: any): void
+        (model: ModelBase, field: string, newVal: any, oldVal?: any): void
     };
+
+    export class ModelInfo {
+        public model: ModelBase;
+        public event: cc.EventTarget;
+        public alias: string;
+    }
+
     export const INNER_DATA_FIELD = "_data_";
 }
 

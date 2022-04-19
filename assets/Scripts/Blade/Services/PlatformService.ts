@@ -1,7 +1,4 @@
-import IService from "../../Blade/Interfaces/IService";
-import Service from "../../Blade/Decorators/Service";
-import Singleton from "../../Blade/Decorators/Singleton";
-import IPlatform from "../../Blade/Interfaces/IPlatform";
+import PlatformBase from "../Bases/PlatformBase";
 import WebPlatform from "../Platforms/WebPlatform";
 import WxPlatform from "../Platforms/WxPlatform";
 import QQPlatform from "../Platforms/QQPlatform";
@@ -9,15 +6,12 @@ import GPPlatform from "../Platforms/GPPlatform";
 import TimerService from "./TimerService";
 import TTPlatform from "../Platforms/TTPlatform";
 import OPPOPlatform from "../Platforms/OPPOPlatform";
+import SingletonBase from "../Bases/SingletonBase";
 
-@Singleton
-@Service("PlatformService")
-class PlatformService implements IService {
-    public alias: string;
-    public static readonly instance: PlatformService;
+class PlatformService extends SingletonBase {
 
     // 当前平台
-    private platform: IPlatform;
+    private platform: PlatformBase;
 
     // 数据
     private data: any = null;
@@ -28,7 +22,8 @@ class PlatformService implements IService {
     private autoSave: TimerService.Timer = null;
     private autoSyncSave: TimerService.Timer = null;
 
-    public async initialize() {
+    public onInitialize() {
+
         switch (this.getType()) {
             case PlatformService.PlatformType.WX:
                 this.platform = new WxPlatform();
@@ -50,23 +45,24 @@ class PlatformService implements IService {
                 break;
         }
 
-        await this.platform.initialize();
+        this.platform.onInitialize();
+
         // 同步数据
         this.data = this.loadLocal()
         cc.log("游戏数据：", this.data);
 
         // 定时保存
         if (this.autoSave) {
-            blade.timer.stopTimer(this.autoSave)
+            TimerService.getInstance().stopTimer(this.autoSave)
         }
-        this.autoSave = blade.timer.startTimer(this.autoSaveSecond, () => {
+        this.autoSave = TimerService.getInstance().startTimer(this.autoSaveSecond, () => {
             this.saveLocal(this.data);
         }, this);
 
         if (this.autoSyncSave) {
-            blade.timer.stopTimer(this.autoSyncSave)
+            TimerService.getInstance().stopTimer(this.autoSyncSave)
         }
-        this.autoSyncSave = blade.timer.startTimer(this.autoSyncSecond, () => {
+        this.autoSyncSave = TimerService.getInstance().startTimer(this.autoSyncSecond, () => {
             // if (this.saveRemote != null && this.localRemote != null) {
             //     this.sync(this.localRemote, this.saveRemote)
             // }
@@ -76,8 +72,7 @@ class PlatformService implements IService {
         }, this);
     }
 
-    public async lazyInitialize() {
-        await this.platform.lazyInitialize();
+    public onDispose() {
     }
 
     /**
@@ -123,7 +118,7 @@ class PlatformService implements IService {
     /**
      * 获取当前平台对象
      */
-    getPlatform(): IPlatform {
+    getPlatform(): PlatformBase {
         return this.platform;
     }
 
@@ -132,14 +127,14 @@ class PlatformService implements IService {
     */
     loadLocal() {
         try {
-            const result = JSON.parse(blade.platform.getPlatform().getArchive('Archive'));
+            const result = JSON.parse(this.platform.getArchive('Archive'));
             if (result != null) {
                 return result;
             } else {
-                return { alterTime: blade.timer.getTime() };
+                return { alterTime: TimerService.getInstance().getTime() };
             }
         } catch (e) {
-            return { alterTime: blade.timer.getTime() };
+            return { alterTime: TimerService.getInstance().getTime() };
         }
     }
 
@@ -149,8 +144,8 @@ class PlatformService implements IService {
     async saveLocal(data: any) {
         // 通过调用平台本地存档接口进行保存
         try {
-            this.data.alterTime = blade.timer.getTime();
-            blade.platform.getPlatform().saveArchive('Archive', JSON.stringify(data));
+            this.data.alterTime = TimerService.getInstance().getTime();
+            this.platform.saveArchive('Archive', JSON.stringify(data));
         } catch (error) {
         }
     }
@@ -184,7 +179,7 @@ class PlatformService implements IService {
         }
         else {
             cc.log("更新云存档")
-            this.data.alterTime = blade.timer.getTime();
+            this.data.alterTime = TimerService.getInstance().getTime();
             // 本地覆盖网络
             saveRemote(this.data);
         }
@@ -194,7 +189,7 @@ class PlatformService implements IService {
     /**
  * 获取指定键对应的值
  * 如果存档中找不到, 则返回默认值
- * @param key 
+ * @param key
  */
     public get<T>(key: string): T {
         if (this.data == null) {
@@ -205,8 +200,8 @@ class PlatformService implements IService {
 
     /**
      * 修改存到指定键名的值
-     * @param key 
-     * @param newValue 
+     * @param key
+     * @param newValue
      */
     public set(key: string, newValue: any) {
         if (this.data == null) {
@@ -226,7 +221,7 @@ class PlatformService implements IService {
     public clear() {
         cc.warn("存档已经重置");
         this.data = {};
-        this.data.alterTime = blade.timer.getTime();
+        this.data.alterTime = TimerService.getInstance().getTime();
         this.saveLocal(this.data);
     }
 
@@ -248,7 +243,7 @@ namespace PlatformService {
     /**
     * 内置事件
     */
-    export type EventType = IPlatform.EventType
+    export type EventType = PlatformBase.EventType
 
 }
 

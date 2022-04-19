@@ -1,28 +1,24 @@
-import Singleton from "../../Blade/Decorators/Singleton";
-import Service from "../../Blade/Decorators/Service";
-import IService from "../../Blade/Interfaces/IService";
+import SingletonBase from "../Bases/SingletonBase";
 import Stack from "../Libs/Structs/Stack";
+import PlatformService from "./PlatformService";
 
 
-@Singleton
-@Service("SceneService")
-class SceneService implements IService {
-    public alias: string;
-    public static readonly instance: SceneService
+class SceneService extends SingletonBase {
 
     // 场景记录栈堆
     private stack: Stack<SceneService.SceneRecord> = new Stack<SceneService.SceneRecord>();
 
-    public async initialize() {
+    public onInitialize() {
+        this.stack.clear();
+        this.stack.push({ name: cc.director.getScene().name, params: PlatformService.getInstance().getPlatform().getLaunchOptions() });
     }
 
-    public async lazyInitialize(){
-        this.stack.push({ name: cc.director.getScene().name, params: blade.platform.getPlatform().getLaunchOptions() });
+    public onDispose() {
     }
 
     /**
     * 进入场景
-    * @param sceneName 
+    * @param sceneName
     */
     public runScene(sceneName: string, params: {} = {}) {
         this.stack.push({ name: sceneName, params });
@@ -32,8 +28,8 @@ class SceneService implements IService {
 
     /**
      * 预加载场景
-     * @param name 
-     * @param progressFun 
+     * @param name
+     * @param progressFun
      */
     public preloadScene(name: string, progressFun?: (completedCount: number, totalCount: number, item: any) => void): Promise<boolean> {
         return new Promise((resolve, reject) => {

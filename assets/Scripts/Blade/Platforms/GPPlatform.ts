@@ -1,4 +1,4 @@
-import IPlatform from "../Interfaces/IPlatform";
+import PlatformBase from "../Bases/PlatformBase";
 import PlatformConfig from "../../Module/Defines/PlatformConfig";
 import PromiseHelper from "../Helpers/PromiseHelper";
 
@@ -7,25 +7,25 @@ import PromiseHelper from "../Helpers/PromiseHelper";
 /**
  * Google Play平台
  */
-export default class GPPlatform extends IPlatform {
+export default class GPPlatform extends PlatformBase {
 
     /**
      * 激励视频预加载状态
      */
-    private videoPreloadState: IPlatform.AdState = IPlatform.AdState.None;
+    private videoPreloadState: PlatformBase.AdState = PlatformBase.AdState.None;
 
     /**
      * 横幅预加载状态
      */
-    private bannerPreloadState: IPlatform.AdState = IPlatform.AdState.None;
+    private bannerPreloadState: PlatformBase.AdState = PlatformBase.AdState.None;
 
     /**
      * 插页广告加载状态
      */
-    private interstitialPreloadState: IPlatform.AdState = IPlatform.AdState.None;
+    private interstitialPreloadState: PlatformBase.AdState = PlatformBase.AdState.None;
 
 
-    public async initialize() {
+    public onInitialize() {
         if (CC_DEBUG) {
             this.callNative('initialize', "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V",
                 "ca-app-pub-3940256099942544~1458002511",
@@ -41,43 +41,39 @@ export default class GPPlatform extends IPlatform {
         }
     }
 
-    public async lazyInitialize() {
 
-    }
-
-
-	/**
-	 * 判断是否支持激励视频广告
-	 */
+    /**
+     * 判断是否支持激励视频广告
+     */
     public isSupportRewardVideo(): boolean {
         return true;
     }
 
-	/**
-	 * 预加载激励视频
-	 */
+    /**
+     * 预加载激励视频
+     */
     public preloadRewardVideo(): Promise<any> {
-        if (this.videoPreloadState == IPlatform.AdState.Loading) {
-            return PromiseHelper.waitUntil(() => this.videoPreloadState != IPlatform.AdState.Loading);
-        } else if (this.videoPreloadState == IPlatform.AdState.Loaded) {
+        if (this.videoPreloadState == PlatformBase.AdState.Loading) {
+            return PromiseHelper.waitUntil(() => this.videoPreloadState != PlatformBase.AdState.Loading);
+        } else if (this.videoPreloadState == PlatformBase.AdState.Loaded) {
             // 已经加载
             return Promise.resolve();
         }
-        else if (this.videoPreloadState == IPlatform.AdState.None) {
+        else if (this.videoPreloadState == PlatformBase.AdState.None) {
             // 启动预加载
             this.callNative('preloadVideo', "(Ljava/lang/String;)V", CC_DEBUG ? 'ca-app-pub-3940256099942544/5224354917' : PlatformConfig.as.adId);
-            this.videoPreloadState = IPlatform.AdState.Loading;
+            this.videoPreloadState = PlatformBase.AdState.Loading;
         }
-        return PromiseHelper.waitUntil(() => this.videoPreloadState != IPlatform.AdState.Loading);
+        return PromiseHelper.waitUntil(() => this.videoPreloadState != PlatformBase.AdState.Loading);
     }
 
     private videoCallback: (isok: boolean) => void = null;
 
-	/**
-	 * 显示激励视频
-	 */
+    /**
+     * 显示激励视频
+     */
     public playRewardVideo(): Promise<boolean> {
-        if (this.videoPreloadState == IPlatform.AdState.Loaded) {
+        if (this.videoPreloadState == PlatformBase.AdState.Loaded) {
             this.callNative('showVideo', "()V");
             if (this.videoCallback != null) {
                 this.videoCallback(false);
@@ -94,43 +90,43 @@ export default class GPPlatform extends IPlatform {
         }
     }
 
-	/**
-	 * 判断视频是否已经加载
-	 */
+    /**
+     * 判断视频是否已经加载
+     */
     public isVideoLoaded(): boolean {
-        return this.videoPreloadState == IPlatform.AdState.Loaded
+        return this.videoPreloadState == PlatformBase.AdState.Loaded
     }
 
-	/**
-	 * 判断是否支持横幅广告
-	 */
+    /**
+     * 判断是否支持横幅广告
+     */
     public isSupportBanner(): boolean {
         return true;
     }
 
-	/**
-	 * 预加载横幅
-	 */
+    /**
+     * 预加载横幅
+     */
     public preloadBanner(): Promise<any> {
-        if (this.bannerPreloadState == IPlatform.AdState.Loading) {
-            return PromiseHelper.waitUntil(() => this.bannerPreloadState != IPlatform.AdState.Loading);
-        } else if (this.bannerPreloadState == IPlatform.AdState.Loaded) {
+        if (this.bannerPreloadState == PlatformBase.AdState.Loading) {
+            return PromiseHelper.waitUntil(() => this.bannerPreloadState != PlatformBase.AdState.Loading);
+        } else if (this.bannerPreloadState == PlatformBase.AdState.Loaded) {
             // 已经加载
             return Promise.resolve();
         }
-        else if (this.bannerPreloadState == IPlatform.AdState.None) {
+        else if (this.bannerPreloadState == PlatformBase.AdState.None) {
             // 启动预加载
             this.callNative('preloadBanner', "()V");
-            this.bannerPreloadState = IPlatform.AdState.Loading;
+            this.bannerPreloadState = PlatformBase.AdState.Loading;
         }
 
-        return PromiseHelper.waitUntil(() => this.bannerPreloadState != IPlatform.AdState.Loading);
+        return PromiseHelper.waitUntil(() => this.bannerPreloadState != PlatformBase.AdState.Loading);
     }
 
-	/**
-	 * 激活 显示/隐藏横幅广告
-	 * @param active
-	 */
+    /**
+     * 激活 显示/隐藏横幅广告
+     * @param active
+     */
     public activeBanner(active: boolean) {
         if (active) {
             this.callNative('showBanner', "()V");
@@ -140,39 +136,39 @@ export default class GPPlatform extends IPlatform {
         }
     }
 
-	/**
-	 * 判断是否支持插页广告
-	 */
+    /**
+     * 判断是否支持插页广告
+     */
     public isSupportInterstitial(): boolean {
         return true;
     }
 
-	/**
-	 * 判插页频是否已经加载
-	 */
+    /**
+     * 判插页频是否已经加载
+     */
     public isInterstitialLoaded(): boolean {
-        return this.interstitialPreloadState == IPlatform.AdState.Loaded
+        return this.interstitialPreloadState == PlatformBase.AdState.Loaded
     }
 
-	/**
-	 * 预加载插页广告
-	 */
+    /**
+     * 预加载插页广告
+     */
     public preloadInterstitial(): Promise<any> {
-        if (this.interstitialPreloadState == IPlatform.AdState.Loaded) {
+        if (this.interstitialPreloadState == PlatformBase.AdState.Loaded) {
             // 已经加载
             return Promise.resolve();
         }
-        else if (this.interstitialPreloadState == IPlatform.AdState.None) {
+        else if (this.interstitialPreloadState == PlatformBase.AdState.None) {
             // 未加载, 调用加载
             this.callNative('preloadInterstitial', "(Ljava/lang/String;)V", CC_DEBUG ? 'ca-app-pub-3940256099942544/4411468910' : PlatformConfig.as.interstitialId);
         }
 
-        return PromiseHelper.waitUntil(() => this.interstitialPreloadState != IPlatform.AdState.Loading);
+        return PromiseHelper.waitUntil(() => this.interstitialPreloadState != PlatformBase.AdState.Loading);
     }
 
-	/**
-	 * 显示插页广告
-	 */
+    /**
+     * 显示插页广告
+     */
     public showInterstitial() {
         this.callNative('showInterstitial', "()V");
     }
@@ -180,9 +176,9 @@ export default class GPPlatform extends IPlatform {
 
     /**
      * 调用系统原生方法
-     * @param method 
-     * @param methodSign 
-     * @param param 
+     * @param method
+     * @param methodSign
+     * @param param
      */
     private callNative(method: string, methodSignature: string, ...args: string[]) {
         jsb.reflection.callStaticMethod('com/external/jsapi/AdmobHelper', method, methodSignature, ...args);
@@ -198,17 +194,17 @@ export default class GPPlatform extends IPlatform {
      */
     private onRewardedVideoAdLoaded() {
         cc.log('onRewardedVideoAdLoaded');
-        this.videoPreloadState = IPlatform.AdState.Loaded;
+        this.videoPreloadState = PlatformBase.AdState.Loaded;
     }
 
     /**
      * 视频加载失败回调
      * Native调用
-     * @param code 
+     * @param code
      */
     private onRewardedVideoAdFailedToLoad(code: number) {
         cc.log('onRewardedVideoAdFailedToLoad:' + code);
-        this.videoPreloadState = IPlatform.AdState.None;
+        this.videoPreloadState = PlatformBase.AdState.None;
     }
 
     /**
@@ -228,7 +224,7 @@ export default class GPPlatform extends IPlatform {
      * Native调用
      */
     private onRewardedVideoAdOpened() {
-        this.videoPreloadState = IPlatform.AdState.None;
+        this.videoPreloadState = PlatformBase.AdState.None;
     }
 
     /**
@@ -257,7 +253,7 @@ export default class GPPlatform extends IPlatform {
      */
     private onBannerLoaded() {
         cc.log('onBannerLoaded');
-        this.bannerPreloadState = IPlatform.AdState.Loaded;
+        this.bannerPreloadState = PlatformBase.AdState.Loaded;
     }
 
     /**
@@ -266,7 +262,7 @@ export default class GPPlatform extends IPlatform {
      */
     private onBannerFailedToLoad(code: number) {
         cc.log('onBannerFailedToLoad:' + code);
-        this.bannerPreloadState = IPlatform.AdState.None;
+        this.bannerPreloadState = PlatformBase.AdState.None;
     }
 
     /**
@@ -282,17 +278,17 @@ export default class GPPlatform extends IPlatform {
      * Native调用
      */
     private onInterstitialLoaded() {
-        this.interstitialPreloadState = IPlatform.AdState.Loaded;
+        this.interstitialPreloadState = PlatformBase.AdState.Loaded;
     }
 
     /**
      * 插页广告加载失败回调
      * Native调用
-     * @param code 
+     * @param code
      */
     private onInterstitialFailedToLoad(code: number) {
         cc.log('onInterstitialFailedToLoad:' + code);
-        this.interstitialPreloadState == IPlatform.AdState.None;
+        this.interstitialPreloadState == PlatformBase.AdState.None;
         this.preloadInterstitial();
     }
 
@@ -309,7 +305,7 @@ export default class GPPlatform extends IPlatform {
      * Native调用
      */
     private onInterstitialClosed() {
-        this.interstitialPreloadState = IPlatform.AdState.None;
+        this.interstitialPreloadState = PlatformBase.AdState.None;
         this.preloadInterstitial();
     }
 

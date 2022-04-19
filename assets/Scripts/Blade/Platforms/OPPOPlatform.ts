@@ -1,11 +1,13 @@
 import PlatformConfig from "../../Module/Defines/PlatformConfig";
 import PromiseHelper from "../Helpers/PromiseHelper";
-import IPlatform from "../Interfaces/IPlatform";
+import PlatformBase from "../Bases/PlatformBase";
+import TickerService from "../Services/TickerService";
+import AudioService from "../Services/AudioService";
 
-export default class OPPOPlatform extends IPlatform {
-    private videoState: IPlatform.AdState = IPlatform.AdState.None;
-    private bannerState: IPlatform.AdState = IPlatform.AdState.None;
-    private nativeAdState: IPlatform.AdState = IPlatform.AdState.None;
+export default class OPPOPlatform extends PlatformBase {
+    private videoState: PlatformBase.AdState = PlatformBase.AdState.None;
+    private bannerState: PlatformBase.AdState = PlatformBase.AdState.None;
+    private nativeAdState: PlatformBase.AdState = PlatformBase.AdState.None;
 
     private video: qg.RewardedVideoAd = null;
 
@@ -20,13 +22,10 @@ export default class OPPOPlatform extends IPlatform {
         width: number
     } = { height: 0, width: 0 };
 
-    public async initialize(): Promise<void> {
+    public onInitialize() {
         this.preloadBanner();
         this.preloadRewardVideo();
         this.preloadNativeAd();
-    }
-
-    public async lazyInitialize(): Promise<void> {
     }
 
     /**
@@ -40,7 +39,7 @@ export default class OPPOPlatform extends IPlatform {
      * 判断视频是否已经加载完成
      */
     public isVideoLoaded(): boolean {
-        let result = this.videoState == IPlatform.AdState.Loaded;
+        let result = this.videoState == PlatformBase.AdState.Loaded;
         if (result == false) {
             this.preloadRewardVideo();
         }
@@ -56,16 +55,16 @@ export default class OPPOPlatform extends IPlatform {
         }
 
         // 已经加载
-        if (this.videoState == IPlatform.AdState.Loaded) {
+        if (this.videoState == PlatformBase.AdState.Loaded) {
             return;
         }
 
         // 正在加载, 等待加载结束
-        if (this.videoState == IPlatform.AdState.Loading) {
-            return await PromiseHelper.waitUntil(() => this.videoState != IPlatform.AdState.Loading);
+        if (this.videoState == PlatformBase.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => this.videoState != PlatformBase.AdState.Loading);
         }
 
-        this.videoState = IPlatform.AdState.Loading;
+        this.videoState = PlatformBase.AdState.Loading;
 
         if (this.video == null) {
             // 初次创建会调load方法
@@ -75,55 +74,55 @@ export default class OPPOPlatform extends IPlatform {
             // 加载成功
             this.video.onLoad(() => {
                 console.log("loaded")
-                this.videoState = IPlatform.AdState.Loaded;
+                this.videoState = PlatformBase.AdState.Loaded;
             });
             // 加载失败
             this.video.onError((err) => {
                 console.error(err)
-                this.videoState = IPlatform.AdState.None;
+                this.videoState = PlatformBase.AdState.None;
             });
             this.video.onClose((res) => {
                 let result = (res && res.isEnded) || res === undefined;
-                blade.ticker.setPause(false);
-                blade.audio.resumeAll();
+                TickerService.getInstance().pause = false;
+                AudioService.getInstance().resumeAll();
                 this.preloadRewardVideo();
                 // 发送结果
-                this.emit(IPlatform.EventType.CloseVideo, result);
+                this.emit(PlatformBase.EventType.CloseVideo, result);
             })
         }
 
         this.video.load();
 
         // 正在加载, 等待加载结束
-        return await PromiseHelper.waitUntil(() => this.videoState != IPlatform.AdState.Loading);
+        return await PromiseHelper.waitUntil(() => this.videoState != PlatformBase.AdState.Loading);
     }
 
     /**
      * 播放激励视频
      */
     public async playRewardVideo(): Promise<boolean> {
-        if (this.video != null && this.videoState == IPlatform.AdState.Loaded) {
-            this.videoState = IPlatform.AdState.None;
-            blade.ticker.setPause(true);
-            blade.audio.pauseAll();
+        if (this.video != null && this.videoState == PlatformBase.AdState.Loaded) {
+            this.videoState = PlatformBase.AdState.None;
+            TickerService.getInstance().pause = true;
+            AudioService.getInstance().pauseAll();
 
             let result: boolean = await new Promise(async (resolve, reject) => {
                 const closeFunc = (result) => {
                     resolve(result);
                 };
-                this.once(IPlatform.EventType.CloseVideo, closeFunc);
+                this.once(PlatformBase.EventType.CloseVideo, closeFunc);
                 try {
                     let result = await this.video.show()
                     console.log(result);
-                    this.emit(IPlatform.EventType.OpenVideo);
+                    this.emit(PlatformBase.EventType.OpenVideo);
                 } catch (error) {
                     console.log(error);
-                    this.off(IPlatform.EventType.CloseVideo, closeFunc);
+                    this.off(PlatformBase.EventType.CloseVideo, closeFunc);
                     resolve(false);
                 }
             })
-            blade.ticker.setPause(false);
-            blade.audio.resumeAll();
+            TickerService.getInstance().pause = false;
+            AudioService.getInstance().resumeAll();
             this.preloadRewardVideo();
             return result;
         } else {
@@ -149,13 +148,13 @@ export default class OPPOPlatform extends IPlatform {
         }
 
         // 已经加载
-        if (this.bannerState == IPlatform.AdState.Loaded) {
+        if (this.bannerState == PlatformBase.AdState.Loaded) {
             return;
         }
 
         // 正在加载, 等待加载结束
-        if (this.bannerState == IPlatform.AdState.Loading) {
-            return await PromiseHelper.waitUntil(() => this.bannerState != IPlatform.AdState.Loading);
+        if (this.bannerState == PlatformBase.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => this.bannerState != PlatformBase.AdState.Loading);
         }
 
         if (this.banner) {
@@ -178,16 +177,16 @@ export default class OPPOPlatform extends IPlatform {
 
         this.banner.onLoad(async () => {
             console.log("banner", "加载成功");
-            this.bannerState = IPlatform.AdState.Loaded;
+            this.bannerState = PlatformBase.AdState.Loaded;
             if (this.bannerActive) {
-                this.emit(IPlatform.EventType.OpenBanner);
+                this.emit(PlatformBase.EventType.OpenBanner);
                 this.banner.show();
             }
         });
 
         this.banner.onError((err) => {
             console.error("banner", "加载失败", err);
-            this.bannerState = IPlatform.AdState.None;
+            this.bannerState = PlatformBase.AdState.None;
         });
 
         this.banner.onResize((res) => {
@@ -203,7 +202,7 @@ export default class OPPOPlatform extends IPlatform {
                 (sysInfo.screenWidth - this.bannerStyle.width) / 2;
         });
 
-        this.bannerState = IPlatform.AdState.Loading;
+        this.bannerState = PlatformBase.AdState.Loading;
     }
 
 
@@ -218,18 +217,18 @@ export default class OPPOPlatform extends IPlatform {
         }
 
         if (active) {
-            if (this.bannerState != IPlatform.AdState.Loaded) {
+            if (this.bannerState != PlatformBase.AdState.Loaded) {
                 this.preloadBanner();
                 return false;
             }
 
-            this.emit(IPlatform.EventType.OpenBanner);
+            this.emit(PlatformBase.EventType.OpenBanner);
             this.banner.show();
-            this.bannerState = IPlatform.AdState.Opening;
+            this.bannerState = PlatformBase.AdState.Opening;
             return true;
         } else {
             // 直接销毁重新创建banner, 刷新广告
-            if (this.bannerState != IPlatform.AdState.Opening) {
+            if (this.bannerState != PlatformBase.AdState.Opening) {
                 return false;
             }
             // this.emit(IPlatform.EventType.CloseBanner);
@@ -240,7 +239,7 @@ export default class OPPOPlatform extends IPlatform {
 
             // XXX: 不销毁
             this.banner.hide();
-            this.bannerState = IPlatform.AdState.Loaded;
+            this.bannerState = PlatformBase.AdState.Loaded;
             return true;
         }
     }
@@ -257,20 +256,20 @@ export default class OPPOPlatform extends IPlatform {
         }
 
         // 已经加载
-        if (this.nativeAdState == IPlatform.AdState.Loaded) {
+        if (this.nativeAdState == PlatformBase.AdState.Loaded) {
             return;
         }
 
         // 正在加载, 等待加载结束
-        if (this.nativeAdState == IPlatform.AdState.Loading) {
-            return await PromiseHelper.waitUntil(() => this.nativeAdState != IPlatform.AdState.Loading);
+        if (this.nativeAdState == PlatformBase.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => this.nativeAdState != PlatformBase.AdState.Loading);
         }
 
         if (this.nativeAd) {
             this.nativeAd.destroy();
             this.nativeAd = null
         }
-        
+
 
         console.log("nativeAd", "开始加载");
 
@@ -281,15 +280,15 @@ export default class OPPOPlatform extends IPlatform {
 
         this.nativeAd.onLoad(async (res) => {
             console.log("nativeAd", "加载成功", res);
-            this.nativeAdState = IPlatform.AdState.Loaded;
+            this.nativeAdState = PlatformBase.AdState.Loaded;
         });
 
         this.nativeAd.onError((err) => {
             console.error("nativeAd", "加载失败", err);
-            this.nativeAdState = IPlatform.AdState.None;
+            this.nativeAdState = PlatformBase.AdState.None;
         });
 
-        this.nativeAdState = IPlatform.AdState.Loading;
+        this.nativeAdState = PlatformBase.AdState.Loading;
     }
 
 }

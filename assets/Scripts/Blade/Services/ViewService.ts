@@ -1,70 +1,75 @@
-import IService from "../../Blade/Interfaces/IService";
-import Singleton from "../../Blade/Decorators/Singleton";
-import Service from "../../Blade/Decorators/Service";
-import IView from "../../Blade/Interfaces/IView";
+import SingletonBase from "../Bases/SingletonBase";
+import ViewBase from "../Bases/ViewBase";
+import AssetService from "./AssetService";
 
+class ViewService extends SingletonBase {
 
-@Singleton
-@Service("ViewService")
-export default class ViewService implements IService {
-    public alias: string;
-    public static readonly instance: ViewService;
+    private views: Map<ViewService.ViewType, ViewBase[]> = new Map<ViewService.ViewType, ViewBase[]>();
 
-
-    private list: Map<string, IView>
-
-    public async initialize() {
-        this.list = new Map<string, IView>();
-    }
-    public async lazyInitialize() {
+    public onInitialize() {
+        this.views.clear();
     }
 
-    /**
-    * 注册控制器
-    */
-    public register(view: IView) {
-        if (this.list.has(view.alias)) {
-            cc.error(`已经存在${view.alias}视图!`);
-            this.unregister(this.list.get(view.alias))
-            this.register(view);
-        } else {
-            this.list.set(view.alias, view)
-        }
+    public onDispose() {
     }
 
-    /**
-     * 注销控制器
-     */
-    public unregister(view: IView) {
-        if (this.list.has(view.alias)) {
-            this.list.delete(view.alias)
-        }
-    }
+    public async openView<T extends ViewBase>(type: ViewService.ViewType, viewType: new () => T, ...args: any[]): Promise<T> {
+        let prefab = await AssetService.getInstance().loadAssetAsync((viewType.prototype as any).alias + ".prefab", cc.Prefab) as cc.Prefab;
+        let node = cc.instantiate(prefab);
+        let view = node.getComponent(viewType);
 
-
-    /**
-     * 获取指定视图
-     * @param alias 
-     */
-    public getView(alias: string) {
-        return this.list.get(alias) || null;
-    }
-
-
-    /**
-    * 命令视图调用指定方法
-    * @param vid 视图名
-    * @param funcName 视图方法
-    * @param args 方法附带参数
-    */
-    public orderViewById(alias: string, funcName: string, ...args: any[]): any {
-        const view: IView = this.getView(alias);
         if (view == null) {
-            cc.error(`视图（${alias}）不存在`);
-            return;
+            view = node.addComponent(viewType);
         }
 
-        return view.order(funcName, ...args);
+        if (this.views.has(type)) {
+            this.views.get(type).push(view);
+        } else {
+            this.views.set(type, [view]);
+        }
+
+        if (view.onInitialize) {
+            view.onInitialize(...args);
+        }
+
+        return view;
+    }
+
+    public async closeViewByType(type: ViewService.ViewType) {
+        if (this.views.has(type)) {
+            let views = this.views.get(type);
+            for (let i = 0; i < views.length; i++) {
+                let view = views[i];
+                (view as any).closeView();
+            }
+            this.views.delete(type);
+        }
+    }
+
+
+    public closeView(view: ViewBase) {
+        if ((view as any).parentView) {
+            (view as any).parentView.closeSubView(view);
+        } else {
+            this.views.forEach((views, type) => {
+                let index = views.indexOf(view);
+                if (index >= 0) {
+                    (views[index] as any).closeView();
+                    views.splice(index, 1);
+                }
+            });
+        }
     }
 
 }
+
+namespace ViewService {
+
+    export enum ViewType {
+        Main,
+        Panel,
+        Tips
+    }
+}
+
+export default ViewService;

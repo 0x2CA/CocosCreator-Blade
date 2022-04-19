@@ -1,69 +1,74 @@
-import IService from "../../Blade/Interfaces/IService";
-import Service from "../../Blade/Decorators/Service";
-import Singleton from "../../Blade/Decorators/Singleton";
-import IController from "../../Blade/Interfaces/IController";
+import ControllerBase from "../Bases/ControllerBase";
+import SingletonBase from "../Bases/SingletonBase";
 
 
-@Singleton
-@Service("ControllerService")
-export default class ControllerService implements IService {
-    public alias: string;
-    public static readonly instance: ControllerService;
+class ControllerService extends SingletonBase {
 
+    private controllerInfos: Map<any, ControllerService.ControllerInfo> = new Map<any, ControllerService.ControllerInfo>()
 
-    private list: Map<string, IController>
-
-    public async initialize() {
-        this.list = new Map<string, IController>();
+    public onInitialize() {
+        this.controllerInfos.clear();
     }
 
-    public async lazyInitialize() {
-    }
-
-
-    /**
-    * 注册控制器
-    */
-    public register(controller: IController) {
-        if (this.list.has(controller.alias)) {
-            cc.error(`已经存在${controller.alias}控制器!`);
-            this.unregister(this.list.get(controller.alias))
-            this.register(controller);
-        } else {
-            this.list.set(controller.alias, controller)
-        }
+    public onDispose() {
     }
 
     /**
-     * 注销控制器
+     * 获取Controller
+     * @param controllerType
      */
-    public unregister(controller: IController) {
-        if (this.list.has(controller.alias)) {
-            this.list.delete(controller.alias)
-        }
-    }
+    public getController<T extends ControllerBase>(controllerType: new () => T): T {
+        let controller = this.controllerInfos.get(controllerType)?.controller as T;
 
-    /**
-     * 获取指定控制器
-     * @param alias
-     */
-    public getController(alias: string): IController {
-        if (this.list.has(alias)) {
-            return this.list.get(alias)
-        }
-    }
-
-    /**
-    * 命令控制器调用指定方法
-    */
-    public orderControllerById(alias: string, funcName: string, ...args: any[]): any {
-        const controller: IController = this.getController(alias);
         if (controller == null) {
-            cc.error(`控制器（${alias}）不存在`);
-            return;
+            controller = this.createController(controllerType);
         }
 
-        return controller.order(funcName, ...args);
+        return controller;
+    }
+
+    public getControllerByAlias(alias) {
+        let controller = null;
+
+        this.controllerInfos.forEach((info) => {
+            if (info.alias == alias) {
+                controller = info.controller;
+            }
+        });
+
+        return controller;
+    }
+
+    /**
+     * 创建Controller
+     * @param controllerType
+     */
+    private createController<T extends ControllerBase>(controllerType: new () => T): T {
+        let controller: T = new controllerType();
+
+        this.controllerInfos.set(controllerType, {
+            controller: controller,
+            alias: (controller as any).alias,
+        });
+
+        if ((controller as any).alias == null || (controller as any).alias == "") {
+            console.warn("Controller的名称是空的，请检查是否使用了Controller装饰器");
+        }
+
+        controller.onInitialize();
+
+        return controller
     }
 
 }
+
+namespace ControllerService {
+
+    export class ControllerInfo {
+        public controller: ControllerBase;
+        public alias: string;
+    }
+
+}
+
+export default ControllerService;

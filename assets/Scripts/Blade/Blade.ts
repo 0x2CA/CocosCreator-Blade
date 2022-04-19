@@ -1,4 +1,3 @@
-import IFrameWork from "./Interfaces/IFrameWork";
 import ViewService from "./Services/ViewService";
 import ControllerService from "./Services/ControllerService";
 import NotificationService from "./Services/NotificationService";
@@ -14,40 +13,63 @@ import SceneService from "./Services/SceneService";
 import TimerService from "./Services/TimerService";
 import AudioService from "./Services/AudioService";
 import ConfigService from "./Services/ConfigService";
+import SingletonBase from "./Bases/SingletonBase";
+import AssetService from "./Services/AssetService";
+import LoadingController from "../Module/Controllers/LoadingController";
 
 
-export default class Blade extends IFrameWork {
+export default class Blade extends SingletonBase {
+
+    public onInitialize() {
+
+    }
+
+    public onDispose() {
+
+    }
 
     /**
      * 模型
      *
      * @memberof Blade
      */
-    public readonly model = ModelService.instance
+    public get model() {
+        return ModelService.getInstance();
+    }
+
     /**
      * 视图
      *
      * @memberof Blade
      */
-    public readonly view = ViewService.instance
+    public get view() {
+        return ViewService.getInstance();
+    }
+
     /**
      * 控制器
      *
      * @memberof Blade
      */
-    public readonly ctrl = ControllerService.instance
+    public get ctrl() {
+        return ControllerService.getInstance();
+    }
     /**
      * 通知
      *
      * @memberof Blade
      */
-    public readonly notice = NotificationService.instance
+    public get notice() {
+        return NotificationService.getInstance();
+    }
     /**
      * 命令
      *
      * @memberof Blade
      */
-    public readonly cmd = CommandService.instance
+    public get cmd() {
+        return CommandService.getInstance();
+    }
 
 
     /**
@@ -55,21 +77,27 @@ export default class Blade extends IFrameWork {
      *
      * @memberof Blade
      */
-    public readonly platform = PlatformService.instance
+    public get platform() {
+        return PlatformService.getInstance();
+    }
 
     /**
      * 动画
      *
      * @memberof Blade
      */
-    public readonly tween = TweenService.instance
+    public get tween() {
+        return TweenService.getInstance();
+    }
 
     /**
      * 多语言
      *
      * @memberof Blade
      */
-    public readonly locale = LocalizedService.instance
+    public get locale() {
+        return LocalizedService.getInstance();
+    }
 
 
     /**
@@ -77,49 +105,68 @@ export default class Blade extends IFrameWork {
     *
     * @memberof Blade
     */
-    public readonly ticker = TickerService.instance
+    public get ticker() {
+        return TickerService.getInstance();
+    }
 
     /**
     * 时间服务
     *
     * @memberof Blade
     */
-    public readonly timer = TimerService.instance
+    public get timer() {
+        return TimerService.getInstance();
+    }
 
     /**
     * 弹窗服务
     *
     * @memberof Blade
     */
-    public readonly popup = PopupService.instance
+    public get popup() {
+        return PopupService.getInstance();
+    }
 
     /**
     * 对象池服务
     *
     * @memberof Blade
     */
-    public readonly pool = PoolService.instance
+    public get pool() {
+        return PoolService.getInstance();
+    }
 
     /**
     * 声音服务
     *
     * @memberof Blade
     */
-    public readonly audio = AudioService.instance
+    public get audio() {
+        return AudioService.getInstance();
+    }
 
     /**
     * 配置服务
     *
     * @memberof Blade
     */
-    public readonly config = ConfigService.instance
+    public get config() {
+        return ConfigService.getInstance();
+    }
 
     /**
     * 场景服务
     *
     * @memberof Blade
     */
-    public readonly scene = SceneService.instance
+    public get scene() {
+        return SceneService.getInstance();
+    }
+
+
+    public get asset() {
+        return AssetService.getInstance();
+    }
 
 }
 
@@ -129,12 +176,14 @@ declare global {
 
 if (typeof blade == typeof undefined) {
 
-    const blade = new Blade();
+    const blade = Blade.getInstance();
     (window as any).blade = blade;
 
     if (cc.sys.platform !== cc.sys.EDITOR_PAGE) {
         // App初始化
-        cc.game.once(cc.game.EVENT_ENGINE_INITED, () => blade.initialize());
+        cc.game.once(cc.game.EVENT_ENGINE_INITED, () => {
+
+        });
 
         // 场景初次启动
         cc.director.on(cc.Director.EVENT_AFTER_SCENE_LAUNCH, (scene: cc.Scene) => {
@@ -144,7 +193,6 @@ if (typeof blade == typeof undefined) {
                 node = new cc.Node();
                 node.name = "Blade";
                 node.parent = scene;
-                node.group = "ui"
             }
 
             // 更新常驻节点的位置和尺寸
@@ -160,11 +208,11 @@ if (typeof blade == typeof undefined) {
 
         // 延迟初始化
         cc.director.once(cc.Director.EVENT_AFTER_SCENE_LAUNCH, (scene: cc.Scene) => {
-            blade.lazyInitialize()
+            ControllerService.getInstance().getController(LoadingController).openLoadingView();
         });
 
     } else {
-        blade.locale.initialize();
+        LocalizedService.getInstance();
     }
 }
 

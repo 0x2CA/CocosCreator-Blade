@@ -1,4 +1,4 @@
-import IPlatform from "../../Blade/Interfaces/IPlatform";
+import PlatformBase from "../Bases/PlatformBase";
 import PromiseHelper from "../Helpers/PromiseHelper";
 import PlatformConfig from "../../Module/Defines/PlatformConfig";
 
@@ -6,7 +6,7 @@ import PlatformConfig from "../../Module/Defines/PlatformConfig";
 /**
  * Facebook
  */
-export default class FbPlatform extends IPlatform {
+export default class FbPlatform extends PlatformBase {
     /**
     * 激励视频实例
     */
@@ -15,7 +15,7 @@ export default class FbPlatform extends IPlatform {
     /**
      * 激励视频预加载状态
      */
-    private videoState: IPlatform.AdState = IPlatform.AdState.None;
+    private videoState: PlatformBase.AdState = PlatformBase.AdState.None;
 
     /**
      * 插页实例
@@ -25,18 +25,15 @@ export default class FbPlatform extends IPlatform {
     /**
     * 插页预加载状态
     */
-    private interstitialState: IPlatform.AdState = IPlatform.AdState.None;
+    private interstitialState: PlatformBase.AdState = PlatformBase.AdState.None;
 
-    public async initialize(){
+    public onInitialize() {
         const player = FBInstant.player;
         this.userInfo = {
             avatar: player.getPhoto(),
             nickname: player.getName(),
             platform: FBInstant.getPlatform(),
         };
-    }
-
-    public async lazyInitialize() {
     }
 
     getLaunchOptions() {
@@ -51,7 +48,7 @@ export default class FbPlatform extends IPlatform {
      * 判断视频是否已经加载完成
      */
     public isVideoLoaded(): boolean {
-        return this.videoState == IPlatform.AdState.Loaded;
+        return this.videoState == PlatformBase.AdState.Loaded;
     }
 
     /**
@@ -59,16 +56,16 @@ export default class FbPlatform extends IPlatform {
      */
     public async preloadRewardVideo(): Promise<any> {
         // 已经加载
-        if (this.videoState == IPlatform.AdState.Loaded) {
+        if (this.videoState == PlatformBase.AdState.Loaded) {
             return;
         }
 
         // 正在加载, 等待加载结束
-        if (this.videoState == IPlatform.AdState.Loading) {
-            return await PromiseHelper.waitUntil(() => this.videoState != IPlatform.AdState.Loading);
+        if (this.videoState == PlatformBase.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => this.videoState != PlatformBase.AdState.Loading);
         }
 
-        this.videoState = IPlatform.AdState.Loading;
+        this.videoState = PlatformBase.AdState.Loading;
 
         try {
             if (this.video == null) {
@@ -84,10 +81,10 @@ export default class FbPlatform extends IPlatform {
                 }
             }
             await this.video.loadAsync();
-            this.videoState = IPlatform.AdState.Loaded;
+            this.videoState = PlatformBase.AdState.Loaded;
         } catch (error) {
             cc.log(error);
-            this.videoState = IPlatform.AdState.None;
+            this.videoState = PlatformBase.AdState.None;
         }
     }
 
@@ -99,7 +96,7 @@ export default class FbPlatform extends IPlatform {
         try {
 
             // 未广告实例或者未加载完成
-            if (this.video == null || this.videoState == IPlatform.AdState.None) {
+            if (this.video == null || this.videoState == PlatformBase.AdState.None) {
                 cc.log('未广告实例或者未加载完成');
                 throw new Error();
             }
@@ -109,7 +106,7 @@ export default class FbPlatform extends IPlatform {
             const now = Date.now();
             await PromiseHelper.waitUntil(() => {
                 waitCount -= (Date.now() - now) / 1000;
-                return waitCount <= 0 || this.videoState == IPlatform.AdState.Loaded;
+                return waitCount <= 0 || this.videoState == PlatformBase.AdState.Loaded;
             });
 
             await this.video.showAsync();
@@ -117,7 +114,7 @@ export default class FbPlatform extends IPlatform {
         } catch (error) {
             return false;
         } finally {
-            this.videoState = IPlatform.AdState.None;
+            this.videoState = PlatformBase.AdState.None;
             this.video = null;
             this.preloadRewardVideo();
         }
@@ -134,7 +131,7 @@ export default class FbPlatform extends IPlatform {
      * 判断插页是否已经加载完成
      */
     public isInterstitialLoaded(): boolean {
-        return this.interstitialState == IPlatform.AdState.Loaded;
+        return this.interstitialState == PlatformBase.AdState.Loaded;
     }
 
     /**
@@ -146,16 +143,16 @@ export default class FbPlatform extends IPlatform {
         }
 
         // 已经加载
-        if (this.interstitialState == IPlatform.AdState.Loaded) {
+        if (this.interstitialState == PlatformBase.AdState.Loaded) {
             return;
         }
 
         // 正在加载, 等待加载结束
-        if (this.interstitialState == IPlatform.AdState.Loading) {
-            return await PromiseHelper.waitUntil(() => this.interstitialState != IPlatform.AdState.Loading);
+        if (this.interstitialState == PlatformBase.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => this.interstitialState != PlatformBase.AdState.Loading);
         }
 
-        this.interstitialState = IPlatform.AdState.Loading;
+        this.interstitialState = PlatformBase.AdState.Loading;
 
         try {
             if (this.interstitial == null) {
@@ -163,9 +160,9 @@ export default class FbPlatform extends IPlatform {
                 this.interstitial = await FBInstant.getInterstitialAdAsync(PlatformConfig.fb.interstitialId);
             }
             await this.interstitial.loadAsync();
-            this.interstitialState = IPlatform.AdState.Loaded;
+            this.interstitialState = PlatformBase.AdState.Loaded;
         } catch (error) {
-            this.interstitialState = IPlatform.AdState.None;
+            this.interstitialState = PlatformBase.AdState.None;
             cc.log(error);
         }
     }
@@ -176,7 +173,7 @@ export default class FbPlatform extends IPlatform {
     public async showInterstitial(): Promise<any> {
         try {
             // 未广告实例或者未加载完成
-            if (this.interstitial == null || this.interstitialState == IPlatform.AdState.None) {
+            if (this.interstitial == null || this.interstitialState == PlatformBase.AdState.None) {
                 cc.log('未广告实例或者未加载完成');
                 throw new Error();
             }
@@ -186,7 +183,7 @@ export default class FbPlatform extends IPlatform {
             const now = Date.now();
             await PromiseHelper.waitUntil(() => {
                 waitCount -= (Date.now() - now) / 1000;
-                return waitCount <= 0 || this.interstitialState == IPlatform.AdState.Loaded;
+                return waitCount <= 0 || this.interstitialState == PlatformBase.AdState.Loaded;
             });
 
             await this.interstitial.showAsync();
@@ -194,7 +191,7 @@ export default class FbPlatform extends IPlatform {
         } catch (error) {
             return false;
         } finally {
-            this.interstitialState = IPlatform.AdState.None;
+            this.interstitialState = PlatformBase.AdState.None;
             this.interstitial = null;
             this.preloadInterstitial();
         }
@@ -203,7 +200,7 @@ export default class FbPlatform extends IPlatform {
     /**
     * 发送邀请
     */
-    public async  sendInvite(imageUrl: string, title: string = 'Do you want to play a game?', param: any): Promise<any> {
+    public async sendInvite(imageUrl: string, title: string = 'Do you want to play a game?', param: any): Promise<any> {
         await FBInstant.shareAsync({
             intent: 'INVITE',
             image: await this.getImageBase64(imageUrl),
@@ -214,7 +211,7 @@ export default class FbPlatform extends IPlatform {
 
     /**
      * 图片转Base64
-     * @param url 
+     * @param url
      */
     private async getImageBase64(url: string) {
         let image = await PromiseHelper.loadRemote(url);

@@ -1,3 +1,6 @@
+import TickerService from "../Services/TickerService";
+import TimerService from "../Services/TimerService";
+
 /**
  *  异步助手
  */
@@ -12,7 +15,7 @@ export default class PromiseHelper {
             if (comp) {
                 comp.scheduleOnce(resolve, delay);
             } else {
-                blade.timer.startTimeout(delay, resolve);
+                TimerService.getInstance().startTimeout(delay, resolve);
             }
         });
     }
@@ -31,16 +34,16 @@ export default class PromiseHelper {
                 onTick: () => {
                     try {
                         if (untilFunc.call(thisObj, ...args)) {
-                            blade.ticker.unregister(ticker);
+                            TickerService.getInstance().off(ticker);
                             resolve();
                         }
                     } catch (e) {
-                        blade.ticker.unregister(ticker);
+                        TickerService.getInstance().off(ticker);
                         reject(e);
                     }
                 },
             };
-            blade.ticker.register(ticker);
+            TickerService.getInstance().on(ticker);
         });
     }
 
@@ -58,16 +61,16 @@ export default class PromiseHelper {
                 onTick: () => {
                     try {
                         if (!whileFunc.call(thisObj, ...args)) {
-                            blade.ticker.unregister(ticker);
+                            TickerService.getInstance().off(ticker);
                             resolve();
                         }
                     } catch (e) {
-                        blade.ticker.unregister(ticker);
+                        TickerService.getInstance().off(ticker);
                         reject(e);
                     }
                 },
             };
-            blade.ticker.register(ticker);
+            TickerService.getInstance().on(ticker);
         });
     }
 

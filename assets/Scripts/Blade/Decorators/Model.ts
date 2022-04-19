@@ -1,12 +1,12 @@
-import IModel from "../../Blade/Interfaces/IModel";
+import ModelBase from "../Bases/ModelBase";
 
 
 /**
  * 模型装饰器
- * @param modelName 
+ * @param modelName
  */
 export default function Model(modelName: string) {
-    return function (target: typeof IModel) {
+    return function (target: typeof ModelBase) {
         Reflect.defineProperty(target.prototype, "alias", {
             value: modelName
         })

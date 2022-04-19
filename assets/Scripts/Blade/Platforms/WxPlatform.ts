@@ -1,13 +1,16 @@
-import IPlatform from "../../Blade/Interfaces/IPlatform";
+import PlatformBase from "../Bases/PlatformBase";
 import HttpHelper from "../Helpers/HttpHelper";
 import StringHelper from "../Helpers/StringHelper";
 import PromiseHelper from "../Helpers/PromiseHelper";
 import PlatformConfig from "../../Module/Defines/PlatformConfig";
+import TickerService from "../Services/TickerService";
+import AudioService from "../Services/AudioService";
+import TimerService from "../Services/TimerService";
 
 /**
  *  微信
  */
-export default class WxPlatform extends IPlatform {
+export default class WxPlatform extends PlatformBase {
 
     // 启动参数
     private launchOptions: wx.launchOption
@@ -24,10 +27,10 @@ export default class WxPlatform extends IPlatform {
         success: Function
     } = null;
 
-    private videoState: IPlatform.AdState = IPlatform.AdState.None;
-    private bannerState: IPlatform.AdState = IPlatform.AdState.None;
-    private interstitialState: IPlatform.AdState = IPlatform.AdState.None;
-    private gridAdState: IPlatform.AdState = IPlatform.AdState.None;
+    private videoState: PlatformBase.AdState = PlatformBase.AdState.None;
+    private bannerState: PlatformBase.AdState = PlatformBase.AdState.None;
+    private interstitialState: PlatformBase.AdState = PlatformBase.AdState.None;
+    private gridAdState: PlatformBase.AdState = PlatformBase.AdState.None;
 
     /**
     * 激励视频实例
@@ -44,8 +47,7 @@ export default class WxPlatform extends IPlatform {
     private bannerActive: boolean = false;
 
 
-
-    public async initialize() {
+    public onInitialize() {
         // 获取尝试用户信息
         this.getUserInfoTry()
 
@@ -53,16 +55,13 @@ export default class WxPlatform extends IPlatform {
             // 更新启动参数
             this.setLaunchOptions(res);
             // 显示事件
-            this.emit(IPlatform.EventType.OnShow, res)
+            this.emit(PlatformBase.EventType.OnShow, res)
         });
 
         this.preloadBanner();
         this.preloadInterstitial();
         this.preloadRewardVideo();
         this.preloadGridAd();
-    }
-
-    public async lazyInitialize() {
     }
 
 
@@ -83,7 +82,7 @@ export default class WxPlatform extends IPlatform {
 
     /**
      * 更新启动参数
-     * @param value 
+     * @param value
      */
     private setLaunchOptions(value: wx.launchOption) {
         this.launchOptions = value;
@@ -253,13 +252,13 @@ export default class WxPlatform extends IPlatform {
             });
         }
 
-        param.shareTime = blade.timer.getTime();
+        param.shareTime = TimerService.getInstance().getTime();
 
         let query = HttpHelper.formatParams(param);
 
         this.shareMenuInfo = {
             imageUrl, title, query, success: () => {
-                this.emit(IPlatform.EventType.OpenShare, imageUrl, title, param);
+                this.emit(PlatformBase.EventType.OpenShare, imageUrl, title, param);
                 if (callback) {
                     callback.call(caller, imageUrl, title, param);
                 }
@@ -279,7 +278,7 @@ export default class WxPlatform extends IPlatform {
      * 判断视频是否已经加载完成
      */
     public isVideoLoaded(): boolean {
-        return this.videoState == IPlatform.AdState.Loaded;
+        return this.videoState == PlatformBase.AdState.Loaded;
     }
 
     /**
@@ -291,16 +290,16 @@ export default class WxPlatform extends IPlatform {
         }
 
         // 已经加载
-        if (this.videoState == IPlatform.AdState.Loaded) {
+        if (this.videoState == PlatformBase.AdState.Loaded) {
             return;
         }
 
         // 正在加载, 等待加载结束
-        if (this.videoState == IPlatform.AdState.Loading) {
-            return await PromiseHelper.waitUntil(() => this.videoState != IPlatform.AdState.Loading);
+        if (this.videoState == PlatformBase.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => this.videoState != PlatformBase.AdState.Loading);
         }
 
-        this.videoState = IPlatform.AdState.Loading;
+        this.videoState = PlatformBase.AdState.Loading;
 
         if (this.video == null) {
             // 初次创建会调load方法
@@ -309,19 +308,19 @@ export default class WxPlatform extends IPlatform {
             });
             // 加载成功
             this.video.onLoad(() => {
-                this.videoState = IPlatform.AdState.Loaded;
+                this.videoState = PlatformBase.AdState.Loaded;
             });
             // 加载失败
             this.video.onError((err) => {
-                this.videoState = IPlatform.AdState.None;
+                this.videoState = PlatformBase.AdState.None;
             });
             this.video.onClose((res) => {
                 let result = (res && res.isEnded) || res === undefined;
-                blade.ticker.setPause(false);
-                blade.audio.resumeAll();
+                TickerService.getInstance().pause = false;
+                AudioService.getInstance().resumeAll();
                 this.preloadRewardVideo();
                 // 发送结果
-                this.emit(IPlatform.EventType.CloseVideo, result);
+                this.emit(PlatformBase.EventType.CloseVideo, result);
             })
         } else {
             this.video.load();
@@ -330,31 +329,31 @@ export default class WxPlatform extends IPlatform {
         this.video.load();
 
         // 正在加载, 等待加载结束
-        return await PromiseHelper.waitUntil(() => this.videoState != IPlatform.AdState.Loading);
+        return await PromiseHelper.waitUntil(() => this.videoState != PlatformBase.AdState.Loading);
     }
 
     /**
      * 播放激励视频
      */
     public async playRewardVideo(): Promise<boolean> {
-        if (this.video != null && this.videoState == IPlatform.AdState.Loaded) {
-            this.videoState = IPlatform.AdState.None;
-            blade.ticker.setPause(true);
-            blade.audio.pauseAll();
+        if (this.video != null && this.videoState == PlatformBase.AdState.Loaded) {
+            this.videoState = PlatformBase.AdState.None;
+            TickerService.getInstance().pause = true;
+            AudioService.getInstance().pauseAll();
 
             let result: boolean = await new Promise(async (resolve, reject) => {
                 const closeFunc = (result) => {
                     resolve(result);
                 };
-                this.once(IPlatform.EventType.CloseVideo, closeFunc);
+                this.once(PlatformBase.EventType.CloseVideo, closeFunc);
                 try {
                     await this.video.show()
-                    this.emit(IPlatform.EventType.OpenVideo);
+                    this.emit(PlatformBase.EventType.OpenVideo);
                 } catch (error) {
-                    blade.ticker.setPause(false);
-                    blade.audio.resumeAll();
+                    TickerService.getInstance().pause = false;
+                    AudioService.getInstance().resumeAll();
                     this.preloadRewardVideo();
-                    this.off(IPlatform.EventType.CloseVideo, closeFunc);
+                    this.off(PlatformBase.EventType.CloseVideo, closeFunc);
                     resolve(false);
                 }
             })
@@ -410,7 +409,7 @@ export default class WxPlatform extends IPlatform {
         this.banner.onLoad(async () => {
             this.bannerState = WxPlatform.AdState.Loaded;
             if (this.bannerActive) {
-                this.emit(IPlatform.EventType.OpenBanner);
+                this.emit(PlatformBase.EventType.OpenBanner);
                 this.banner.show();
             }
         });
@@ -427,7 +426,7 @@ export default class WxPlatform extends IPlatform {
                 (sysInfo.windowWidth - this.banner.style.realWidth) / 2;
         });
 
-        this.bannerState = IPlatform.AdState.Loading;
+        this.bannerState = PlatformBase.AdState.Loading;
     }
 
 
@@ -441,23 +440,23 @@ export default class WxPlatform extends IPlatform {
         }
 
         if (active) {
-            if (this.bannerState != IPlatform.AdState.Loaded) {
+            if (this.bannerState != PlatformBase.AdState.Loaded) {
                 return false;
             }
 
-            this.emit(IPlatform.EventType.OpenBanner);
+            this.emit(PlatformBase.EventType.OpenBanner);
             this.banner.show();
-            this.bannerState = IPlatform.AdState.Opening;
+            this.bannerState = PlatformBase.AdState.Opening;
             return true;
         } else {
             // 直接销毁重新创建banner, 刷新广告
-            if (this.bannerState != IPlatform.AdState.Opening) {
+            if (this.bannerState != PlatformBase.AdState.Opening) {
                 return false;
             }
-            this.emit(IPlatform.EventType.CloseBanner);
+            this.emit(PlatformBase.EventType.CloseBanner);
             this.banner.destroy();
             this.banner = null;
-            this.bannerState = IPlatform.AdState.None;
+            this.bannerState = PlatformBase.AdState.None;
             this.preloadBanner();
             return true;
         }
@@ -468,7 +467,7 @@ export default class WxPlatform extends IPlatform {
     }
 
     public isInterstitialLoaded() {
-        return this.interstitialState == IPlatform.AdState.Loaded;
+        return this.interstitialState == PlatformBase.AdState.Loaded;
     }
 
     public async preloadInterstitial() {
@@ -476,31 +475,31 @@ export default class WxPlatform extends IPlatform {
             return;
         }
 
-        if (this.interstitialState == IPlatform.AdState.Loaded) {
+        if (this.interstitialState == PlatformBase.AdState.Loaded) {
             return;
         }
 
-        if (this.interstitialState == IPlatform.AdState.Loading) {
+        if (this.interstitialState == PlatformBase.AdState.Loading) {
             return await PromiseHelper.waitUntil(() => {
-                return this.interstitialState != IPlatform.AdState.Loading;
+                return this.interstitialState != PlatformBase.AdState.Loading;
             });
         }
 
-        this.interstitialState = IPlatform.AdState.Loading;
+        this.interstitialState = PlatformBase.AdState.Loading;
         if (this.interstitial == null) {
             this.interstitial = wx.createInterstitialAd({ adUnitId: PlatformConfig.wx.interstitialId });
 
             this.interstitial.onLoad(() => {
-                this.interstitialState = IPlatform.AdState.Loaded;
+                this.interstitialState = PlatformBase.AdState.Loaded;
             });
 
             this.interstitial.onError(async (error) => {
-                this.interstitialState = IPlatform.AdState.None;
+                this.interstitialState = PlatformBase.AdState.None;
             });
 
             this.interstitial.onClose(() => {
-                this.interstitialState = IPlatform.AdState.None;
-                this.emit(IPlatform.EventType.CloseInterstitial);
+                this.interstitialState = PlatformBase.AdState.None;
+                this.emit(PlatformBase.EventType.CloseInterstitial);
             });
         }
     }
@@ -517,8 +516,8 @@ export default class WxPlatform extends IPlatform {
 
         try {
             await this.interstitial.show();
-            this.interstitialState = IPlatform.AdState.Opening;
-            this.emit(IPlatform.EventType.OpenInterstitial)
+            this.interstitialState = PlatformBase.AdState.Opening;
+            this.emit(PlatformBase.EventType.OpenInterstitial)
         } catch (error) {
             cc.error(error);
         }
@@ -531,7 +530,7 @@ export default class WxPlatform extends IPlatform {
 
 
     public isGridAdLoaded() {
-        return this.gridAdState == IPlatform.AdState.Loaded;
+        return this.gridAdState == PlatformBase.AdState.Loaded;
     }
 
     public async preloadGridAd() {
@@ -539,18 +538,18 @@ export default class WxPlatform extends IPlatform {
             return;
         }
 
-        if (this.gridAdState == IPlatform.AdState.Loaded) {
+        if (this.gridAdState == PlatformBase.AdState.Loaded) {
             return;
         }
 
-        if (this.gridAdState == IPlatform.AdState.Loading) {
+        if (this.gridAdState == PlatformBase.AdState.Loading) {
             return await PromiseHelper.waitUntil(() => {
-                return this.gridAdState != IPlatform.AdState.Loading;
+                return this.gridAdState != PlatformBase.AdState.Loading;
             });
         }
 
         const sysInfo: wx.systemInfo = wx.getSystemInfoSync();
-        this.gridAdState = IPlatform.AdState.Loading;
+        this.gridAdState = PlatformBase.AdState.Loading;
         if (this.gridAd == null) {
             this.gridAd = wx.createGridAd({
                 adUnitId: PlatformConfig.wx.gridId,
@@ -565,11 +564,11 @@ export default class WxPlatform extends IPlatform {
             });
 
             this.gridAd.onLoad(() => {
-                this.gridAdState = IPlatform.AdState.Loaded;
+                this.gridAdState = PlatformBase.AdState.Loaded;
             });
 
             this.gridAd.onError(async (error) => {
-                this.gridAdState = IPlatform.AdState.None;
+                this.gridAdState = PlatformBase.AdState.None;
             });
 
             this.gridAd.onResize((res) => {
@@ -614,7 +613,7 @@ export default class WxPlatform extends IPlatform {
         });
         await PromiseHelper.wait(1)
 
-        this.emit(IPlatform.EventType.OpenShare, imageUrl, title, param);
+        this.emit(PlatformBase.EventType.OpenShare, imageUrl, title, param);
     }
 
 

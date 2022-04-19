@@ -1,49 +1,18 @@
-import Singleton from "../../Blade/Decorators/Singleton";
-import Service from "../../Blade/Decorators/Service";
-import IService from "../../Blade/Interfaces/IService";
-
+import SingletonBase from "../Bases/SingletonBase";
 
 /**
  * 全局的配置服务
  *
  * @class ConfigService
  */
-@Singleton
-@Service("ConfigService")
-class ConfigService implements IService {
-    public alias: string;
-
-    public static readonly instance: ConfigService
+class ConfigService extends SingletonBase {
 
     private list = new Map<string, ConfigService.ConfigInfo>();
 
-    private configPath = "Configs"
-
-    public async initialize() {
-        await this.loadFolder();
+    public onInitialize() {
     }
 
-    public async lazyInitialize() {
-    }
-
-
-
-    /**
-    * 从目录加载配置
-    */
-    public loadFolder() {
-        new Promise((resolve, reject) => {
-            cc.resources.loadDir(this.configPath, (err, resource) => {
-                for (let index = 0; index < resource.length; index++) {
-                    const json = (resource as cc.JsonAsset[])[index];
-                    this.register(json.name, json);
-                }
-
-                this.info();
-
-                resolve();
-            });
-        })
+    public onDispose() {
     }
 
     async register(
@@ -63,7 +32,7 @@ class ConfigService implements IService {
 
     /**
      * 获取指定的配置
-     * @param name 
+     * @param name
      */
     public get<T>(name: string): T {
         if (this.list.has(name)) {
@@ -114,7 +83,7 @@ class ConfigService implements IService {
 
     /**
      * 打印信息
-     * @param name 
+     * @param name
      */
     info(name?: string) {
         if (name) {

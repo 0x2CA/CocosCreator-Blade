@@ -1,25 +1,19 @@
-import Singleton from "../../Blade/Decorators/Singleton";
-import Service from "../../Blade/Decorators/Service";
-import IService from "../../Blade/Interfaces/IService";
+import SingletonBase from "../Bases/SingletonBase";
+import AssetService from "./AssetService";
+import PlatformService from "./PlatformService";
+
 
 /**
  * 全局的声音服务
  *
  * @class AudioService
  */
-@Singleton
-@Service("AudioService")
-export default class AudioService implements IService {
-    public alias: string;
-
-    public static readonly instance: AudioService
+export default class AudioService extends SingletonBase {
 
     private static readonly BGM_VOL_KEY = 'bgm_volume';
     private static readonly SFX_VOL_KEY = 'sfx_volume';
 
-    private list = new Map<string, cc.AudioClip>();
-
-    private readonly audioPath = "Audios"
+    private audios = new Map<string, cc.AudioClip>();
 
     // 声音大小
     private bgmVolume: number = 1.0;
@@ -28,62 +22,52 @@ export default class AudioService implements IService {
     // 背景播放id
     private bgmAudioID: number = 0;
 
-    public async initialize() {
-        await this.loadFolder();
+    public onInitialize() {
         this.initVolume();
     }
 
-    public async lazyInitialize() {
+    public onDispose() {
     }
 
     /**
      * 初始化音量
      */
     public initVolume() {
-        const bgmVol = blade.platform.getPlatform().getArchive(AudioService.BGM_VOL_KEY);
+        const bgmVol = PlatformService.getInstance().getPlatform().getArchive(AudioService.BGM_VOL_KEY);
         this.bgmVolume = parseFloat(bgmVol);
         if (isNaN(this.bgmVolume)) {
             this.bgmVolume = 1;
         }
 
-        const sfxVol = blade.platform.getPlatform().getArchive(AudioService.SFX_VOL_KEY);
+        const sfxVol = PlatformService.getInstance().getPlatform().getArchive(AudioService.SFX_VOL_KEY);
         this.sfxVolume = parseFloat(sfxVol);
         if (isNaN(this.sfxVolume)) {
             this.sfxVolume = 1;
         }
     }
 
-
-    /**
-    * 从目录加载声音
-    */
-    public loadFolder() {
-        return new Promise((resolve, reject) => {
-            cc.resources.loadDir(this.audioPath, (err, resource) => {
-                for (let index = 0; index < resource.length; index++) {
-                    const audio = (resource as cc.AudioClip[])[index];
-                    this.register(audio.name, audio);
-                }
-
-                this.info();
-
-                resolve();
-            });
-        })
-    }
-
-    async register(
+    public async register(
         name: string,
-        audio: cc.AudioClip
+        audio?: cc.AudioClip
     ) {
-        if (!this.list.has(name)) {
-            this.list.set(name, audio);
+        if (!this.audios.has(name)) {
+            if (audio == null) {
+                try {
+                    audio = await AssetService.getInstance().loadAssetAsync(name, cc.AudioClip) as cc.AudioClip;
+
+                    this.audios.set(name, audio);
+                } catch (error) {
+                    cc.error(`加载声音${name}失败`, error);
+                }
+            } else {
+                this.audios.set(name, audio);
+            }
         }
     }
 
-    async unregister(name: string) {
-        if (this.list.has(name)) {
-            this.list.delete(name);
+    public async unregister(name: string) {
+        if (this.audios.has(name)) {
+            this.audios.delete(name);
         }
     }
 
@@ -98,12 +82,12 @@ export default class AudioService implements IService {
             this.bgmAudioID = -1;
         }
 
-        if (this.list.has(name)) {
-            const audioId = cc.audioEngine.play(this.list.get(name), true, this.bgmVolume);
+        if (this.audios.has(name)) {
+            const audioId = cc.audioEngine.play(this.audios.get(name), true, this.bgmVolume);
             this.bgmAudioID = audioId;
             return audioId;
         } else {
-            cc.error(`播放的声音不存在!:${name}`)
+            cc.warn(`播放的声音不存在!:${name}`)
         }
     }
 
@@ -113,8 +97,8 @@ export default class AudioService implements IService {
     */
     public playSFX(name: string, loop = false) {
         if (this.sfxVolume > 0) {
-            if (this.list.has(name)) {
-                const audioId = cc.audioEngine.play(this.list.get(name), loop, this.sfxVolume);
+            if (this.audios.has(name)) {
+                const audioId = cc.audioEngine.play(this.audios.get(name), loop, this.sfxVolume);
                 return audioId;
             } else {
                 cc.error(`播放的声音不存在!:${name}`)
@@ -124,7 +108,7 @@ export default class AudioService implements IService {
 
     /**
      * 停止播放指定声音
-     * @param audioId 
+     * @param audioId
      */
     public stopAudio(audioId: number) {
         cc.audioEngine.stop(audioId);
@@ -147,19 +131,19 @@ export default class AudioService implements IService {
 
     /**
     * 设置音效音量
-    * @param vol 
+    * @param vol
     */
     public setSFXVolume(vol: number) {
         if (this.sfxVolume != vol) {
-            blade.platform.getPlatform().saveArchive(AudioService.SFX_VOL_KEY, vol.toString());
+            PlatformService.getInstance().getPlatform().saveArchive(AudioService.SFX_VOL_KEY, vol.toString());
             this.sfxVolume = vol;
         }
     }
 
     /**
      * 设置背景音乐音量
-     * @param vol 
-     * @param force 
+     * @param vol
+     * @param force
      */
     public setBGMVolume(vol: number) {
         if (this.bgmAudioID >= 0) {
@@ -171,7 +155,7 @@ export default class AudioService implements IService {
             }
         }
         if (this.bgmVolume != vol) {
-            blade.platform.getPlatform().saveArchive(AudioService.BGM_VOL_KEY, vol.toString());
+            PlatformService.getInstance().getPlatform().saveArchive(AudioService.BGM_VOL_KEY, vol.toString());
             this.bgmVolume = vol;
             cc.audioEngine.setVolume(this.bgmAudioID, vol);
         }
@@ -193,19 +177,19 @@ export default class AudioService implements IService {
 
     /**
      * 打印信息
-     * @param name 
+     * @param name
      */
     info(name?: string) {
         if (name) {
-            if (this.list.has(name)) {
-                cc.log(name + ":", this.list.get(name));
+            if (this.audios.has(name)) {
+                cc.log(name + ":", this.audios.get(name));
             } else {
                 cc.log(`没有${name}声音`);
             }
         } else {
             let info = "声音信息:\n"
-            if (this.list.size > 0) {
-                this.list.forEach(
+            if (this.audios.size > 0) {
+                this.audios.forEach(
                     (value: cc.AudioClip, key: string, map: Map<string, cc.AudioClip>) => {
                         info += "   " + key + "    ✔" + "\n";
                     }

@@ -1,16 +1,11 @@
-import IService from "../../Blade/Interfaces/IService";
-import Service from "../../Blade/Decorators/Service";
-import Singleton from "../../Blade/Decorators/Singleton";
+import SingletonBase from "../Bases/SingletonBase";
+import AssetService from "./AssetService";
+import PlatformService from "./PlatformService";
 
 /**
  * 多语言服务
  */
-@Singleton
-@Service("LocalizedService")
-class LocalizedService extends cc.EventTarget implements IService {
-    public alias: string;
-
-    public static readonly instance: LocalizedService;
+class LocalizedService extends SingletonBase {
 
     private static readonly CURRENT_LANG_KEY = 'curLang';
 
@@ -24,19 +19,13 @@ class LocalizedService extends cc.EventTarget implements IService {
 
     private readonly langPath = 'Langs'
 
-    public async initialize() {
-        try {
-            //加载多语言配置
-            await this.loadFolder();
-        } catch (error) {
-        }
+    private event: cc.EventTarget = new cc.EventTarget();
 
-        // 初始化语言
+    public onInitialize() {
         this.initLang();
-
     }
 
-    public async lazyInitialize() {
+    public onDispose() {
     }
 
     /**
@@ -48,7 +37,7 @@ class LocalizedService extends cc.EventTarget implements IService {
         if (cc.sys.platform == cc.sys.EDITOR_PAGE) {
             lang = LocalizedService.LangType.zh_CN
         } else {
-            lang = blade.platform.getPlatform().getArchive(LocalizedService.CURRENT_LANG_KEY);
+            lang = PlatformService.getInstance().getPlatform().getArchive(LocalizedService.CURRENT_LANG_KEY);
         }
         if (lang == null || lang == "") {
             switch (sysLang) {
@@ -68,48 +57,39 @@ class LocalizedService extends cc.EventTarget implements IService {
         this.setLang(lang as LocalizedService.LangType);
     }
 
-
     /**
      * 加载多国语言
-     * @param lang 
-     * @param data 
+     * @param lang
+     * @param data
      */
     public load(lang: LocalizedService.LangType, data: { [key: string]: string }) {
         this.langs[lang] = data;
         if (lang == this.curLang) {
-            blade.locale.emit(LocalizedService.EventType.LanguageChange, lang);
+            console.log("多语言加载成功:", lang, data);
+            this.emit(LocalizedService.EventType.LanguageChange, lang);
         }
     }
 
     /**
-     * 从目录加载多国语言json文件
+     * 加载多国语言json文件
      */
-    public loadFolder() {
-        return new Promise((resolve, reject) => {
-            cc.resources.loadDir(this.langPath, (err, resource) => {
-                const jsonResList = resource as cc.JsonAsset[];
-                for (const jsonRes of jsonResList) {
-                    this.load(jsonRes.name as any, jsonRes.json);
-                }
-
-                this.info();
-                resolve();
-            });
-        })
-
+    public async loadLangConfig(lang: LocalizedService.LangType) {
+        let asset = await AssetService.getInstance().loadAssetAsync(lang + ".json", cc.JsonAsset) as cc.JsonAsset;
+        this.load(lang, asset.json);
+        AssetService.getInstance().unloadAsset(lang + ".json");
     }
 
     /**
      * 设置当前语言
-     * @param lang 
+     * @param lang
      */
     public setLang(lang: LocalizedService.LangType) {
         if (lang != null && this.curLang != lang) {
-            this.curLang = lang;
-            blade.locale.emit(LocalizedService.EventType.LanguageChange, lang);
             cc.log("设置语言环境:", lang)
+            this.curLang = lang;
+            this.emit(LocalizedService.EventType.LanguageChange, lang);
             if (cc.sys.platform != cc.sys.EDITOR_PAGE) {
-                blade.platform.getPlatform().saveArchive(LocalizedService.CURRENT_LANG_KEY, lang)
+                PlatformService.getInstance().getPlatform().saveArchive(LocalizedService.CURRENT_LANG_KEY, lang)
             }
         }
     }
@@ -123,7 +103,7 @@ class LocalizedService extends cc.EventTarget implements IService {
 
     /**
      * 获取文本ID对应的值
-     * @param langID 
+     * @param langID
      * @param params
      */
     public value(langID: string, ...params: any[]) {
@@ -163,6 +143,34 @@ class LocalizedService extends cc.EventTarget implements IService {
 
             cc.log(info)
         }
+    }
+
+    public hasEventListener(type: string): boolean {
+        return this.event.hasEventListener(type);
+    }
+
+    public emit(key: string, arg1?: any, arg2?: any, arg3?: any, arg4?: any, arg5?: any): void {
+        this.event.emit(key, arg1, arg2, arg3, arg4, arg5);
+    }
+
+    public on<T extends Function>(type: string, callback: T, target?: any, useCapture?: boolean): T {
+        return this.event.on(type, callback, target, useCapture);
+    }
+
+    public off(type: string, callback?: Function, target?: any): void {
+        this.event.off(type, callback, target);
+    }
+
+    public targetOff(target: any): void {
+        this.event.targetOff(target);
+    }
+
+    public once(type: string, callback: (arg1?: any, arg2?: any, arg3?: any, arg4?: any, arg5?: any) => void, target?: any): void {
+        this.on(type, callback, target, true);
+    }
+
+    public clear(): void {
+        this.event.clear();
     }
 }
 

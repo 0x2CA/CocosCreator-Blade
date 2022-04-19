@@ -1,28 +1,31 @@
-import IService from "../../Blade/Interfaces/IService";
-import Service from "../../Blade/Decorators/Service";
-import Singleton from "../../Blade/Decorators/Singleton";
 import Tween from "../Libs/Tween/Tween";
 import ITicker from "../../Blade/Interfaces/ITicker";
+import SingletonBase from "../Bases/SingletonBase";
+import TickerService from "./TickerService";
 
 /**
  * 动画服务类
  */
-@Singleton
-@Service("TweenService")
-export default class TweenService implements IService, ITicker {
-    public alias: string;
-    public static readonly instance: TweenService;
+export default class TweenService extends SingletonBase implements ITicker {
+    public onInitialize() {
+        TickerService.getInstance().on(this);
 
-
-    public async initialize(){
         Tween.customTick = true;
-
-        // 设置更新服务
-        blade.ticker.register(this);
     }
 
-    public async lazyInitialize() {
+    public onDispose() {
+        TickerService.getInstance().off(this);
+    }
 
+    public get(target: any,
+        props?: { loop?: boolean; manualTick?: boolean; onChange?: Function; onChangeObj?: any },
+        pluginData: any = null,
+        override: boolean = false) {
+        return Tween.get(target, props, pluginData, override);
+    }
+
+    public removeTweens(target: any): void {
+        Tween.removeTweens(target);
     }
 
     /**

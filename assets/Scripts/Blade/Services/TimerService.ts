@@ -1,18 +1,12 @@
-import IService from "../../Blade/Interfaces/IService";
-import Service from "../../Blade/Decorators/Service";
-import Singleton from "../../Blade/Decorators/Singleton";
-import IView from "../../Blade/Interfaces/IView";
+import ViewBase from "../Bases/ViewBase";
 import ITicker from "../../Blade/Interfaces/ITicker";
+import SingletonBase from "../Bases/SingletonBase";
+import TickerService from "./TickerService";
 
 /**
  * 时间服务
  */
-@Singleton
-@Service("TimerService")
-class TimerService implements IService, ITicker {
-
-    public alias: string;
-    public static readonly instance: TimerService;
+class TimerService extends SingletonBase implements ITicker {
 
     // 自动同步时间间隔
     private static readonly SYNC_INTERVAL: number = 60000;
@@ -34,13 +28,13 @@ class TimerService implements IService, ITicker {
      */
     private syncing: boolean = false;
 
+    private readonly timers: Set<TimerService.Timer> = new Set<TimerService.Timer>()
 
-    private readonly list: Set<TimerService.Timer> = new Set<TimerService.Timer>()
+    public onInitialize() {
 
-    public async initialize() {
-        this.list.clear();
+        TickerService.getInstance().on(this);
 
-        blade.ticker.register(this);
+        this.timers.clear();
 
         // 定时更新时间
         this.startTimer(1, () => {
@@ -53,7 +47,8 @@ class TimerService implements IService, ITicker {
         })
     }
 
-    public async lazyInitialize() {
+    public onDispose() {
+        TickerService.getInstance().off(this);
     }
 
     /**
@@ -110,7 +105,7 @@ class TimerService implements IService, ITicker {
             args
         };
 
-        this.list.add(timer)
+        this.timers.add(timer)
         return timer
     }
 
@@ -119,7 +114,7 @@ class TimerService implements IService, ITicker {
      * @param timer
      */
     public stopTimer(timer: TimerService.Timer) {
-        this.list.delete(timer)
+        this.timers.delete(timer)
     }
 
 
@@ -140,7 +135,7 @@ class TimerService implements IService, ITicker {
             args
         }
 
-        this.list.add(timer);
+        this.timers.add(timer);
 
         return timer;
     }
@@ -154,9 +149,10 @@ class TimerService implements IService, ITicker {
         cc.director.once(cc.Director.EVENT_BEFORE_UPDATE, func as any, target);
     }
 
+
     onTick(delta: number): void {
         let deleteList = []
-        this.list.forEach((timer) => {
+        this.timers.forEach((timer) => {
             //减时间
             timer.timeRemain -= delta;
             if (timer.timeRemain <= 0) {

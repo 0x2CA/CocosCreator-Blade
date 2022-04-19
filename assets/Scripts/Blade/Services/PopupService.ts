@@ -1,82 +1,53 @@
-import IService from "../../Blade/Interfaces/IService";
-import Singleton from "../../Blade/Decorators/Singleton";
-import Service from "../../Blade/Decorators/Service";
-import IPopup from "../../Blade/Interfaces/IPopup";
+import PopupBase from "../Bases/PopupBase";
 import PriorityQueue from "../Libs/Structs/PriorityQueue";
 import ITicker from "../../Blade/Interfaces/ITicker";
 import Tween from "../Libs/Tween/Tween";
 import PromiseHelper from "../Helpers/PromiseHelper";
+import SingletonBase from "../Bases/SingletonBase";
+import TickerService from "./TickerService";
+import AssetService from "./AssetService";
 
 
 /**
  * 弹窗服务类
  */
-@Singleton
-@Service("PopupService")
-class PopupService extends cc.EventTarget implements IService, ITicker {
-
-
-    public alias: string;
-    public static readonly instance: PopupService;
-
+class PopupService extends SingletonBase implements ITicker {
 
     private static readonly ModalPrefabPath = "Prefabs/Commons/Modal";
 
     // 当前在显示的弹窗队列
-    private readonly list: PriorityQueue<IPopup> = new PriorityQueue<IPopup>()
+    private readonly list: PriorityQueue<PopupBase> = new PriorityQueue<PopupBase>()
     // Modal组件
     private modal: cc.Node = null;
     private readonly prefabCache: Map<string, cc.Prefab> = new Map<string, cc.Prefab>()
 
-    public async initialize() {
+    private event: cc.EventTarget = new cc.EventTarget();
+
+    public async onInitialize() {
         this.list.clear();
         this.prefabCache.clear();
-        await this.loadFolder();
+
+        try {
+            let prefab = await AssetService.getInstance().loadAssetAsync("Modal.prefab", cc.Prefab) as cc.Prefab;
+            // 添加模态层节点
+            const appNode = cc.find("Blade");
+            if (appNode == null) {
+                throw new Error("没有Blade节点")
+            }
+            const modalNode: cc.Node = cc.instantiate(prefab);
+            modalNode.parent = appNode;
+            modalNode.active = false;
+            modalNode.zIndex = -1;
+            this.modal = modalNode;
+        } catch (error) {
+            cc.error(`不存在模态层预制件Modal.prefab`);
+            this.createModal();
+        }
+
+        TickerService.getInstance().on(this);
     }
 
-    public async lazyInitialize() {
-
-        await new Promise<void>((resolve, reject) => {
-            cc.resources.load(PopupService.ModalPrefabPath, cc.Prefab, (err: Error, res: any) => {
-                if (err) {
-                    cc.error(`路径('${PopupService.ModalPrefabPath}')不存在模态层预制件`);
-                    this.createModal();
-                } else {
-                    // 添加模态层节点
-                    const appNode = cc.find("Blade");
-                    if (appNode == null) {
-                        throw new Error("没有Blade节点")
-                    }
-                    const modalNode: cc.Node = cc.instantiate(res);
-                    modalNode.parent = appNode;
-                    modalNode.active = false;
-                    modalNode.zIndex = -1;
-                    this.modal = modalNode;
-                }
-
-                resolve();
-            });
-        })
-        blade.ticker.register(this);
-    }
-
-    /**
-   * 从目录加载多国语言json文件
-   */
-    public loadFolder() {
-        return new Promise<void>((resolve, reject) => {
-            cc.resources.loadDir("Prefabs/Panels", (err, resource) => {
-
-                const prefabResList = resource as cc.Prefab[];
-                for (const prefabRes of prefabResList) {
-                    this.prefabCache.set(prefabRes.name, prefabRes)
-                }
-
-                this.info();
-                resolve();
-            });
-        })
-
+    public onDispose() {
     }
 
     /**
@@ -185,27 +156,15 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
                     // 节点
                     panelNode = info.node;
                 } else if (typeof info.node == "string") {
-                    // 只是文件名, 默认为Prefabs/Panels目录下的预制件
-                    if (cc.path.dirname(info.node) == null) {
-                        info.node = "Prefabs" + "/Panels" + "/" + info.node
-                    }
 
                     let prefab: cc.Prefab = null;
-                    if (this.prefabCache.has(info.node)) {
-                        prefab = this.prefabCache.get(info.node)
+                    let prefabName = info.node + ".prefab";
+                    if (this.prefabCache.has(prefabName)) {
+                        prefab = this.prefabCache.get(prefabName)
                     } else {
+                        prefab = await AssetService.getInstance().loadAssetAsync(prefabName, cc.Prefab) as cc.Prefab;
 
-                        prefab = await new Promise((resolve, reject) => {
-                            cc.resources.load(info.node as string, cc.Prefab, (err: Error, res: any) => {
-                                if (err) {
-                                    reject(err);
-                                } else {
-                                    resolve(res);
-                                }
-                            });
-                        })
-
-                        this.prefabCache.set(info.node, prefab);
+                        this.prefabCache.set(prefabName, prefab);
                     }
                     panelNode = cc.instantiate(prefab);
                 } else {
@@ -216,11 +175,11 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
                     throw new Error("面板资源创建失败");
                 }
 
-                const panel: IPopup = panelNode.getComponent(IPopup);
+                const panel: PopupBase = panelNode.getComponent(PopupBase);
 
                 // 填充文字
                 if (info.template != null) {
-                    const viewsComponent = panelNode.getComponents(IPopup);
+                    const viewsComponent = panelNode.getComponents(PopupBase);
                     if (viewsComponent && viewsComponent.length > 0) {
                         for (const v of viewsComponent) {
                             if (v.applyTemplate) {
@@ -233,17 +192,17 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
                 // 点击回调
                 panelNode.once(
                     PopupService.EventType.POPUP_CLICK,
-                    async (eventType: string, panel: IPopup | cc.Node) => {
-                        blade.popup.emit(PopupService.EventType.POPUP_CLICK, eventType, panel);
+                    async (eventType: string, panel: PopupBase | cc.Node) => {
+                        this.emit(PopupService.EventType.POPUP_CLICK, eventType, panel);
 
                         if (panel instanceof cc.Node) {
-                            panel = panel.getComponent(IPopup);
+                            panel = panel.getComponent(PopupBase);
                         }
 
                         await panel.disappear();
                         panel.onDisappear();
                         // 发送隐藏通知
-                        blade.popup.emit(PopupService.EventType.PANEL_DISABLE);
+                        this.emit(PopupService.EventType.PANEL_DISABLE);
                         // 移出队列
                         this.list.dequeue();
                         // 执行回调
@@ -361,7 +320,7 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
             cc.warn(err);
         });
         // 发送模态层弹出通知
-        blade.popup.emit(PopupService.EventType.PANEL_ENABLE);
+        this.emit(PopupService.EventType.PANEL_ENABLE);
     }
 
     onTick(delta: number): void {
@@ -383,6 +342,29 @@ class PopupService extends cc.EventTarget implements IService, ITicker {
         this.showPanel();
     }
 
+    public hasEventListener(type: string): boolean {
+        return this.event.hasEventListener(type);
+    }
+
+    public emit(key: string, arg1?: any, arg2?: any, arg3?: any, arg4?: any, arg5?: any): void {
+        this.event.emit(key, arg1, arg2, arg3, arg4, arg5);
+    }
+
+    public on<T extends Function>(type: string, callback: T, target?: any, useCapture?: boolean): T {
+        return this.event.on(type, callback, target, useCapture);
+    }
+
+    public off(type: string, callback?: Function, target?: any): void {
+        this.event.off(type, callback, target);
+    }
+
+    public targetOff(target: any): void {
+        this.event.targetOff(target);
+    }
+
+    public once(type: string, callback: (arg1?: any, arg2?: any, arg3?: any, arg4?: any, arg5?: any) => void, target?: any): void {
+        this.on(type, callback, target, true);
+    }
 
 }
 

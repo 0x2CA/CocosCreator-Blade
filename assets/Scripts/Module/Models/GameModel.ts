@@ -1,9 +1,9 @@
-import IModel from "../../Blade/Interfaces/IModel";
+import ModelBase from "../../Blade/Bases/ModelBase";
 import Model from "../../Blade/Decorators/Model";
 
 
 @Model("GameModel")
-export default class GameModel extends IModel {
+export default class GameModel extends ModelBase {
 
     constructor(
 

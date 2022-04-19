@@ -57,19 +57,19 @@ export default class LocalizedLabel extends cc.Component implements LocalizedIte
 
     onLoad() {
         this.updateLang();
-        blade.locale.on(LocalizedService.EventType.LanguageChange, this.updateLang, this);
+        LocalizedService.getInstance().on(LocalizedService.EventType.LanguageChange, this.updateLang, this);
 
         // 编辑器模式, 执行定时更新
         if (CC_EDITOR) {
-            this.updateInterval = blade.timer.startTimer(blade.locale.EditorRefreshInterval, this.updateLang.bind(this));
+            this.updateInterval = TimerService.getInstance().startTimer(LocalizedService.getInstance().EditorRefreshInterval, this.updateLang.bind(this));
         }
     }
 
     onDestroy() {
-        blade.locale.off(LocalizedService.EventType.LanguageChange, this.updateLang, this);
+        LocalizedService.getInstance().off(LocalizedService.EventType.LanguageChange, this.updateLang, this);
 
         if (this.updateInterval) {
-            blade.timer.stopTimer(this.updateInterval);
+            TimerService.getInstance().stopTimer(this.updateInterval);
         }
     }
 
@@ -78,7 +78,7 @@ export default class LocalizedLabel extends cc.Component implements LocalizedIte
             return;
         }
 
-        const text = (this.langArgs && this.langArgs.length > 0) ? blade.locale.value(this.langID, ...this.langArgs) : blade.locale.value(this.langID);
+        const text = (this.langArgs && this.langArgs.length > 0) ? LocalizedService.getInstance().value(this.langID, ...this.langArgs) : LocalizedService.getInstance().value(this.langID);
         switch (this.textType) {
             case 0:
             default:
@@ -95,8 +95,8 @@ export default class LocalizedLabel extends cc.Component implements LocalizedIte
 
     /**
      * 设置格式化后的语言对应文本
-     * @param langID 
-     * @param args 
+     * @param langID
+     * @param args
      */
     public setLangID(langID: string, ...args: any[]) {
         this.langArgs = args;
@@ -105,7 +105,7 @@ export default class LocalizedLabel extends cc.Component implements LocalizedIte
 
     /**
      * 设置文本格式化参数
-     * @param args 
+     * @param args
      */
     public setLangFormat(...args: any[]) {
         this.langArgs = args;
