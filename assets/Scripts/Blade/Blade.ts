@@ -212,7 +212,7 @@ if (typeof blade == typeof undefined) {
         });
 
     } else {
-        LocalizedService.getInstance();
+        LocalizedService.getInstance().loadLangConfig(LocalizedService.getInstance().getLang());
     }
 }
 
