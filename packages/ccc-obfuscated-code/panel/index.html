@@ -1,0 +1,149 @@
+<div class="container">
+  <h2>配置面板</h2>
+  <ui-box-container class="layout vertical left">
+    <div>
+      <ui-prop name="构建后自动混淆" type="boolean" v-value="auto" tooltip="· 项目构建完成后根据已保存配置自动混淆代码。"></ui-prop>
+      <hr />
+      <!-- <ui-prop name="额外需要混淆的文件（非项目代码文件）" style='height: 50;'
+        tooltip="· 默认根目录为项目导出目录 build/{dest}/&#10;· 绝对路径如：E:\hahaha\build\web-mobile\src\project.js&#10;* 多个值之间用 ',' 隔开">
+        <ui-checkbox v-value="useAbsPath">绝对路径?</ui-checkbox>
+        <ui-text-area v-show="extraFiles != ''" class="flex-1" type="string" v-value="extraFiles"></ui-text-area>
+        <ui-input v-show="extraFiles == ''" class="flex-1" type="string" v-value="extraFiles"></ui-input>
+      </ui-prop>
+      <hr /> -->
+      <ui-prop name="预设"
+        tooltip="· 可用值：&#10;- 高度混淆，性能较低：性能比不混淆慢 50 - 100%&#10;- 中度混淆，性能均衡：性能比不混淆慢 30 - 50%&#10;- 轻度混淆，性能较高：性能只会比不混淆稍微慢一点点">
+        <ui-select class="flex-1" v-value="preset">
+          <option value="default">默认（全部参数设为默认值）</option>
+          <option value="high">高度混淆，性能较低（降低 50 - 100% 性能）</option>
+          <option value="mid">中度混淆，性能均衡（降低 30 - 50% 性能）</option>
+          <option value="low">轻度混淆，性能较高（对性能影响较小）</option>
+          <option value="lower">究极轻度混淆（轻到飞起啦）</option>
+        </ui-select>
+        <ui-button class="tiny green" @click="getPreset()">读取</ui-button>
+      </ui-prop>
+      <div class="layout horizontal justified">
+        <ui-hint class="tiny top" position="-288px">参数太多不知道怎么选？试试预设吧！一般项目轻度混淆就足够啦~</ui-hint>
+        <ui-hint class="tiny top" position="-26px">读取预设不会自动保存</ui-hint>
+      </div>
+      <hr />
+      <ui-hint>
+        · 鼠标移到参数上有中文（人话）说明，另外中文文档在这里 <a href="https://gitee.com/ifaswind/ccc-obfuscated-code">传送门</a>
+        <br>
+        · 不适用于 Cocos 的参数已经隐藏，但是不同平台间参数具体表现有差异，不一定都能用，建议多多测试~
+        <br>
+        · 选好参数不要忘记保存！保存按钮在页面底部~
+      </ui-hint>
+      <!-- <ui-prop readonly name="compact（压缩至一行）" type="boolean" v-value="options.compact" tooltip="· 将代码压缩至一行。"></ui-prop> -->
+      <ui-prop name="controlFlowFlattening（逻辑扁平化）" type="boolean" v-value="options.controlFlowFlattening"
+        tooltip="· 皮皮：就是将代码逻辑扁平化了。&#10;· 注意：该选项将严重影响性能，影响高达 1.5 倍。使用 controlFlowFlatteningThreshold 选项来控制转换概率。&#10;· 开启代码控制流扁平化。控制流扁平化会转换源代码的结构，阻碍程序的阅读理解。">
+      </ui-prop>
+      <ui-prop name="controlFlowFlatteningThreshold（扁平化比例）" v-if="options.controlFlowFlattening" indent="1"
+        type="number" v-value="options.controlFlowFlatteningThreshold" step="0.01" min="0" max="1"
+        tooltip="· 应用控制流扁平化的概率。"></ui-prop>
+      <ui-prop name="deadCodeInjection（注入废代码）" type="boolean" v-value="options.deadCodeInjection"
+        tooltip="· 皮皮：就是往代码里面随机加一些没有用的代码，迷惑敌人~&#10;· 注意：该选项会大大增加代码的体积（甚至高达 200%）。可以使用 deadCodeInjectionThreshold 来设置添加的比例。&#10;· 注意：开启这个选项会强制使用 stringArray 。">
+      </ui-prop>
+      <ui-prop name="deadCodeInjectionThreshold（注入比例）" v-if="options.deadCodeInjection" indent="1" type="number"
+        v-value="options.deadCodeInjectionThreshold" step="0.01" min="0" max="1" tooltip="· 设置无用代码注入的比例。">
+      </ui-prop>
+      <ui-prop name="debugProtection（禁用调试）" type="boolean" v-value="options.debugProtection"
+        tooltip="· 皮皮：开启该选项之后开着 DevTools 就进不了游戏，但是进游戏之后再打开 DevTools 是没问题的。如果想要完全没法使用 DevTools ，需要配合 debugProtectionInterval 一起使用。">
+      </ui-prop>
+      <ui-prop name="debugProtectionInterval（持续禁用调试）" v-if="options.debugProtection" type="boolean"
+        v-value="options.debugProtectionInterval" tooltip="· 皮皮：让 DevTools 一直没法用！">
+      </ui-prop>
+      <ui-prop name="disableConsoleOutput（禁用控制台输出）" type="boolean" v-value="options.disableConsoleOutput"
+        tooltip="· 禁用 console.log, console.info, console.error, console.warn, console.debug, console.exception, console.trace &#10;· 原理是用空的函数替换掉这些函数。">
+      </ui-prop>
+      <ui-prop name="domainLock（域名锁定）" type="string" v-value="options.domainLock"
+        tooltip="· 让程序只能运行在特定的域名或子域名下。&#10;· 可以同时锁定多个域名。举个栗子，要让程序只能运行在 www.example.com 就添加 www.example.com 。要运行在 example.com 的所有子域名下的话就用 .example.com 。&#10;* 多个值之间用 ',' 隔开">
+      </ui-prop>
+      <ui-prop name="identifierNamesGenerator（标识符生成器）" type="enum" v-value="options.identifierNamesGenerator"
+        tooltip="· 设置标识符生成器。&#10;· 可用值：&#10;- dictionary：从 identifiersDictionary 列表中获取标识符&#10;- hexadecimal：和 _0xabc123 类似的标识符&#10;- mangled：和 a 、 b 、 c 类似的短标识符">
+        <div class="user-content">
+          <option disabled value="dictionary">dictionary (不可用)</option>
+          <option value="hexadecimal">hexadecimal</option>
+          <option value="mangled">mangled (推荐)</option>
+        </div>
+      </ui-prop>
+      <ui-prop name="identifiersDictionary（标识符字典）" v-if="options.identifierNamesGenerator == 'dictionary'" type="string"
+        v-value="options.identifiersDictionary" tooltip="· 设置 identifierNamesGenerator 的标识符字典。&#10;* 多个值之间用 ',' 隔开">
+      </ui-prop>
+      <ui-prop name="identifiersPrefix（标识符前缀）" type="string" v-value="options.identifiersPrefix"
+        tooltip="· 设置全局标识符的前缀。&#10;· 当你需要混淆多个文件的时候使用这个。开启后可以避免多个文件之间的全局标识符冲突。每个文件的前缀都应该不一样。"></ui-prop>
+      <!-- <ui-prop name="log" type="boolean" v-value="options.log" tooltip="· 打印日志到控制台。"></ui-prop> -->
+      <ui-prop name="renameGlobals（重命名全局成员）" type="boolean" v-value="options.renameGlobals"
+        tooltip="· 混淆全局变量和函数。&#10;· 注意：可能会让你的代码笋干爆炸。（害怕.jpg）"></ui-prop>
+      <ui-prop name="reservedNames（保留变量名）" type="string" v-value="options.reservedNames"
+        tooltip="· 保留标识符，让其不被混淆，支持正则表达式。&#10;* 多个值之间用 ',' 隔开"></ui-prop>
+      <ui-prop name="reservedStrings（保留字符串）" type="string" v-value="options.reservedStrings"
+        tooltip="· 保留字符串，让其不被混淆，支持正则表达式。&#10;* 多个值之间用 ',' 隔开"></ui-prop>
+      <ui-prop name="seed（随机种子）" type="string" v-value="options.seed"
+        tooltip="· 设置随机种子(number | string)。&#10;· 当种子为 0 时，随机生成器就不会使用随机种子。"></ui-prop>
+      <ui-prop name="selfDefending（修改保护）" type="boolean" v-value="options.selfDefending"
+        tooltip="· 警告：微信平台请勿开启此选项！&#10;· 注意：开启这个选项之后不要对混淆后的代码进行任何更改，因为任何更改（例如丑化代码）都会触发自我保护导致代码无法运行。&#10;· 注意：开启这个选项会强制将 compact 设为 true &#10;· 开启这个选项之后就不能对代码进行格式化或者重命名变量。任何人尝试美化混淆后的代码，都会让代码无法运行，使得代码难以理解和更改。">
+      </ui-prop>
+      <!-- <ui-prop name="sourceMap" type="boolean" v-value="options.sourceMap"
+        tooltip="· 生成混淆后的代码的 source map 。&#10;· Source maps 对于调试混淆后的代码很有帮助。如果你想要或者需要对产品进行调试，可以上传单独的 source map 文件到一个安全的地方，然后引用到浏览器中。">
+      </ui-prop>
+      <ui-prop name="sourceMapMode" v-if="options.sourceMap" indent="1" type="enum" v-value="options.sourceMapMode"
+        tooltip="· 指定 source map 的生成模式。&#10;- inline：发送包含 source map 的单个文件而不是生成单独的文件。&#10;- separate：生成与 source map 对应的 '.map' 文件。">
+        <div class="user-content">
+          <option value="inline">inline</option>
+          <option value="separate">separate</option>
+        </div>
+      </ui-prop>
+      <ui-prop name="inputFileName" v-if="options.sourceMap" indent="1" type="string" v-value="options.inputFileName"
+        tooltip="· 设置源代码的输入文件名字。这个名字将用于内部生成 source map 。"></ui-prop>
+      <ui-prop name="sourceMapBaseUrl" v-if="options.sourceMap && options.sourceMapMode == 'separate'" indent="1"
+        type="string" v-value="options.sourceMapBaseUrl"
+        tooltip="· 设置当 sourceMapMode: 'separate' 时的 source map 导入 url 的 BaseUrl。">
+      </ui-prop>
+      <ui-prop name="sourceMapFileName" v-if="options.sourceMap && options.sourceMapMode == 'separate'" indent="1"
+        type="string" v-value="options.sourceMapFileName" tooltip="· 设置当 sourceMapMode: 'separate' 时的 source map 输出名称。">
+      </ui-prop> -->
+      <ui-prop name="splitStrings（拆分字符串）" type="boolean" v-value="options.splitStrings"
+        tooltip="· 根据 splitStringsChunkLength 将字符串分成指定长度的块。"></ui-prop>
+      <ui-prop name="splitStringsChunkLength（拆分长度）" v-if="options.splitStrings" indent="1" type="number"
+        v-value="options.splitStringsChunkLength" tooltip="· 设置字符串块的最大长度。"></ui-prop>
+      <ui-prop name="stringArray（字符串聚合）" type="boolean" v-value="options.stringArray"
+        tooltip="· 移除并用指定的列表替换字符串。&#10;· 举个栗子， var m = 'Hello World'; 中的字符串 Hello World 将会被替换，语句会变成类似 var m = _0x12c456[0x1]; 的形式。">
+      </ui-prop>
+      <ui-prop name="stringArrayThreshold（聚合比例）" v-if="options.stringArray" indent="1" type="number"
+        v-value="options.stringArrayThreshold" step="0.01" min="0" max="1"
+        tooltip="· 设置字符串替换的概率。&#10;· stringArrayThreshold: 0 等同于 stringArray: false 。">
+      </ui-prop>
+      <ui-prop name="stringArrayEncoding（加密）" v-if="options.stringArray" indent="1" type="enum"
+        v-value="options.stringArrayEncoding"
+        tooltip="· 这个选项会降低脚本的运行速度。&#10;· 用 base64 或者 rc4 来加密字符串列表中的字符串，并且插入特定的代码用来运行时解密。&#10;· 可用值：&#10;- true（boolean）：用 base64 加密 stringArray 字符串&#10;- false（boolean）：不加密 stringArray 字符串&#10;- base64（string）：用 base64 加密 stringArray 字符串&#10;- rc4（string）：用 rc4 加密 stringArray 字符串。比 base64 慢大概 30 - 50% ，但是让人更难获取初始值。">
+        <div class="user-content">
+          <option value="true">true</option>
+          <option value="false">false</option>
+          <option value="base64">base64</option>
+          <option value="rc4">rc4</option>
+        </div>
+      </ui-prop>
+      <ui-prop name="shuffleStringArray（随机洗牌）" v-if="options.stringArray" indent="1" type="boolean"
+        v-value="options.shuffleStringArray" tooltip="· 皮皮：对字符串列表进行随机洗牌打乱。"></ui-prop>
+      <ui-prop name="rotateStringArray（旋转）" v-if="options.stringArray" indent="1" type="boolean"
+        v-value="options.rotateStringArray" tooltip="· 皮皮：随机变换字符串列表中元素的位置。&#10;· 变幻莫测，女少 口阿 ！">
+      </ui-prop>
+      <!-- <ui-prop disabled name="target" type="enum" v-value="options.target"
+        tooltip="· 允许你设置混淆后的代码的运行环境。&#10;· 可用值：&#10;- browser;&#10;- browser-no-eval;&#10;- node。&#10;· 目前 browser 和 node 的输出代码是完全一样的，但是某些特定的浏览器不能用 node 。 browser-no-eval 的输出代码没有使用 eval 。">
+        <div class="user-content">
+          <option value="browser">browser</option>
+          <option value="browser-no-eval">browser-no-eval</option>
+          <option value="node">node</option>
+        </div>
+      </ui-prop> -->
+      <ui-prop name="transformObjectKeys（对象转换）" type="boolean" v-value="options.transformObjectKeys"
+        tooltip="· 开启 Object 的 key 转换。&#10;· 皮皮：将对象转换成多个复杂变量的组合（反正就是丑）。"></ui-prop>
+      <ui-prop name="unicodeEscapeSequence（转 Unicode）" type="boolean" v-value="options.unicodeEscapeSequence"
+        tooltip="· 皮皮：将字符转为 Unicode 格式，看起来又长又臭，但是实际上很容易恢复。&#10;· 而且开启该选项会大大增加代码的体积（不骗你）。"></ui-prop>
+    </div>
+    <br>
+    <ui-button class="button blue big" v-disabled="isSaving" @click="saveConfig()">保存</ui-button>
+  </ui-box-container>
+  <br>
+</div>

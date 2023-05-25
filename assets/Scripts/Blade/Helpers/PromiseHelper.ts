@@ -1,5 +1,4 @@
-import TickerService from "../Services/TickerService";
-import TimerService from "../Services/TimerService";
+import ITicker from "../Interfaces/ITicker";
 
 /**
  *  异步助手
@@ -15,7 +14,7 @@ export default class PromiseHelper {
             if (comp) {
                 comp.scheduleOnce(resolve, delay);
             } else {
-                TimerService.getInstance().startTimeout(delay, resolve);
+                blade.timer.startTimeout(delay, resolve);
             }
         });
     }
@@ -23,54 +22,50 @@ export default class PromiseHelper {
     /**
      * Until条件达成才退出
      */
-    public static waitUntil(untilFunc: Function, thisObj?: any, ...args: any[]): Promise<void> {
+    public static waitUntil(untilFunc: (delta: number, ...args) => boolean, thisObj?: any, ...args: any[]): Promise<void> {
         if (untilFunc.call(thisObj, ...args)) {
             return Promise.resolve();
         }
 
         return new Promise((resolve, reject) => {
-            let ticker;
-            ticker = {
-                onTick: () => {
-                    try {
-                        if (untilFunc.call(thisObj, ...args)) {
-                            TickerService.getInstance().off(ticker);
-                            resolve();
-                        }
-                    } catch (e) {
-                        TickerService.getInstance().off(ticker);
-                        reject(e);
+            let onTick: (delta: number) => void = null;
+            onTick = (delta: number) => {
+                try {
+                    if (untilFunc.call(thisObj, delta, ...args)) {
+                        blade.ticker.offTick(onTick);
+                        resolve();
                     }
-                },
-            };
-            TickerService.getInstance().on(ticker);
+                } catch (e) {
+                    blade.ticker.offTick(onTick);
+                    reject(e);
+                }
+            }
+            blade.ticker.onTick(onTick);
         });
     }
 
     /**
-     * While提交达成前一直等待
+     * While条件不满足时退出
      */
-    public static waitWhile(whileFunc: Function, thisObj?: any, ...args: any[]): Promise<void> {
+    public static waitWhile(whileFunc: (delta: number, ...args) => boolean, thisObj?: any, ...args: any[]): Promise<void> {
         if (!whileFunc.call(thisObj, ...args)) {
             return Promise.resolve();
         }
 
         return new Promise((resolve, reject) => {
-            let ticker;
-            ticker = {
-                onTick: () => {
-                    try {
-                        if (!whileFunc.call(thisObj, ...args)) {
-                            TickerService.getInstance().off(ticker);
-                            resolve();
-                        }
-                    } catch (e) {
-                        TickerService.getInstance().off(ticker);
-                        reject(e);
+            let onTick: (delta: number) => void = null;
+            onTick = (delta: number) => {
+                try {
+                    if (!whileFunc.call(thisObj, delta, ...args)) {
+                        blade.ticker.offTick(onTick);
+                        resolve();
                     }
-                },
-            };
-            TickerService.getInstance().on(ticker);
+                } catch (e) {
+                    blade.ticker.offTick(onTick);
+                    reject(e);
+                }
+            }
+            blade.ticker.onTick(onTick);
         });
     }
 
@@ -82,58 +77,4 @@ export default class PromiseHelper {
             cc.director.once(cc.Director.EVENT_BEFORE_UPDATE, resolve);
         });
     }
-
-    /**
-     * 加载一个资源
-     * @param url
-     */
-    public static loadRes<T extends cc.Asset>(url: string, type: typeof cc.Asset): Promise<T> {
-        return new Promise((resolve, reject) => {
-            cc.resources.load(url, type, (err: Error, res: any) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(res as T);
-                }
-            });
-        });
-    }
-
-    /**
-     * 加载一组资源
-     * @param url
-     */
-    public static loadResArray<T extends cc.Asset>(
-        url: string[],
-        type: typeof cc.Asset
-    ): Promise<T[]> {
-        return new Promise((resolve, reject) => {
-            cc.resources.load(url, type, (err: Error, res: any[]) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    resolve(res as T[]);
-                }
-            });
-        });
-    }
-
-    /**
-    * 加载一个远程资源
-    * @param url
-    */
-    public static loadRemote(url: string, opttion = {}): Promise<any> {
-        return new Promise((resolve, reject) => {
-            cc.assetManager.loadRemote(url, opttion,
-                (err: Error, res: any) => {
-                    if (err) {
-                        reject(err);
-                    } else {
-                        resolve(res);
-                    }
-                }
-            );
-        });
-    }
-
 }

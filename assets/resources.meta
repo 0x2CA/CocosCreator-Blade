@@ -6,16 +6,40 @@
   "bundleName": "resources",
   "priority": 8,
   "compressionType": {
-    "web-mobile": "default"
+    "web-mobile": "default",
+    "wechatgame": "default",
+    "bytedance": "default",
+    "qgame": "default",
+    "quickgame": "default",
+    "xiaomi": "default",
+    "huawei": "none"
   },
   "optimizeHotUpdate": {
-    "web-mobile": false
+    "web-mobile": false,
+    "wechatgame": false,
+    "bytedance": false,
+    "qgame": false,
+    "quickgame": false,
+    "xiaomi": false,
+    "huawei": false
   },
   "inlineSpriteFrames": {
-    "web-mobile": false
+    "web-mobile": false,
+    "wechatgame": false,
+    "bytedance": false,
+    "qgame": false,
+    "quickgame": false,
+    "xiaomi": false,
+    "huawei": false
   },
   "isRemoteBundle": {
-    "web-mobile": false
+    "web-mobile": false,
+    "wechatgame": true,
+    "bytedance": true,
+    "qgame": true,
+    "quickgame": true,
+    "xiaomi": true,
+    "huawei": true
   },
   "subMetas": {}
 }

@@ -1,12 +1,9 @@
-import ViewBase from "../Bases/ViewBase";
-import ITicker from "../../Blade/Interfaces/ITicker";
 import SingletonBase from "../Bases/SingletonBase";
-import TickerService from "./TickerService";
 
 /**
  * 时间服务
  */
-class TimerService extends SingletonBase implements ITicker {
+class TimerService extends SingletonBase<TimerService> {
 
     // 自动同步时间间隔
     private static readonly SYNC_INTERVAL: number = 60000;
@@ -16,107 +13,150 @@ class TimerService extends SingletonBase implements ITicker {
     /**
      * 当前服务器的时间戳
      */
-    private timeStamp: number = new Date().getTime();
+    private _timeStamp: number = null;
 
     /**
      * 最后同步的时间
      */
-    private lastSyncTime: number = new Date().getTime();
+    private _lastSyncTime: number = null;
 
     /**
      * 是否正在同步时间
      */
-    private syncing: boolean = false;
+    private _isSync: boolean = false;
 
-    private readonly timers: Set<TimerService.Timer> = new Set<TimerService.Timer>()
+    private _syncCallback: (sync: (syncTime: number) => void) => void = null;
 
-    public onInitialize() {
+    private _syncCaller = null;
 
-        TickerService.getInstance().on(this);
+    private readonly _timers: Set<TimerService.Timer> = new Set<TimerService.Timer>()
+    private readonly _adds: Set<TimerService.Timer> = new Set<TimerService.Timer>()
+    private readonly _deletes: Set<TimerService.Timer> = new Set<TimerService.Timer>()
 
-        this.timers.clear();
+    protected onInitialize() {
+        this._timers.clear();
 
-        // 定时更新时间
-        this.startTimer(1, () => {
-            if (this.timeStamp > 0) {
-                this.timeStamp += 1000;
-            }
-            if (!this.syncing && this.timeStamp - this.lastSyncTime > TimerService.SYNC_INTERVAL) {
-                this.syncTime();
-            }
-        })
+        blade.ticker.onTick(this.onTick, this);
+        blade.ticker.onLateTick(this.onLateTick, this);
     }
 
-    public onDispose() {
-        TickerService.getInstance().off(this);
+    protected onDispose() {
+        blade.ticker.offTick(this.onTick, this);
+        blade.ticker.offLateTick(this.onLateTick, this);
+    }
+
+    private updateTime(delta: number) {
+        if (this._timeStamp == null) {
+            this._timeStamp = this._lastSyncTime = new Date().getTime();
+            this._isSync = false;
+            return;
+        }
+
+        this._timeStamp += delta;
+
+        if (!this._isSync && this._timeStamp - this._lastSyncTime > TimerService.SYNC_INTERVAL) {
+            this.syncTime();
+        }
+    }
+
+    /**
+     * 设置同步回调
+     * @param callback
+     * @param caller
+     */
+    public setSyncCallback(callback: (sync: (syncTime: number) => void) => void, caller: object = null) {
+        this._isSync = false;
+        this._syncCallback = callback;
+        this._syncCaller = caller;
     }
 
     /**
      * 网络同步时间
      */
-    public syncTime(): Promise<void> {
-        if (this.syncing) {
-            cc.log("正在同步时间!");
-            return Promise.resolve();
+    public syncTime() {
+        if (this._isSync) {
+            console.log("正在同步时间!");
         }
 
-        this.syncing = true;
+        this._isSync = true;
 
-        return new Promise((resolve, reject) => {
-            // //TODO: 暂时使用本地时间
-            this.lastSyncTime = new Date().getTime();
-            this.timeStamp = new Date().getTime();
-            this.syncing = false;
-            cc.log("同步时间", this.timeStamp)
-            resolve()
-        })
+        if (this._syncCallback != null) {
+            this._syncCallback.call(this._syncCaller, (syncTime) => {
+                this._timeStamp = this._lastSyncTime = syncTime;
+                this._isSync = false;
+                console.log("同步时间", this._timeStamp)
+            });
+        } else {
+            this._timeStamp = this._lastSyncTime = new Date().getTime();
+            this._isSync = false;
+            console.log("同步时间", this._timeStamp)
+        }
     }
-
 
     /**
     * 获取当时网络时间(毫秒)
     */
     public getTime() {
-        return Math.floor(this.timeStamp);
+        if (this._timeStamp == null) {
+            this._timeStamp = this._lastSyncTime = new Date().getTime();
+            this._isSync = false;
+        }
+        return Math.floor(this._timeStamp);
     }
 
     /**
      * 获取当时网络时间(秒)
      */
     public getSecond() {
-        return Math.floor(this.timeStamp / 1000);
+        if (this._timeStamp == null) {
+            this._timeStamp = this._lastSyncTime = new Date().getTime();
+            this._isSync = false;
+        }
+        return Math.floor(this._timeStamp / 1000);
     }
 
+    /**
+     * 停止
+     * @param timer
+     */
+    public stop(timer: TimerService.Timer) {
+        this._adds.delete(timer);
+        this._deletes.add(timer);
+    }
 
     /**
-     * 开始一个定时器
+     * 开始
      * @param seconds
+     * @param times
      * @param callback
      * @param thisArgs
      * @param args
+     * @returns
      */
-    public startTimer(seconds: number, callback: Function, thisArgs?: any, ...args: any[]): TimerService.Timer {
+    public start(seconds: number, times: number, callback: Function, thisArgs?: object, ...args: object[]) {
         let timer = {
-            interval: seconds,
-            timeRemain: seconds,
-            times: -1,
+            interval: Math.round(seconds * 1000),
+            timeRemain: Math.round(seconds * 1000),
+            times: Math.floor(times),
             callback,
             thisArgs,
             args
         };
 
-        this.timers.add(timer)
-        return timer
+        this._adds.add(timer);
+        return timer;
     }
 
     /**
-     * 停止一个定时器
-     * @param timer
+     * 开始一个定时器
+     * @param timeout 超时时间, 单位：秒
+     * @param callback 回调
+     * @param target 回调上下文对象
+     * @param args 回调附带参数
      */
-    public stopTimer(timer: TimerService.Timer) {
-        this.timers.delete(timer)
+    public startTimer(seconds: number, callback: Function, target?: object, ...args: object[]): TimerService.Timer {
+        return this.start(seconds, -1, callback, target, ...args);
     }
-
 
     /**
      * 添加一个超时回调
@@ -125,57 +165,61 @@ class TimerService extends SingletonBase implements ITicker {
      * @param target 回调上下文对象
      * @param args 回调附带参数
      */
-    public startTimeout(timeout: number, callback: Function, target?: any, ...args: any[]): TimerService.Timer {
-        let timer = {
-            interval: timeout,
-            timeRemain: timeout,
-            times: 1,
-            callback,
-            thisArgs: target,
-            args
-        }
-
-        this.timers.add(timer);
-
-        return timer;
+    public startTimeout(timeout: number, callback: Function, target?: object, ...args: object[]): TimerService.Timer {
+        return this.start(timeout, 1, callback, target, ...args);
     }
-
 
     /**
      * 下一帧执行
      * @param func
      */
-    public runNextFrame(func: Function, target?: any) {
-        cc.director.once(cc.Director.EVENT_BEFORE_UPDATE, func as any, target);
+    public runNextFrame(func: Function, target?: object) {
+        return this.startTimeout(0, func, target);
     }
 
+    private onTick(delta: number): void {
+        this.updateTime(delta);
 
-    onTick(delta: number): void {
-        let deleteList = []
-        this.timers.forEach((timer) => {
+        this._timers.forEach((timer) => {
             //减时间
             timer.timeRemain -= delta;
-            if (timer.timeRemain <= 0) {
+            // 循环检查是否结束
+            while (timer.timeRemain <= 0) {
                 // 时间结束
-                timer.callback.apply(timer.thisArgs, ...timer.args);
+                try {
+                    timer.callback.apply(timer.thisArgs, ...timer.args);
+                } catch (error) {
+                    console.error(error);
+                    this.stop(timer);
+                    return;
+                }
 
                 if (timer.times > 0) {
                     --timer.times;
                 }
+
                 if (timer.times == 0) {
                     // 达到次数, 加入待删除队列
-                    deleteList.push(timer);
+                    this.stop(timer);
+                    return;
                 }
-                else {
-                    timer.timeRemain = timer.interval;
-                }
+
+                timer.timeRemain += timer.interval;
             }
         })
+    }
 
-        // 删除过期定时器
-        deleteList.forEach(timer => {
-            this.stopTimer(timer);
+    private onLateTick() {
+        // 处理增加
+        this._adds.forEach((timer) => {
+            this._timers.add(timer);
         });
+        this._adds.clear();
+        // 处理删除
+        this._deletes.forEach((timer) => {
+            this._timers.delete(timer);
+        });
+        this._deletes.clear();
     }
 }
 
@@ -200,11 +244,11 @@ namespace TimerService {
         /**
          * 回调者
          */
-        thisArgs?: any;
+        thisArgs?: object;
         /**
          * 参数
          */
-        args: any[];
+        args: object[];
     }
 }
 

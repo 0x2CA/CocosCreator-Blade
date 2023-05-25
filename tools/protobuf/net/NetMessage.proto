@@ -1,0 +1,42 @@
+syntax = "proto3";
+
+option java_package = "lilith.server.protobuf";
+option java_outer_classname = "NetMessage";
+
+package protobuf;
+
+/*客户端发送到服务端 */
+message C2SMessage {
+	/**	命令id*/
+	int32 cmdId = 1;
+	/**	消息包索引*/
+	int32 ind = 2;
+	/**	消息签名*/
+	string sign = 3;
+	/**	玩家账号*/
+	string lid = 4;
+	/**	cmd数据*/
+	bytes data = 5;
+}
+
+/*服务端发送到客户端 */
+message S2CMessage {
+	/**	cmdid*/
+	int32 cmdId = 1;
+	/**	是否压缩(0-不压缩，1-压缩)*/
+	int32 compress = 2;
+	/**	cmd实际数据*/
+	bytes data = 3;
+	/** 错误提示语 */
+	S2CPrompt error = 4;
+	/** 成功提示语 */
+	S2CPrompt success = 5;
+}
+
+/** 提示语 */
+message S2CPrompt {
+	/** 飘字id **/
+	int32 code = 1;
+	/** 填充参数 **/
+	repeated string args = 2;
+}

@@ -1,46 +1,48 @@
 import SingletonBase from "../Bases/SingletonBase";
-import AssetService from "./AssetService";
+import ObjectPool from "../Libs/Pool/ObjectPool";
 
 /**
  * 全局的对象池服务
  *
  * @class PoolService
  */
-class PoolService extends SingletonBase {
+class PoolService extends SingletonBase<PoolService> {
 
-    private list = new Map<string, PoolService.Pool>();
+    private _pools = new Map<string, ObjectPool<cc.Node>>();
 
-    public onInitialize() {
+    protected onInitialize() {
     }
 
-    public onDispose() {
+    protected onDispose() {
     }
 
     async register(
         name: string,
         prefab: cc.Prefab,
-        max: number,
-        component?: { prototype: cc.Component }
+        max: number = 10000
     ) {
-        if (!this.list.has(name)) {
-            if (prefab == null) {
-                try {
-                    prefab = await AssetService.getInstance().loadAssetAsync(name + ".prefab", cc.Prefab) as cc.Prefab;
-
-                    this.list.set(name, new PoolService.Pool(prefab, max, component));
-                } catch (error) {
-                    cc.error(`加载对象池对象${name}失败`, error);
-                }
-            } else {
-                this.list.set(name, new PoolService.Pool(prefab, max, component));
-            }
+        if (!this._pools.has(name)) {
+            this._pools.set(name, new ObjectPool<cc.Node>(
+                () => {
+                    return cc.instantiate(prefab);
+                },
+                (node) => {
+                    node.active = true
+                },
+                (node) => {
+                    node.active = false
+                    node.parent = null;
+                },
+                (node) => {
+                    node.destroy()
+                }, false, max));
         }
     }
 
-    async unregister(name: string) {
-        if (this.list.has(name)) {
-            this.list.get(name).clear();
-            this.list.delete(name);
+    unregister(name: string) {
+        if (this._pools.has(name)) {
+            this._pools.get(name).clear();
+            this._pools.delete(name);
         }
     }
 
@@ -49,11 +51,11 @@ class PoolService extends SingletonBase {
      * @param name
      * @param node
      */
-    put(name: string, node: cc.Node) {
-        if (this.list.has(name)) {
-            this.list.get(name).put(node);
+    release(name: string, node: cc.Node) {
+        if (this._pools.has(name)) {
+            this._pools.get(name).release(node);
         } else {
-            cc.error("没有注册预制体");
+            console.error("没有注册预制体", name, node.name);
             node.destroy();
         }
     }
@@ -63,10 +65,10 @@ class PoolService extends SingletonBase {
      * @param name
      */
     get(name: string) {
-        if (this.list.has(name)) {
-            return this.list.get(name).get();
+        if (this._pools.has(name)) {
+            return this._pools.get(name).get();
         } else {
-            cc.error("没有注册预制体");
+            console.error("没有注册预制体", name);
         }
     }
 
@@ -76,81 +78,28 @@ class PoolService extends SingletonBase {
     */
     info(name?: string) {
         if (name) {
-            if (this.list.has(name)) {
-                cc.log(name + ":", this.list.get(name));
+            if (this._pools.has(name)) {
+                console.log(name + ":", this._pools.get(name));
             } else {
-                cc.log(`没有注册${name}预制体`);
+                console.log(`没有注册${name}预制体`);
             }
         } else {
             let info = "对象池信息:\n"
-            if (this.list.size > 0) {
-                this.list.forEach(
-                    (value: PoolService.Pool, key: string, map: Map<string, PoolService.Pool>) => {
+            if (this._pools.size > 0) {
+                this._pools.forEach(
+                    (value: ObjectPool<cc.Node>, key: string, map: Map<string, ObjectPool<cc.Node>>) => {
                         info += "   " + key + "    ✔" + "\n";
                     }
                 );
             } else {
                 info += "   没有注册对象池对象";
             }
-            cc.log(info)
+            console.log(info)
         }
     }
 }
 
 namespace PoolService {
-
-    /**
-     * 对象池
-     *
-     * @export
-     * @class Pool
-     */
-    export class Pool {
-        private template: cc.Prefab = null;
-        private list: cc.NodePool = null;
-        private max: number = 0;
-        constructor(
-            template: cc.Prefab,
-            max: number,
-            component?: string | { prototype: cc.Component }
-        ) {
-            this.list = new cc.NodePool(component);
-            this.template = template;
-            this.max = max;
-        }
-
-        put(node: cc.Node) {
-            if ((<any>node).prefab == this.template) {
-                node.active = false;
-                if (this.list.size() < this.max) {
-                    this.list.put(node);
-                } else {
-                    node.destroy();
-                }
-            } else {
-                console.warn("该节点不是该对象池的对象");
-                node.destroy();
-            }
-        }
-
-        get() {
-            let node: cc.Node;
-            if (this.list.size() > 0) {
-                node = this.list.get();
-            } else {
-                node = cc.instantiate(this.template);
-                (<any>node).prefab = this.template;
-                // cc.warn("对象池预设不足");
-            }
-            node.active = true;
-            return node;
-        }
-
-        clear() {
-            this.list.clear();
-        }
-
-    }
 }
 
 

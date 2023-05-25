@@ -3,14 +3,14 @@
  */
 class LocationHelper {
     /**
-     * cc.Widget 更新
+     * 更新节点布局对齐(包括父节点)
      *
      * @private
      * @static
      * @param {cc.Node} content
      * @memberof ListView
      */
-    public static updateWidget(content: cc.Node) {
+    public static updateParentWidget(content: cc.Node) {
         let tmp = content.getParent();
         let result: Array<cc.Widget> = [];
         while (tmp && !(tmp instanceof cc.Scene)) {
@@ -22,17 +22,35 @@ class LocationHelper {
         }
         while (result.length > 0) {
             let tmp = result.pop();
-            tmp.updateAlignment();
+            if (tmp.isValid == true && tmp.enabled == true) {
+                tmp.updateAlignment();
+            }
         }
     }
 
+    /**
+     * 更新节点布局对齐(包括子节点)
+     * @param node
+     */
+    public static updateChildrenWidget(node: cc.Node) {
+        let weights = node.getComponentsInChildren(cc.Widget);
+        for (let index = 0; index < weights.length; index++) {
+            const weight = weights[index];
+            if (weight.isValid == true && weight.enabled == true) {
+                weight.updateAlignment();
+            }
+        }
+    }
 
-
-
+    /**
+     * 获取定位
+     * @param content
+     * @returns
+     */
     public static getLocation(content: cc.Node): LocationHelper.Location {
         let winSize = cc.view.getVisibleSize();
         let canvas = cc.find("Canvas");
-        LocationHelper.updateWidget(content);
+        LocationHelper.updateParentWidget(content);
         let nodeWorld = content.convertToWorldSpaceAR(cc.Vec2.ZERO);
         let nodetoCanvas = canvas.convertToNodeSpaceAR(nodeWorld);
 

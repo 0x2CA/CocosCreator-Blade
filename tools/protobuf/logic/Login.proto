@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+option java_package = "lilith.server.protobuf";
+option java_outer_classname = "LoginProto";
+
+package protobuf;
+
+/** 获取玩家 **/
+message C2SGetPlayer {
+
+}
+message S2CGetPlayer {
+	/**玩家ID ,不存在为空串*/
+	string  pid = 1;
+}
+
+/** 请求随机名字 **/
+message C2SRandName {
+	/** 性别：0-男，1-女*/
+    int32 gender = 1;
+}
+message S2CRandName {
+    string name = 1;
+}
+
+/** 创建角色 **/
+message C2SCreatePlayer {
+	/**服务器ID*/
+    int32 serverId = 1;
+    /** 性别：0-男，1-女*/
+    int32 gender = 2;
+    /** 名字 */
+    string name = 3;
+    /** 出身 */
+    string roleBirth = 4;
+	/** 邀请者ID(可为空)*/
+	string invitedId = 5;
+}
+
+message S2CCreatePlayer {
+	/**玩家ID*/
+	string  playerId = 1;
+}
+
+/** 登录 **/
+message C2SLogin {
+
+}
+
+message S2CLogin {
+	/** 同步玩家信息 **/
+}
+
+
+/** 登录成功 **/
+message C2SLoginSuccess {
+
+}
+
+message S2CLoginSuccess {
+	/** 同步需要延迟同步的信息 **/
+}

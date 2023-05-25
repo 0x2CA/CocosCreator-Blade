@@ -1,37 +1,46 @@
-import Tween from "../Libs/Tween/Tween";
-import ITicker from "../../Blade/Interfaces/ITicker";
+
 import SingletonBase from "../Bases/SingletonBase";
-import TickerService from "./TickerService";
+import Tween from "../Libs/Tween/Tween";
 
-/**
- * 动画服务类
- */
-export default class TweenService extends SingletonBase implements ITicker {
-    public onInitialize() {
-        TickerService.getInstance().on(this);
+export default class TweenService extends SingletonBase<TweenService> {
 
-        Tween.customTick = true;
+    protected onInitialize() {
+        blade.ticker.onTick(this.onTick, this);
     }
 
-    public onDispose() {
-        TickerService.getInstance().off(this);
+    protected onDispose() {
+        blade.ticker.offTick(this.onTick, this);
     }
 
-    public get(target: any,
-        props?: { loop?: boolean; manualTick?: boolean; onChange?: Function; onChangeObj?: any },
-        pluginData: any = null,
-        override: boolean = false) {
-        return Tween.get(target, props, pluginData, override);
+    public get<T>(target: T) {
+        return Tween.get(target);
     }
 
-    public removeTweens(target: any): void {
+    public removeTweens<T>(target: T): void {
         Tween.removeTweens(target);
+    }
+
+    public pauseTweens<T>(target: T): void {
+        Tween.pauseTweens(target);
+    }
+
+    public resumeTweens<T>(target: T): void {
+        Tween.resumeTweens(target);
+    }
+
+    public finishTweens<T>(target: T): void {
+        Tween.finishTweens(target);
+    }
+
+    public getAllTweens() {
+        return Tween.getAllTweens();
     }
 
     /**
      * 动画刷新
      */
-    public onTick() {
-        Tween.tick();
+    private onTick(delta: number) {
+        Tween.tick(delta);
     }
+
 }

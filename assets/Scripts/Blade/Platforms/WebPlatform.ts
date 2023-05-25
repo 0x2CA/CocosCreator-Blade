@@ -1,15 +1,20 @@
+/*
+ * @作者: 0x2CA
+ * @创建时间: 2023-02-09
+ * @最后编辑时间: 2023-03-16
+ * @最后编辑者: 0x2CA
+ * @描述:
+ */
 import PlatformBase from "../Bases/PlatformBase";
-import HttpHelper from "../Helpers/HttpHelper";
-import PromiseHelper from "../Helpers/PromiseHelper";
 
 /**
  * 网页
  */
 export default class WebPlatform extends PlatformBase {
 
-    public onInitialize() {
+    protected onInitialize() {
         this.userInfo = {
-            avatar: 'https://img.readygo.yunyungquan.com/common/default_avatar.png',
+            avatar: '',
             nickname: '测试用户',
             platform: 'WEB',
             gender: 1,
@@ -77,11 +82,41 @@ export default class WebPlatform extends PlatformBase {
         PromiseHelper.wait(3).then(() => {
             this.emit(PlatformBase.EventType.CloseInterstitial)
         })
-        return;
+        return Promise.resolve(true);
     }
 
-    public sendInvite(imageUrl: string, title: string, param: any): Promise<any> {
+    public sendInvite(imageUrl: string, title: string, param: any): Promise<void> {
+        console.log("分享模拟", imageUrl, title, param, window.location.origin + window.location.pathname + HttpHelper.formatParams(param, true));
         this.emit(PlatformBase.EventType.OpenShare)
         return Promise.resolve();
     }
+
+    public async pay(refId: string): Promise<void> {
+        console.log("充值模拟");
+    }
+
+    public copyToClipBoard(string: string): Promise<void> {
+        var textArea: any = null;
+        textArea = document.getElementById("clipBoard");
+        if (textArea === null) {
+            textArea = document.createElement("textarea");
+            textArea.id = "clipBoard";
+            textArea.textContent = string;
+            document.body.appendChild(textArea);
+        }
+        textArea.select();
+        try {
+            const msg = document.execCommand('copy') ? 'successful' : 'unsuccessful';
+            console.log("已经复制到剪贴板");
+            document.body.removeChild(textArea);
+            return Promise.resolve();
+        } catch (err) {
+            console.log("复制到剪贴板失败");
+            Promise.reject(err);
+        }
+    }
 }
+
+import HttpHelper from "../Helpers/HttpHelper";
+import PromiseHelper from "../Helpers/PromiseHelper";
+

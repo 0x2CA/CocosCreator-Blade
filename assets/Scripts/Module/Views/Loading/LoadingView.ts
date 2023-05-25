@@ -1,104 +1,84 @@
+
 import ViewBase from "../../../Blade/Bases/ViewBase";
 import View from "../../../Blade/Decorators/View";
 import NodeHelper from "../../../Blade/Helpers/NodeHelper";
-import LocalizedLabel from "../../../Blade/Libs/Localized/LocalizedLabel";
-import ControllerService from "../../../Blade/Services/ControllerService";
-import LocalizedService from "../../../Blade/Services/LocalizedService";
-import PlatformService from "../../../Blade/Services/PlatformService";
-import TickerService from "../../../Blade/Services/TickerService";
-import TweenService from "../../../Blade/Services/TweenService";
-import LoadingController from "../../Controllers/LoadingController";
-import MainController from "../../Controllers/MainController";
+import LoadingCtrl from "../../Controllers/LoadingCtrl";
+import UICtrl from "../../Controllers/UICtrl";
+import GameConfig from "../../Defines/GameConfig";
 
 const { ccclass, property } = cc._decorator;
-
+/*
+ * @作者: 0x2CA
+ * @创建时间: 2023-02-09
+ * @最后编辑时间: 2023-05-16
+ * @最后编辑者: 0x2CA
+ * @描述:
+ */
 @ccclass
 @View("LoadingView")
 export default class LoadingView extends ViewBase {
 
-    @property({
-        type: cc.Node,
-        tooltip: "加载容器",
-    })
-    loadingTips: cc.Node = null;
+    @property(cc.Label)
+    private version: cc.Label = null;
 
-    @property({
-        type: cc.Node,
-        tooltip: "加载容器",
-    })
-    loadingContainer: cc.Node = null;
+    @property(cc.Sprite)
+    private backGround: cc.Sprite = null;
 
-    @property({
-        type: LocalizedLabel,
-        tooltip: "加载状态标签",
-    })
-    labelStatus: LocalizedLabel = null;
+    @property(cc.Node)
+    private waitTips: cc.Node = null;
 
-    @property({
-        type: cc.ProgressBar,
-        tooltip: "加载进度",
-    })
-    progress: cc.ProgressBar = null;
+    @property(cc.ProgressBar)
+    private progressBar: cc.ProgressBar = null;
 
-    public async onInitialize() {
+    protected onInitialize() {
         this.node.parent = NodeHelper.getMainLayer();
 
-        this.loadingTips.active = true;
-        this.loadingContainer.active = false;
+        this.waitTips.active = true;
+        blade.tween.get(this.waitTips)
+            .set({ angle: 0 })
+            .to({ angle: -360 }, 1000)
+            .setLoop(true);
 
-        if (CC_DEBUG) {
-            this.parseUrl();
-        }
+        this.progressBar.totalLength = this.progressBar.barSprite.node.width;
+        this.progressBar.progress = 0;
+        this.progressBar.node.active = false;
 
-        TweenService.getInstance().get(this.loadingTips, { loop: true }).set({ angle: 0 }).to({ angle: -360 }, 1000);
+        NodeHelper.fillSpriteByWinSize(this.backGround);
 
-        await LocalizedService.getInstance().loadLangConfig(LocalizedService.getInstance().getLang());
+        this.version.string = GameConfig.version;
+    }
 
-        this.loadingTips.active = false;
-        this.loadingContainer.active = true;
+    protected onDispose() {
+        blade.tween.removeTweens(this.waitTips);
+    }
 
-        this.progress.progress = 0;
+    protected onShow() {
+    }
+
+    protected onHide() {
+    }
+
+    protected onRefresh() {
+        this.load();
+    }
+
+    private async load() {
         // 检查更新
-        this.labelStatus.langID = "CHECKINGUPDATE";
-        await blade.platform.getPlatform().checkForUpdate();
-        this.progress.progress = 0.3;
+        await blade.platform.get().checkForUpdate();
 
         // 预加载
-        await ControllerService.getInstance().getController(LoadingController).preloadAsset((progress) => {
-            this.labelStatus.langID = "LOADING"
-            this.progress.progress = 0.3 + 0.7 * progress;
+        await blade.ctrl.get(LoadingCtrl).preload((progress) => {
+            this.onPreload(progress);
         });
 
-        this.close();
-
-        ControllerService.getInstance().getController(MainController).openMainView();
+        // 进入登录页面
+        blade.ctrl.get(UICtrl).open(UICtrl.ViewStatus.Login);
     }
 
-    public onDispose() {
-        TweenService.getInstance().removeTweens(this.loadingTips);
+    private onPreload(progress: number) {
+        this.waitTips.active = false;
+        this.progressBar.node.active = true;
+        this.progressBar.progress = progress;
     }
 
-    /**
- * 解析地址参数
- */
-    private parseUrl() {
-        cc.warn(`=========================
-地址栏参数说明：
-reset: 重置存档 (1:重置)
-time: 时间倍数
-=========================`);
-
-        const urlParam = PlatformService.getInstance().getPlatform().getLaunchOptions();
-
-        // 地址栏附带启动参数检查
-        // 存档重置
-        if (urlParam["reset"] === "1") {
-            PlatformService.getInstance().clear();
-        }
-
-        try {
-            const timeScale = parseFloat(urlParam["time"]);
-            TickerService.getInstance().timeScale = timeScale;
-        } catch (e) { }
-    }
 }

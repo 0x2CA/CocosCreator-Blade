@@ -4,22 +4,28 @@ import SingletonBase from "../Bases/SingletonBase";
 /**
  * 计时管理类
  */
-export default class TickerService extends SingletonBase {
+class TickerService extends SingletonBase<TickerService> {
 
-    public onInitialize() {
-        const appNode = cc.find('Blade');
+    private _event: cc.EventTarget = new cc.EventTarget();
 
-        // if (appNode == null) {
-        //     throw new Error("没有Blade节点")
-        // }
+    protected onInitialize() {
+        if (cc.sys.platform !== cc.sys.EDITOR_PAGE) {
+            const appNode = cc.find('Blade');
 
-        if (appNode.getComponent(TickerComponent) == null) {
-            appNode.addComponent(TickerComponent);
+            if (appNode == null) {
+                throw new Error("没有Blade节点")
+            }
+
+            if (appNode.getComponent(TickerService.TickerComponent) == null) {
+                appNode.addComponent(TickerService.TickerComponent);
+            }
+
+            this._event.clear();
         }
     }
 
-    public onDispose() {
-
+    protected onDispose() {
+        this._event.clear();
     }
 
     private _timeScale: number = 1;
@@ -32,7 +38,7 @@ export default class TickerService extends SingletonBase {
 
     public set timeScale(scale: number) {
         this._timeScale = scale > 0 ? scale : 1;
-        cc.warn('设置时间缩放：' + this._timeScale);
+        console.warn('设置时间缩放：' + this._timeScale);
     }
 
     public get pause() {
@@ -46,38 +52,90 @@ export default class TickerService extends SingletonBase {
         }
     }
 
-    public tick(delta: number) {
+    private tick(delta: number) {
         delta *= this._timeScale;
-        this._tickList.forEach((item) => {
-            if (item.onTick) {
-                if (!this._pause) {
-                    item.onTick(delta);
-                }
+        if (!this._pause) {
+            try {
+                this._event.emit(TickerService.TickerType.Tick, delta);
+            } catch (error) {
+                console.error(error);
             }
-        })
+        }
     }
 
-    public fixedTick(delta: number) {
-        let fixedDelta = 1 / cc.game.getFrameRate() * this._timeScale;
-        this._tickList.forEach((item) => {
-            if (item.onFixedTick) {
-                if (!this._pause) {
-                    item.onFixedTick(fixedDelta);
-                }
+    private fixedTick(delta: number) {
+        let fixedDelta = delta * this._timeScale;
+        if (!this._pause) {
+            try {
+                this._event.emit(TickerService.TickerType.FixedTick, fixedDelta)
+            } catch (error) {
+                console.error(error);
             }
-        })
+        }
     }
 
-    public lateTick() {
-
-        this._tickList.forEach((item) => {
-            if (item.onLateTick) {
-                if (!this._pause) {
-                    item.onLateTick();
-                }
+    private lateTick() {
+        if (!this._pause) {
+            try {
+                this._event.emit(TickerService.TickerType.LateTick)
+            } catch (error) {
+                console.error(error);
             }
-        })
+        }
+    }
 
+    /**
+     * 监听Tick
+     * @param tick
+     * @param target
+     */
+    public onTick(tick: (delta: number) => void, target: object = null) {
+        this._event.on(TickerService.TickerType.Tick, tick, target);
+    }
+
+    /**
+     * 取消监听Tick
+     * @param tick
+     * @param target
+     */
+    public offTick(tick: (delta: number) => void, target: object = null) {
+        this._event.off(TickerService.TickerType.Tick, tick, target);
+    }
+
+    /**
+     * 监听FixedTick
+     * @param fixedTick
+     * @param target
+     */
+    public onFixedTick(fixedTick: (delta: number) => void, target: object = null) {
+        this._event.on(TickerService.TickerType.FixedTick, fixedTick, target);
+    }
+
+    /**
+     * 取消监听FixedTick
+     * @param fixedTick
+     * @param target
+     */
+    public offFixedTick(fixedTick: (delta: number) => void, target: object = null) {
+        this._event.off(TickerService.TickerType.FixedTick, fixedTick, target);
+    }
+
+    /**
+     * 监听LateTick
+     * @param lateTick
+     * @param target
+     */
+    public onLateTick(lateTick: () => void, target: object = null) {
+        this._event.on(TickerService.TickerType.LateTick, lateTick, target);
+    }
+
+    /**
+     * 取消监听LateTick
+     * @param lateTick
+     * @param target
+     */
+    public offLateTick(lateTick: () => void, target: object = null) {
+        this._event.off(TickerService.TickerType.LateTick, lateTick, target);
     }
 
     /**
@@ -86,6 +144,9 @@ export default class TickerService extends SingletonBase {
      */
     public on(ticker: ITicker) {
         if (this._tickList.has(ticker) == false) {
+            this._event.on(TickerService.TickerType.Tick, ticker.onTick, ticker);
+            this._event.on(TickerService.TickerType.LateTick, ticker.onLateTick, ticker);
+            this._event.on(TickerService.TickerType.FixedTick, ticker.onFixedTick, ticker);
             this._tickList.add(ticker);
         }
     }
@@ -96,36 +157,87 @@ export default class TickerService extends SingletonBase {
      */
     public off(ticker: ITicker) {
         if (this._tickList.has(ticker)) {
+            this._event.off(TickerService.TickerType.Tick, ticker.onTick, ticker);
+            this._event.off(TickerService.TickerType.LateTick, ticker.onLateTick, ticker);
+            this._event.off(TickerService.TickerType.FixedTick, ticker.onFixedTick, ticker);
             this._tickList.delete(ticker);
         }
     }
 }
 
-/**
- * 计时组件供外部全局节点附加
- */
-class TickerComponent extends cc.Component {
-    private tickerService: TickerService;
+namespace TickerService {
+    /**
+     * 计时组件供外部全局节点附加
+     */
+    export class TickerComponent extends cc.Component {
 
-    private fixedFrame: number = 60;
-    private fixedTime: number = 0;
+        private _tickerService: TickerService = null;
 
-    onLoad() {
-        this.tickerService = TickerService.getInstance();
-    }
+        private _fixedTick: (delta: number) => void;
+        private _tick: (delta: number) => void;
+        private _lateTick: () => void;
 
-    update(dt: number) {
-        this.fixedTime += dt;
+        private _lastTime: number = null;
 
-        while (this.fixedTime >= 1 / this.fixedFrame) {
-            this.fixedTime -= 1 / this.fixedFrame;
-            this.tickerService.fixedTick(1 / this.fixedFrame);
+        private _frameRate = 30;
+        private _fixedTime: number = Math.floor(1000 / this._frameRate);
+        private _fixedTimeOffset: number = 1000 - (this._fixedTime * this._frameRate);
+        private _fixedTimeCount: number = 0;
+        private _fixedTimeTotal: number = 0;
+
+        onLoad() {
+            this._tickerService = TickerService.getInstance();
+            this._fixedTick = Reflect.get(this._tickerService, "fixedTick");
+            this._tick = Reflect.get(this._tickerService, "tick");
+            this._lateTick = Reflect.get(this._tickerService, "lateTick");
         }
 
-        this.tickerService.tick(dt);
+        update(delta: number) {
+
+            let currrentTime = new Date().getTime();
+
+            if (this._lastTime == currrentTime) {
+                return;
+            }
+
+            if (this._lastTime == null) {
+                this._lastTime = currrentTime;
+            }
+
+            let subTime = currrentTime - this._lastTime;
+
+            this._lastTime = currrentTime;
+
+            this._fixedTimeTotal += subTime;
+
+            // 时间判断满足不满足下一个
+            while (this._fixedTimeTotal >= ((this._fixedTimeCount + 1) * 1000 / this._frameRate)) {
+                this._fixedTimeCount += 1;
+                let fixedTime = this._fixedTime;
+                if (this._fixedTimeCount % this._frameRate == 0) {
+                    fixedTime += this._fixedTimeOffset;
+                }
+                this._fixedTick.call(this._tickerService, fixedTime);
+            }
+
+            // 以秒为单位缩减次数和累计时间(防止浮点数误差)
+            let seconds = Math.floor(this._fixedTimeCount / this._frameRate);
+            this._fixedTimeCount -= seconds * this._frameRate;
+            this._fixedTimeTotal -= 1000 * seconds;
+
+            this._tick.call(this._tickerService, subTime);
+        }
+
+        lateUpdate() {
+            this._lateTick.call(this._tickerService);
+        }
     }
 
-    lateUpdate() {
-        this.tickerService.lateTick();
+    export enum TickerType {
+        Tick = "Tick",
+        FixedTick = "FixedTick",
+        LateTick = "LateTick"
     }
 }
+
+export default TickerService

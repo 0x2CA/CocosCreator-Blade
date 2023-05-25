@@ -1,0 +1,20 @@
+syntax = "proto3";
+
+option java_package = "lilith.server.protobuf";
+option java_outer_classname = "GiftCodeProto";
+
+package protobuf;
+
+/**兑换码*/
+message C2SGiftCodeExchange {
+    /**礼包码 */
+	string code = 1;
+}
+
+message S2CGiftCodeExchange {
+	/**成功码 */
+	int32 code = 1;
+    /**奖励 */
+	string reward = 2;
+}
+

@@ -23,7 +23,7 @@ export default class Application {
         Application.ForeachFile(options.input, (filePath: string) => {
             let extension = path.extname(filePath);
 
-            if (extension == ".meta" || extension == "") {
+            if (extension == ".meta" || extension == ".pac" || extension == ".atlas" || extension == "") {
                 return;
             }
 
@@ -32,6 +32,8 @@ export default class Application {
             if (fileName == "Addressables.json") {
                 return;
             }
+
+            // console.log("处理文件", fileName);
 
             filePath = filePath.split("resources/")[1].replace("\\", "/");
 
@@ -55,6 +57,9 @@ export default class Application {
         for (let direntsIndex = 0; direntsIndex < dirents.length; direntsIndex++) {
             const dirent = dirents[direntsIndex];
             if (dirent.isDirectory()) {
+                if (dirent.name == ".git" || dirent.name == ".svn") {
+                    continue;
+                }
                 let direntPath = dirPath + "/" + dirent.name;
                 Application.ForeachFile(direntPath, callback);
             } else {

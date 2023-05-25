@@ -162,7 +162,7 @@ export default class SinglyList<T> {
 	 * @memberof SinglyList
 	 */
 	getNodeByValue(value: T) {
-		var currNode = this.head;
+		let currNode = this.head;
 		while (currNode && currNode.value != value) {
 			currNode = currNode.next;
 		}
@@ -272,7 +272,7 @@ export default class SinglyList<T> {
 			tmp += JSON.stringify(currNode.value) + "\n";
 			currNode = currNode.next;
 		}
-		cc.log(tmp);
+		console.log(tmp);
 	}
 
 	/**

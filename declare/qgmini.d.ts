@@ -1,3 +1,4 @@
+
 /**
  * 取消一个先前通过调用 requestAnimationFrame 方法添加到计划中的动画帧请求
  */
@@ -66,38 +67,19 @@ declare namespace qg {
     var env: ENV;
 
     type systemInfo = {
-        /** 手机品牌*/
-        brand: string;
-        /** 手机型号*/
-        model: string;
-        /**	设备像素比 */
-        pixelRatio: number;
-        /** 屏幕宽度*/
-        screenWidth: number;
-        /** 屏幕高度*/
-        screenHeight: number;
-        /** 可使用窗口宽度*/
-        windowWidth: number;
-        /** 可使用窗口高度*/
-        windowHeight: number;
-        /** 状态栏的高度*/
-        statusBarHeight: number;
-        /** 微信设置的语言*/
-        language: string;
-        /** 微信版本号*/
-        version: string;
-        /** 操作系统版本*/
-        system: string;
-        /** 客户端平台*/
-        platform: string
-        /** 用户字体大小设置。以“我-设置 - 通用 - 字体大小”中的设置为准，单位 px。*/
-        fontSizeSetting: number;
-        /** 客户端基础库版本*/
-        COREVersion: string;
-        /**平台版本号 */
-        platformVersionCode: int;
-        /** 性能等级*/
-        benchmarkLevel: number;
+        brand: string	//手机品牌
+        model: string	//手机型号
+        pixelRatio: number	//设备像素比
+        screenWidth: number	//屏幕宽度
+        screenHeight: number	//屏幕高度
+        windowHeight: number	//可使用窗口高度
+        windowWidth: number	//可使用窗口宽度
+        language: string	//当前环境设置的语言
+        COREVersion: string	//版本号
+        platformVersionName: string	//客户端平台
+        system: string	//操作系统版本
+        platformVersionCode: number	//平台版本号
+        statusBarHeight: number	//状态栏异形缺口高度
     }
 
     type launchOption = {
@@ -143,6 +125,32 @@ declare namespace qg {
          */
         onUpdateFailed(callback: () => void): void;
     }
+
+    // oppo
+    function setLoadingProgress(object: { progress: number }): void
+    function loadingComplete(object: { complete: (res) => void }): void
+    // oppo
+    function createQRCode(object: {
+        pkgName?: string,
+        extraData?: object,
+        isSaveToAlbum?: boolean,
+        isBattleGame?: boolean,
+        data?: object,
+        success?: function,
+        fail?: function,
+        complete?: function
+    }): { path: string };
+
+    // vivo
+    function applyUpdate(): void;
+    // vivo
+    function onUpdateReady(callback: (res: number) => void): void;
+    //vivo
+    function share(data: {
+        success?: (res) => void,
+        fail?: (err) => void,
+        complete?: (res) => void
+    }): void;
 
     /**
      * 在触控设备上的触摸点。通常是指手指或者触控笔在触屏设备或者触摸板上的操作。
@@ -501,12 +509,12 @@ declare namespace qg {
         load()
         /**
          * 上报广告曝光，一个广告只有一次上报有效，adId 为 load 方法获取的广告数据的 adId 字段
-         * @param option 
+         * @param option
          */
         reportAdShow(option: { adId: string })
         /**
          * 上报广告点击，一个广告只有一次上报有效，adId 为 load 方法获取的广告数据的 adId 字段
-         * @param option 
+         * @param option
          */
         reportAdClick(option: { adId: string })
         onLoad(callback: (res: {
@@ -541,24 +549,24 @@ declare namespace qg {
                 clickBtnTxt: string
                 /**
                  * 获取广告类型，取值说明：
-0：无
-1：纯文字
-2：图片
-3：图文混合
-4：视频
-6. 640x320 大小图文混合
-7. 320x210 大小图文单图
-8. 320x210 大小图文多图
+    0：无
+    1：纯文字
+    2：图片
+    3：图文混合
+    4：视频
+    6. 640x320 大小图文混合
+    7. 320x210 大小图文单图
+    8. 320x210 大小图文多图
                  */
                 creativeType: number
                 /**
                  * 获取广告点击之后的交互类型，取值说明：
-0：无
-1：浏览类
-2：下载类
-3：浏览器（下载中间页广告）
-4：打开应用首页
-5：打开应用详情页
+    0：无
+    1：浏览类
+    2：下载类
+    3：浏览器（下载中间页广告）
+    4：打开应用首页
+    5：打开应用详情页
                  */
                 interactionType: number
             }>
@@ -618,13 +626,30 @@ declare namespace qg {
     /**
      * 创建激励视频广告组件。请通过 qg.getSystemInfoSync() 返回对象的 SDKVersion 判断基础库版本号 >= 2.0.4 后再使用该 API。同时，开发者工具上暂不支持调试该 API，请直接在真机上进行调试。
      */
-    function createRewardedVideoAd(res: { adUnitId: string }): RewardedVideoAd;
+    function createRewardedVideoAd(res: {
+        adUnitId: string
+    } |
+    // vivo
+    {
+        posId: string
+    }): RewardedVideoAd;
 
     /**
      * 创建 banner 广告组件。请通过 qg.getSystemInfoSync() 返回对象的 SDKVersion 判断基础库版本号 >= 2.0.4 后再使用该 API。同时，开发者工具上暂不支持调试该 API，请直接在真机上进行调试。
      */
     function createBannerAd(res: {
-        adUnitId: string, style: {
+        adUnitId: string,
+        style: {
+            left: number,
+            top: number,
+            width: number,
+            height: number
+        }
+    } |
+    // vivo
+    {
+        posId: string,
+        style: {
             left: number,
             top: number,
             width: number,
@@ -634,17 +659,29 @@ declare namespace qg {
 
     /**
      * 原生广告是 cp 通过封装好的接口获取广告数据，根据实际场景自由选择绘制和展示方式的广告，更加灵活。 需要注意的是，每个原生广告组件对象只有一次有效曝光，一次有效点击。 同一个 adUnitId，如果已经创建，并且未 destroy，会复用之前的对象。
-     * @param res 
+     * @param res
      */
     function createNativeAd(res: {
         adUnitId: string
+
+    } |
+    // vivo
+    {
+        posId: string
     }): NativeAd;
+
 
     /**
      * 创建 banner 广告组件。请通过 qg.getSystemInfoSync() 返回对象的 SDKVersion 判断基础库版本号 >= 2.6.0 后再使用该 API。
-     * @param Option 
+     * @param Option
      */
-    function createInterstitialAd(Option: { adUnitId: string }): InterstitialAd;
+    function createInterstitialAd(Option: {
+        adUnitId: string
+    } |
+    // vivo
+    {
+        posId: string
+    }): InterstitialAd;
 
     /**
      * 显示操作菜单
@@ -929,9 +966,9 @@ declare namespace qg {
         send(obj: { address: string, port: number, message: string | ArrayBuffer, offset?: number, length?: number }): void;
     }
 
-    /** 
+    /**
      * 更新转发属性
-     * 
+     *
      */
     function updateShareMenu(object: { withShareTicket?: boolean, isUpdatableMessage?: boolean, activityId?: string, templateInfo?: { parameterList: Array<{ name: string, value: string }> }, success?: (res?: any) => void, fail?: (res?: any) => void, complete?: (res?: any) => void }): void;
 
@@ -942,13 +979,13 @@ declare namespace qg {
 
     /**
      * 隐藏转发按钮
-     * 
+     *
      */
     function hideShareMenu(object: { success?: (res?: any) => void, fail?: (res?: any) => void, complete?: (res?: any) => void }): void;
 
     /**
      * 获取转发详细信息
-     *  
+     *
      */
     function getShareInfo(object: {
         shareTicket: string,
@@ -995,6 +1032,197 @@ declare namespace qg {
         zoneId?: string,
         success?: (res?: any) => void, fail?: (res?: any) => void, complete?: (res?: any) => void
     }): void;
+
+    function pay(object: {
+        appId: number,
+        token: string,
+        timestamp: number,
+        orderNo: string,
+        paySign: string,
+        success?: function,
+        fail?: function,
+        complete?: function,
+    } |
+    // vivo
+    {
+        orderInfo: string,
+        success?: function,
+        fail?: function,
+        cancel?: function,
+        complete?: function,
+    } |
+    // xiaomi
+    {
+        orderInfo: {
+            appId: string,
+            appAccountId: string,
+            session: string,
+            cpOrderId: string,
+            cpUserInfo: string,
+            displayName: string,
+            feeValue: number,
+            sign: string,
+        },
+        success?: function,
+        fail?: function,
+        complete?: function,
+    }
+    ): void;
+
+    // huawei
+    function isEnvReady(object: {
+        isEnvReadyReq: { applicationID: string; };
+        success?: (data: { returnCode: number }) => void;
+        fail?: (data: string, code: number) => void;
+    }): void;
+
+    // huawei
+    function isSandboxActivated(object: {
+        isSandboxActivatedReq: { applicationID: string; };
+        success?: (data: {
+            returnCode: number,
+            errMsg: string,
+            isSandboxUser: boolean,
+            isSandboxApk: boolean,
+            versionInApk: string,
+            versionFrMarket: string
+        }) => void;
+        fail?: (data: string, code: number) => void;
+    }): void;
+
+    type ProductInfo = {
+        productId: string,
+        priceType: number,
+        price: string,
+        microsPrice: number,
+        currency: string,
+        productName: string,
+        productDesc: string,
+        subPeriod: string,
+        subSpecialPrice: string,
+        subSpecialPriceMicros: number,
+        subSpecialPeriod: string,
+        subSpecialPeriodCycles: string,
+        subsFreeTrialPeriod: string,
+        subsGroupId: string,
+        subsGroupTitle: string,
+        subsProductLevel: string,
+        originalMicroPrice: string,
+        originalLocalPrice: string,
+        status: number,
+    };
+
+    function obtainProductInfo(data: {
+        productInfoReq: {
+            priceType: number;
+            productIds: string[];
+            applicationID: string;
+        };
+        success?: (data: {
+            returnCode: number,
+            errMsg: string,
+            productInfoList: ProductInfo[]
+        }) => void;
+        fail?: (data: string, code: number) => void;
+    }): void;
+
+    function createPurchaseIntent(data: {
+        purchaseIntentReq: {
+            applicationID: string;
+            productId: string;
+            priceType: number;
+            developerPayload: string;
+            publicKey: string;
+        };
+        success?: (data: {
+            returnCode: number,
+            errMsg: string,
+            inAppDataSignature: string,
+            inAppPurchaseData: string
+        }) => void;
+        fail?: (data: string, code: number) => void;
+    }): void
+
+    type InAppPurchaseData = {
+        applicationId: string,
+        autoRenewing: boolean,
+        orderId: string,
+        kind: number,
+        packageName: string,
+        productId: string,
+        productName: string,
+        purchaseTime: string,
+        purchaseState: string,
+        developerPayload: string,
+        developerChallenge: string,
+        consumptionState: string,
+        purchaseToken: string,
+        purchaseType: number,
+        currency: string,
+        price: number,
+        country: string,
+        payType: string,
+        //以下参数只有查询订阅类商品时才返回
+        lastOrderId: string,
+        productGroup: string,
+        purchaseTime: number,
+        oriPurchaseTime: number,
+        subscriptionId: string,
+        oriSubscriptionId: string,
+        quantity: number,
+        daysLasted: number,
+        numOfPeriods: number,
+        numOfDiscount: number,
+        expirationDate: number,
+        expirationIntent: number,
+        retryFlag: number,
+        introductoryFlag: number,
+        trialFlag: number,
+        cancelTime: number,
+        cancelReason: number,
+        renewStatus: number,
+        priceConsentStatus: number,
+        renewPrice: number,
+        subIsvalid: boolean,
+        cancelledSubKeepDays: number,
+        resumeTime: number,
+    }
+
+    function consumeOwnedPurchase(data: {
+        consumeOwnedPurchaseReq: {
+            applicationID: string;
+            developerPayload: string;
+            purchaseToken: string;
+            publicKey: string;
+        };
+        success?: (data: {
+            returnCode: number,
+            errMsg: string,
+            consumePurchaseData: string,
+            dataSignature: string
+        }) => void;
+        fail?: (data: string, code: number) => void;
+    }): void;
+
+    function obtainOwnedPurchases(data: {
+        ownedPurchasesReq: {
+            priceType: number;
+            applicationID: string;
+            publicKey: string;
+            continuationToken?: string;
+        };
+        success?: (data: {
+            returnCode: number,
+            errMsg: string,
+            itemList: string[],
+            inAppPurchaseDataList: string[],
+            inAppSignature: string[],
+            continuationToken?: string,
+            placedInappPurchaseDataList: string[],
+            placedInappSignatureList: string[]
+        }) => void;
+        fail?: (data: string, code: number) => void;
+    }): void
 
     /**
      * qg.getStorageInfo 的同步版本
@@ -1637,14 +1865,31 @@ declare namespace qg {
      * 获取用户信息。
      */
     function getUserInfo(object: {
-        withCredentials?: boolean, lang?: string, success?: (res: {
-            ƒ
-            userInfo: UserInfo,
-            rawData: string,
-            signature: string,
-            encryptedData: string,
-            iv: string
-        }) => void, fail?: (res?: any) => void, complete?: (res?: any) => void
+        withCredentials?: boolean, lang?: string, success?: (res:
+            {
+                //     ƒ
+                //     userInfo: UserInfo,
+                //     rawData: string,
+                //     signature: string,
+                //     encryptedData: string,
+                //     iv: string,
+                // vivo
+                data?: {
+                    nickName: string,
+                    smallAvatar: string,
+                    biggerAvatar: string,
+                    gender: number,
+                },
+                // xiaomi
+                userInfo?: {
+                    nickName: string,
+                    avatarUrl: string,
+                    gender: number,
+                }
+            }
+        ) => void,
+        fail?: (res?: any) => void,
+        complete?: (res?: any) => void
     }): void;
 
     /** 用户信息按钮*/
@@ -1724,7 +1969,45 @@ declare namespace qg {
     /**
      * 调用接口获取登录凭证（code）进而换取用户登录态信息，包括用户的唯一标识（openid） 及本次登录的 会话密钥（session_key）等。用户数据的加解密通讯需要依赖会话密钥完成。
      */
-    function login(object: { timeout?: number, success?: (res: { code: string }) => void, fail?: (res?: any) => void, complete?: (res?: any) => void }): void;
+    function login(object: {
+        success?: (res: {
+            token: string,
+            openId?: string,
+            avatar?: string,
+            nickName?: string,
+            sex?: string,
+            isTourist?: boolean,
+            oid?: string,
+            data: ?{
+                // vivo
+                token: string
+                //xiaomi
+                appAccountId: number,
+                session: string
+            },
+
+        }) => void,
+        fail?: (res?: any) => void,
+        complete?: (res?: any) => void
+    }): void;
+
+    // huawei 防沉迷登录
+    function gameLoginWithReal(
+        object: {
+            forceLogin: number,
+            appid: string,
+            success?: (data: {
+                playerId: string,
+                displayName: string,
+                playerLevel: number,
+                ts: string,
+                gameAuthSign: string,
+                hiResImageUri: string,
+                imageUri: string
+            }) => void,
+            fail?: (data: string, code: number) => void,
+        }
+    ): void;
 
     /**
      * 只有开放数据域能调用，获取主域和开放数据域共享的 sharedCanvas
@@ -2158,7 +2441,7 @@ declare namespace qg {
         complete?: (res?: any) => void
     }): void;
 
-    /** 
+    /**
      * 监听内存不足告警事件。
      * 当 iOS/Android 向小程序进程发出内存警告时，触发该事件。触发该事件不意味小程序被杀，大部分情况下仅仅是告警，开发者可在收到通知后回收一些不必要资源避免进一步加剧内存紧张。
      */
@@ -2533,7 +2816,7 @@ interface AggregationOperators {
 //  */
 // declare var WebGLRenderingContext: {
 //     /**
-//      * 
+//      *
 //      * @param texture WebGL 的纹理类型枚举值
 //      * @param canvas 需要绑定为 Texture 的 Canvas
 //      */

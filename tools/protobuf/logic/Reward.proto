@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+option java_package = "lilith.server.protobuf";//指定java代码的包路径
+option java_outer_classname = "RewardProto";//自定义生成java文件的名称
+
+package protobuf;
+
+/** 奖励 */
+message RewardStatus {
+	/** 奖励对应RefId */
+	string refId = 1;
+	/** 领取状态(0-不可领取, 1-可领取，2-已领取) */
+	int32  status = 2;
+}
+

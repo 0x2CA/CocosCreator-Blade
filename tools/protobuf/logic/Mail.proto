@@ -1,0 +1,64 @@
+syntax = "proto3";
+
+option java_package = "lilith.server.protobuf";
+option java_outer_classname = "MailProto";
+
+package protobuf;
+
+/**邮件模块 */
+
+
+/**邮件信息*/
+message Mail {
+	/**邮件流水ID*/
+	string id = 1;
+	/**邮件标题*/
+	string title = 2;
+	/**邮件内容*/
+	string content = 3;
+	/**发送者ID*/
+	string senderId = 4;
+	/**接受者ID*/
+	string recevierId = 5;
+	/**发送时间戳*/
+	string sendTime = 6;
+	/**奖励领取状态(0-不可领取, 1-可领取，2-已领取)*/
+	int32 receiveStatus = 7;
+	/**邮件ID(0-未读,1-已读)*/
+	int32 read = 8;
+	/**附件*/
+	string attachment = 9;
+}
+
+/**邮件列表*/
+message C2SMailListSync {
+
+}
+
+/** 邮件列表*/
+message S2CMailListSync {
+	/**同步类型 0-全部  1-增加 2-修改 3-删除 */
+	int32 syncType = 1;
+	/**邮件列表 */
+	repeated Mail mails = 2;
+}
+
+
+/**邮件操作*/
+message C2SMailOp {
+	/**操作类型(1-一键阅读领取，2-删除已读邮件，3-单个领取，4-单个删除,5-单个已读)*/
+	int32 op = 1;
+	/**邮件ID(当op=3,4,5时,传邮件流水ID)*/
+	string id = 2;
+}
+
+
+/**邮件操作*/
+message S2CMailOp {
+	/**奖励*/
+	string reward = 1;
+}
+
+
+
+

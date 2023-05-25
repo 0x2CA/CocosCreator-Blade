@@ -1,5 +1,3 @@
-import PlatformService from "../Services/PlatformService";
-
 /**
  * 平台接口类
  */
@@ -12,7 +10,7 @@ abstract class PlatformBase extends cc.EventTarget {
     /**
      * 平台初始化操作
      */
-    public abstract onInitialize(): void;
+    protected abstract onInitialize(): void;
 
     /**
      * 调用类内方法, 适合调用平台不通用的方法
@@ -46,10 +44,34 @@ abstract class PlatformBase extends cc.EventTarget {
     /**
      * 检查新版本
      */
-    public checkForUpdate(): Promise<any> {
+    public checkForUpdate(): Promise<void> {
         return Promise.resolve();
     }
 
+    /**
+     * 登录
+     * @returns
+     */
+    public login(isForce: boolean = false) {
+        return Promise.resolve();
+    }
+
+    /**
+     * 注销
+     * @returns
+     */
+    public logout() {
+        return Promise.resolve();
+    }
+
+    /**
+     * 支付
+     * @param refId
+     * @returns
+     */
+    public async pay(refId: string) {
+        return Promise.resolve();
+    }
 
     /**
      * 判断是否支持激励视频广告
@@ -61,7 +83,7 @@ abstract class PlatformBase extends cc.EventTarget {
     /**
      * 预加载激励视频
      */
-    public preloadRewardVideo(): Promise<any> {
+    public preloadRewardVideo(): Promise<void> {
         return Promise.resolve();
     }
 
@@ -89,7 +111,7 @@ abstract class PlatformBase extends cc.EventTarget {
     /**
      * 预加载横幅
      */
-    public preloadBanner(): Promise<any> {
+    public preloadBanner(): Promise<void> {
         return Promise.resolve();
     }
 
@@ -118,7 +140,7 @@ abstract class PlatformBase extends cc.EventTarget {
     /**
      * 预加载插页广告
      */
-    public preloadInterstitial(): Promise<any> {
+    public preloadInterstitial(): Promise<void> {
         return Promise.resolve();
     }
 
@@ -126,7 +148,7 @@ abstract class PlatformBase extends cc.EventTarget {
      * 显示插页广告
      */
     public showInterstitial() {
-        return;
+        return Promise.resolve(false);
     }
 
     /**
@@ -147,7 +169,7 @@ abstract class PlatformBase extends cc.EventTarget {
     /**
      * 发送邀请
      */
-    public sendInvite(imageUrl: string, title: string, param: any): Promise<any> {
+    public sendInvite(imageUrl: string, title: string, param: any): Promise<void> {
         return Promise.resolve();
     }
 
@@ -156,6 +178,15 @@ abstract class PlatformBase extends cc.EventTarget {
      * @param short
      */
     public vibrate(short: boolean = true) { }
+
+
+    /**
+     * 拷贝到剪切板
+     * @param string
+     */
+    public copyToClipBoard(string: string): Promise<void> {
+        return Promise.resolve();
+    }
 }
 
 

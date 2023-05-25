@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+option java_package = "lilith.server.protobuf";
+option java_outer_classname = "NoticeProto";
+
+package protobuf;
+
+/**公告模块 */
+
+
+/**公告信息*/
+message Notice {
+	/**公告流水ID*/
+	string id = 1;
+	/**公告标题*/
+	string title = 2;
+	/**公告地址*/
+	string url = 3;
+	/**发送时间戳*/
+	string sendTime = 4;
+}
+
+/**公告列表*/
+message C2SNoticeListSync {
+
+}
+
+/** 公告列表*/
+message S2CNoticeListSync {
+	/**同步类型 0-全部  1-增加 2-修改 3-删除 */
+	int32 syncType = 1;
+	/**公告列表 */
+	repeated Notice notices = 2;
+}
+
+
+
+
+

@@ -1,3 +1,12 @@
+/*
+ * @作者: 0x2CA
+ * @创建时间: 2022-09-29
+ * @最后编辑时间: 2023-03-17
+ * @最后编辑者: 0x2CA
+ * @描述: 配置服务
+ */
+import { EDataConfig } from "../../Module/Configs/IDataConfig";
+import GameConfig from "../../Module/Defines/GameConfig";
 import SingletonBase from "../Bases/SingletonBase";
 
 /**
@@ -5,81 +14,140 @@ import SingletonBase from "../Bases/SingletonBase";
  *
  * @class ConfigService
  */
-class ConfigService extends SingletonBase {
+class ConfigService extends SingletonBase<ConfigService>{
 
-    private list = new Map<string, ConfigService.ConfigInfo>();
+    private _datas: object = {};
 
-    public onInitialize() {
+    protected onInitialize() {
     }
 
-    public onDispose() {
+    protected onDispose() {
     }
 
     async register(
         name: string,
-        jsonAsset: cc.JsonAsset
+        data: object
     ) {
-        if (!this.list.has(name)) {
-            this.list.set(name, { jsonAsset: jsonAsset, data: null });
+        if (this._datas[name] == null) {
+            this._datas[name] = data;
         }
     }
 
     async unregister(name: string) {
-        if (this.list.has(name)) {
-            this.list.delete(name);
+        if (this._datas[name] != null) {
+            this._datas[name] = null;
+        }
+    }
+
+    async registerAllAsync(progress: (finish: number, total: number) => void = null) {
+        await new Promise<void>((resolve, reject) => {
+
+            if (GameConfig.isZipConfigs) {
+                //加载Configs.bin
+                cc.resources.load("Configs", cc.BufferAsset, (finish: number, total: number) => {
+                    if (progress) {
+                        progress(Math.floor(1 * finish / total), 4);
+                    }
+                }, async (err, asset: cc.BufferAsset) => {
+
+                    //解析
+                    let zip = await JSZip.loadAsync((asset as any)._buffer)
+
+                    //获取配置
+                    let files: JSZip.JSZipObject[] = [];
+                    for (const key in zip.files) {
+                        if (Object.prototype.hasOwnProperty.call(zip.files, key)) {
+                            const file = zip.files[key];
+                            if (key.endsWith(".json")) {
+                                files.push(file);
+                            }
+                        }
+                    }
+
+                    let promises: Promise<void>[] = [];
+
+                    let finish = 0;
+
+                    for (let index = 0; index < files.length; index++) {
+                        const file = files[index];
+
+                        promises.push(file.async("text").then((data) => {
+                            let name = file.name.replace(/^.*\/(.*)\.json$/g, "$1");
+                            //string转成json格式
+                            let json = JSON.parse(data);
+                            // console.log(name, json);
+                            blade.config.register(name, json);
+
+                            finish += 1;
+
+                            let total = Math.floor(files.length / 0.75);
+                            if (progress) {
+                                progress(Math.floor(total * 0.25) + finish, total);
+                            }
+                        }));
+
+                    }
+
+                    await Promise.all(promises);
+
+                    resolve();
+                });
+
+            } else {
+                cc.resources.loadDir("Configs", (finish: number, total: number) => {
+                    if (progress) {
+                        progress(finish, total);
+                    }
+                }, (error, assets: cc.JsonAsset[]) => {
+                    if (error) {
+                        console.error("预加载配置资源失败", error);
+                        reject(error);
+                        return;
+                    }
+
+                    for (let index = 0; index < assets.length; index++) {
+                        let asset = assets[index];
+                        this.register(asset.name, asset.json);
+                    }
+
+                    resolve();
+                });
+            }
+        });
+    }
+
+    /**
+     * 获取表格数据(全表)
+     * @param name
+     */
+    public getRef<T extends object>(config: EDataConfig | string): { [key: string]: T } {
+        // 转换表名
+        let name = EDataConfig[config];
+        if (name == null || typeof (name) == "number") {
+            name = config
+        }
+        //获取表
+        if (this._datas[name] != null) {
+            return this._datas[name];
+        } else {
+            console.warn(`没有${name}配置文件,请提前注册`);
+            return null;
         }
     }
 
     /**
-     * 获取指定的配置
-     * @param name
+     * 获取表格配置
+     * @param config
+     * @returns
      */
-    public get<T>(name: string): T {
-        if (this.list.has(name)) {
-            let info = this.list.get(name);
-            if (info.data) {
-                return info.data
-            } else {
-                return info.data = this.build(info.jsonAsset.json)
-            }
-        }
+    public getRefConfig<T extends object>(config: EDataConfig | string): T {
+        return (this.getRef<object>(config) as any) as T;
     }
 
-    private build<T>(obj: any): T {
-        const key: string[] = obj["keys"]
-        const data: any[] = obj["data"]
-        const index = obj["index"]
-        let result
-
-        if (index == null) {
-            // 数组
-            result = []
-            for (let i = 0; i < data.length; i++) {
-                const item = data[i];
-                let obj = {};
-                for (let j = 0; j < item.length; j++) {
-                    obj[key[j]] = item[j];
-                }
-                result.push(obj);
-            }
-        } else {
-            result = {}
-            for (let i = 0; i < data.length; i++) {
-                const item = data[i];
-                let obj = {};
-                for (let j = 0; j < item.length; j++) {
-                    if (key[j] != index) {
-                        obj[key[j]] = item[j];
-                    } else {
-                        result[item[j]] = obj;
-                    }
-                }
-            }
-        }
-
-        return result;
+    public getRefItem<T extends object>(config: EDataConfig | string, refId: string): T {
+        let refs = this.getRef<T>(config);
+        return refs[refId];
     }
-
 
     /**
      * 打印信息
@@ -87,33 +155,31 @@ class ConfigService extends SingletonBase {
      */
     info(name?: string) {
         if (name) {
-            if (this.list.has(name)) {
-                cc.log(name + ":", this.list.get(name).jsonAsset);
+            if (this._datas[name] != null) {
+                console.log(name + ":", this._datas[name]);
             } else {
-                cc.log(`没有${name}配置文件`);
+                console.log(`没有${name}配置文件`);
             }
         } else {
             let info = "配置信息:\n"
-            if (this.list.size > 0) {
-                this.list.forEach(
-                    (value: ConfigService.ConfigInfo, key: string, map: Map<string, ConfigService.ConfigInfo>) => {
-                        info += "   " + key + "    ✔" + "\n";
+
+            const keys = Object.keys(this._datas);
+
+            if (keys.length > 0) {
+                keys.forEach(
+                    (value: string, index: number, array: string[]) => {
+                        info += "   " + value + "    ✔" + "\n";
                     }
                 );
             } else {
                 info += "   没有注册配置";
             }
-            cc.log(info)
+            console.log(info)
         }
     }
 }
 
 namespace ConfigService {
-    export interface ConfigInfo {
-        data: any,
-        jsonAsset: cc.JsonAsset
-    }
 }
-
 
 export default ConfigService;

@@ -1,82 +1,82 @@
 (function webpackUniversalModuleDefinition(root, factory) {
-    // if (typeof exports === 'object' && typeof module === 'object')
-    //     module.exports = factory();
-    // else if (typeof define === 'function' && define.amd)
-    //     define([], factory);
-    // else if (typeof exports === 'object')
-    //     exports["io"] = factory();
-    // else
-    root["io"] = factory();
-})(window, function() {
-    return /******/ (function(modules) { // webpackBootstrap
-            /******/ // The module cache
+    if (typeof exports === 'object' && typeof module === 'object')
+        module.exports = factory();
+    else if (typeof define === 'function' && define.amd)
+        define([], factory);
+    else if (typeof exports === 'object')
+        exports["io"] = factory();
+    else
+        root["io"] = factory();
+})(window, function () {
+    return /******/ (function (modules) { // webpackBootstrap
+        /******/ // The module cache
+        /******/
+        var installedModules = {};
+
+        /******/ // The require function
+        /******/
+        function __webpack_require__(moduleId) {
+
+            /******/ // Check if module is in cache
             /******/
-            var installedModules = {};
+            if (installedModules[moduleId])
+                /******/
+                return installedModules[moduleId].exports;
 
-            /******/ // The require function
+            /******/ // Create a new module (and put it into the cache)
             /******/
-            function __webpack_require__(moduleId) {
-
-                /******/ // Check if module is in cache
+            var module = installedModules[moduleId] = {
                 /******/
-                if (installedModules[moduleId])
+                exports: {},
                 /******/
-                    return installedModules[moduleId].exports;
-
-                /******/ // Create a new module (and put it into the cache)
+                id: moduleId,
                 /******/
-                var module = installedModules[moduleId] = {
-                    /******/
-                    exports: {},
-                    /******/
-                    id: moduleId,
-                    /******/
-                    loaded: false
-                        /******/
-                };
-
-                /******/ // Execute the module function
+                loaded: false
                 /******/
-                modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
+            };
 
-                /******/ // Flag the module as loaded
-                /******/
-                module.loaded = true;
-
-                /******/ // Return the exports of the module
-                /******/
-                return module.exports;
-                /******/
-            }
-
-
-            /******/ // expose the modules object (__webpack_modules__)
+            /******/ // Execute the module function
             /******/
-            __webpack_require__.m = modules;
+            modules[moduleId].call(module.exports, module, module.exports, __webpack_require__);
 
-            /******/ // expose the module cache
+            /******/ // Flag the module as loaded
             /******/
-            __webpack_require__.c = installedModules;
+            module.loaded = true;
 
-            /******/ // __webpack_public_path__
+            /******/ // Return the exports of the module
             /******/
-            __webpack_require__.p = "";
+            return module.exports;
+            /******/
+        }
 
-            /******/ // Load entry module and return exports
-            /******/
-            return __webpack_require__(0);
-            /******/
-        })
+
+        /******/ // expose the modules object (__webpack_modules__)
+        /******/
+        __webpack_require__.m = modules;
+
+        /******/ // expose the module cache
+        /******/
+        __webpack_require__.c = installedModules;
+
+        /******/ // __webpack_public_path__
+        /******/
+        __webpack_require__.p = "";
+
+        /******/ // Load entry module and return exports
+        /******/
+        return __webpack_require__(0);
+        /******/
+    })
         /************************************************************************/
         /******/
         ([
             /* 0 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
                 'use strict';
 
-                var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function(obj) { return typeof obj; } : function(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+                var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
                 /**
                  * Module dependencies.
@@ -190,10 +190,10 @@
             },
             /* 1 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
                 /* WEBPACK VAR INJECTION */
-                (function(global) {
+                (function (global) {
                     'use strict';
 
                     /**
@@ -271,13 +271,13 @@
                         return obj;
                     }
                     /* WEBPACK VAR INJECTION */
-                }.call(exports, (function() { return window; }())))
+                }.call(exports, (function () { return window; }())))
 
                 /***/
             },
             /* 2 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
                 /**
                  * Parses an URI
@@ -324,10 +324,10 @@
             },
             /* 3 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
                 /* WEBPACK VAR INJECTION */
-                (function(process) {
+                (function (process) {
                     /**
                      * This is the web browser implementation of `debug()`.
                      *
@@ -381,7 +381,7 @@
                      * Map %j to `JSON.stringify()`, since no Web Inspectors do that by default.
                      */
 
-                    exports.formatters.j = function(v) {
+                    exports.formatters.j = function (v) {
                         try {
                             return JSON.stringify(v);
                         } catch (err) {
@@ -417,7 +417,7 @@
                         // figure out the correct index to insert the CSS into
                         var index = 0;
                         var lastC = 0;
-                        args[0].replace(/%[a-z%]/g, function(match) {
+                        args[0].replace(/%[a-z%]/g, function (match) {
                             if ('%%' === match) return;
                             index++;
                             if ('%c' === match) {
@@ -460,7 +460,7 @@
                             } else {
                                 exports.storage.debug = namespaces;
                             }
-                        } catch (e) {}
+                        } catch (e) { }
                     }
 
                     /**
@@ -474,7 +474,7 @@
                         var r;
                         try {
                             return exports.storage.debug;
-                        } catch (e) {}
+                        } catch (e) { }
 
                         // If debug isn't set in LS, and we're in Electron, try to load $DEBUG
                         if (typeof process !== 'undefined' && 'env' in process) {
@@ -502,7 +502,7 @@
                     function localstorage() {
                         try {
                             return window.localStorage;
-                        } catch (e) {}
+                        } catch (e) { }
                     }
 
                     /* WEBPACK VAR INJECTION */
@@ -512,7 +512,7 @@
             },
             /* 4 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
                 // shim for using process in browser
                 var process = module.exports = {};
@@ -532,7 +532,7 @@
                 function defaultClearTimeout() {
                     throw new Error('clearTimeout has not been defined');
                 }
-                (function() {
+                (function () {
                     try {
                         if (typeof setTimeout === 'function') {
                             cachedSetTimeout = setTimeout;
@@ -650,7 +650,7 @@
                     runClearTimeout(timeout);
                 }
 
-                process.nextTick = function(fun) {
+                process.nextTick = function (fun) {
                     var args = new Array(arguments.length - 1);
                     if (arguments.length > 1) {
                         for (var i = 1; i < arguments.length; i++) {
@@ -668,7 +668,7 @@
                     this.fun = fun;
                     this.array = array;
                 }
-                Item.prototype.run = function() {
+                Item.prototype.run = function () {
                     this.fun.apply(null, this.array);
                 };
                 process.title = 'browser';
@@ -678,7 +678,7 @@
                 process.version = ''; // empty string to avoid regexp issues
                 process.versions = {};
 
-                function noop() {}
+                function noop() { }
 
                 process.on = noop;
                 process.addListener = noop;
@@ -688,22 +688,22 @@
                 process.removeAllListeners = noop;
                 process.emit = noop;
 
-                process.binding = function(name) {
+                process.binding = function (name) {
                     throw new Error('process.binding is not supported');
                 };
 
-                process.cwd = function() { return '/' };
-                process.chdir = function(dir) {
+                process.cwd = function () { return '/' };
+                process.chdir = function (dir) {
                     throw new Error('process.chdir is not supported');
                 };
-                process.umask = function() { return 0; };
+                process.umask = function () { return 0; };
 
 
                 /***/
             },
             /* 5 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
 
                 /**
@@ -769,7 +769,7 @@
                 function debug(namespace) {
 
                     // define the `disabled` version
-                    function disabled() {}
+                    function disabled() { }
                     disabled.enabled = false;
 
                     // define the `enabled` version
@@ -803,7 +803,7 @@
 
                         // apply any `formatters` transformations
                         var index = 0;
-                        args[0] = args[0].replace(/%([a-z%])/g, function(match, format) {
+                        args[0] = args[0].replace(/%([a-z%])/g, function (match, format) {
                             // if we encounter an escaped % then don't increase the array index
                             if (match === '%%') return match;
                             index++;
@@ -910,7 +910,7 @@
             },
             /* 6 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
                 /**
                  * Helpers.
@@ -936,7 +936,7 @@
                  * @api public
                  */
 
-                module.exports = function(val, options) {
+                module.exports = function (val, options) {
                     options = options || {}
                     var type = typeof val
                     if (type === 'string' && val.length > 0) {
@@ -1067,7 +1067,7 @@
             },
             /* 7 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
 
                 /**
@@ -1182,7 +1182,7 @@
                  * @api public
                  */
 
-                function Encoder() {}
+                function Encoder() { }
 
                 /**
                  * Encode a packet as a single string if non-binary, or as a
@@ -1194,7 +1194,7 @@
                  * @api public
                  */
 
-                Encoder.prototype.encode = function(obj, callback) {
+                Encoder.prototype.encode = function (obj, callback) {
                     debug('encoding packet %j', obj);
 
                     if (exports.BINARY_EVENT == obj.type || exports.BINARY_ACK == obj.type) {
@@ -1301,7 +1301,7 @@
                  * @api public
                  */
 
-                Decoder.prototype.add = function(obj) {
+                Decoder.prototype.add = function (obj) {
                     var packet;
                     if ('string' == typeof obj) {
                         packet = decodeString(obj);
@@ -1412,7 +1412,7 @@
                  * @api public
                  */
 
-                Decoder.prototype.destroy = function() {
+                Decoder.prototype.destroy = function () {
                     if (this.reconstructor) {
                         this.reconstructor.finishedReconstruction();
                     }
@@ -1443,7 +1443,7 @@
                  * @api private
                  */
 
-                BinaryReconstructor.prototype.takeBinaryData = function(binData) {
+                BinaryReconstructor.prototype.takeBinaryData = function (binData) {
                     this.buffers.push(binData);
                     if (this.buffers.length == this.reconPack.attachments) { // done with buffer list
                         var packet = binary.reconstructPacket(this.reconPack, this.buffers);
@@ -1459,7 +1459,7 @@
                  * @api private
                  */
 
-                BinaryReconstructor.prototype.finishedReconstruction = function() {
+                BinaryReconstructor.prototype.finishedReconstruction = function () {
                     this.reconPack = null;
                     this.buffers = [];
                 };
@@ -1476,7 +1476,7 @@
             },
             /* 8 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
 
                 /**
@@ -1531,7 +1531,7 @@
                  * Map %j to `JSON.stringify()`, since no Web Inspectors do that by default.
                  */
 
-                exports.formatters.j = function(v) {
+                exports.formatters.j = function (v) {
                     return JSON.stringify(v);
                 };
 
@@ -1563,7 +1563,7 @@
                     // figure out the correct index to insert the CSS into
                     var index = 0;
                     var lastC = 0;
-                    args[0].replace(/%[a-z%]/g, function(match) {
+                    args[0].replace(/%[a-z%]/g, function (match) {
                         if ('%%' === match) return;
                         index++;
                         if ('%c' === match) {
@@ -1606,7 +1606,7 @@
                         } else {
                             exports.storage.debug = namespaces;
                         }
-                    } catch (e) {}
+                    } catch (e) { }
                 }
 
                 /**
@@ -1620,7 +1620,7 @@
                     var r;
                     try {
                         r = exports.storage.debug;
-                    } catch (e) {}
+                    } catch (e) { }
                     return r;
                 }
 
@@ -1644,7 +1644,7 @@
                 function localstorage() {
                     try {
                         return window.localStorage;
-                    } catch (e) {}
+                    } catch (e) { }
                 }
 
 
@@ -1652,7 +1652,7 @@
             },
             /* 9 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
 
                 /**
@@ -1718,7 +1718,7 @@
                 function debug(namespace) {
 
                     // define the `disabled` version
-                    function disabled() {}
+                    function disabled() { }
                     disabled.enabled = false;
 
                     // define the `enabled` version
@@ -1749,7 +1749,7 @@
 
                         // apply any `formatters` transformations
                         var index = 0;
-                        args[0] = args[0].replace(/%([a-z%])/g, function(match, format) {
+                        args[0] = args[0].replace(/%([a-z%])/g, function (match, format) {
                             // if we encounter an escaped % then don't increase the array index
                             if (match === '%%') return match;
                             index++;
@@ -1856,7 +1856,7 @@
             },
             /* 10 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
                 /**
                  * Helpers.
@@ -1881,7 +1881,7 @@
                  * @api public
                  */
 
-                module.exports = function(val, options) {
+                module.exports = function (val, options) {
                     options = options || {};
                     if ('string' == typeof val) return parse(val);
                     return options.long ?
@@ -1989,15 +1989,15 @@
             },
             /* 11 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
                 /* WEBPACK VAR INJECTION */
-                (function(module, global) { /*** IMPORTS FROM imports-loader ***/
+                (function (module, global) { /*** IMPORTS FROM imports-loader ***/
                     var define = false;
 
                     /*! JSON v3.3.2 | http://bestiejs.github.io/json3 | Copyright 2012-2014, Kit Cambridge | http://kit.mit-license.org */
                     ;
-                    (function() {
+                    (function () {
                         // Detect the `define` function exposed by asynchronous module loaders. The
                         // strict `define` check is necessary for compatibility with `r.js`.
                         var isLoader = typeof define === "function" && define.amd;
@@ -2059,7 +2059,7 @@
                                     // but clips the values returned by the date methods to the range of
                                     // signed 32-bit integers ([-2 ** 31, 2 ** 31 - 1]).
                                     isExtended.getUTCHours() == 10 && isExtended.getUTCMinutes() == 37 && isExtended.getUTCSeconds() == 6 && isExtended.getUTCMilliseconds() == 708;
-                            } catch (exception) {}
+                            } catch (exception) { }
 
                             // Internal: Determines whether the native `JSON.stringify` and `parse`
                             // implementations are spec-compliant. Based on work by Ken Snyder.
@@ -2072,7 +2072,7 @@
                                 if (name == "bug-string-char-index") {
                                     // IE <= 7 doesn't support accessing string characters using square
                                     // bracket notation. IE 8 only supports this for primitives.
-                                    isSupported = "a" [0] != "a";
+                                    isSupported = "a"[0] != "a";
                                 } else if (name == "json") {
                                     // Indicates whether both `JSON.stringify` and `JSON.parse` are
                                     // supported.
@@ -2085,7 +2085,7 @@
                                             stringifySupported = typeof stringify == "function" && isExtended;
                                         if (stringifySupported) {
                                             // A test function object with a custom `toJSON` method.
-                                            (value = function() {
+                                            (value = function () {
                                                 return 1;
                                             }).toJSON = value;
                                             try {
@@ -2164,14 +2164,14 @@
                                                         try {
                                                             // Safari <= 5.1.2 and FF 3.1b1 allow unescaped tabs in strings.
                                                             parseSupported = !parse('"\t"');
-                                                        } catch (exception) {}
+                                                        } catch (exception) { }
                                                         if (parseSupported) {
                                                             try {
                                                                 // FF 4.0 and 4.0.1 allow leading `+` signs and leading
                                                                 // decimal points. FF 4.0, 4.0.1, and IE 9-10 also allow
                                                                 // certain octal literals.
                                                                 parseSupported = parse("01") !== 1;
-                                                            } catch (exception) {}
+                                                            } catch (exception) { }
                                                         }
                                                         if (parseSupported) {
                                                             try {
@@ -2179,7 +2179,7 @@
                                                                 // points. These environments, along with FF 3.1b1 and 2,
                                                                 // also allow trailing commas in JSON objects and arrays.
                                                                 parseSupported = parse("1.") !== 1;
-                                                            } catch (exception) {}
+                                                            } catch (exception) { }
                                                         }
                                                     }
                                                 }
@@ -2213,7 +2213,7 @@
                                     var Months = [0, 31, 59, 90, 120, 151, 181, 212, 243, 273, 304, 334];
                                     // Internal: Calculates the number of days between the Unix epoch and the
                                     // first day of the given month.
-                                    var getDay = function(year, month) {
+                                    var getDay = function (year, month) {
                                         return Months[month] + 365 * (year - 1970) + floor((year - 1969 + (month = +(month > 1))) / 4) - floor((year - 1901 + month) / 100) + floor((year - 1601 + month) / 400);
                                     };
                                 }
@@ -2221,17 +2221,17 @@
                                 // Internal: Determines if a property is a direct property of the given
                                 // object. Delegates to the native `Object#hasOwnProperty` method.
                                 if (!(isProperty = objectProto.hasOwnProperty)) {
-                                    isProperty = function(property) {
+                                    isProperty = function (property) {
                                         var members = {},
                                             constructor;
                                         if ((members.__proto__ = null, members.__proto__ = {
-                                                // The *proto* property cannot be set multiple times in recent
-                                                // versions of Firefox and SeaMonkey.
-                                                "toString": 1
-                                            }, members).toString != getClass) {
+                                            // The *proto* property cannot be set multiple times in recent
+                                            // versions of Firefox and SeaMonkey.
+                                            "toString": 1
+                                        }, members).toString != getClass) {
                                             // Safari <= 2.0.3 doesn't implement `Object#hasOwnProperty`, but
                                             // supports the mutable *proto* property.
-                                            isProperty = function(property) {
+                                            isProperty = function (property) {
                                                 // Capture and break the object's prototype chain (see section 8.6.2
                                                 // of the ES 5.1 spec). The parenthesized expression prevents an
                                                 // unsafe transformation by the Closure Compiler.
@@ -2246,7 +2246,7 @@
                                             constructor = members.constructor;
                                             // Use the `constructor` property to simulate `Object#hasOwnProperty` in
                                             // other environments.
-                                            isProperty = function(property) {
+                                            isProperty = function (property) {
                                                 var parent = (this.constructor || constructor).prototype;
                                                 return property in this && !(property in parent && this[property] === parent[property]);
                                             };
@@ -2258,14 +2258,14 @@
 
                                 // Internal: Normalizes the `for...in` iteration algorithm across
                                 // environments. Each enumerated key is yielded to a `callback` function.
-                                forEach = function(object, callback) {
+                                forEach = function (object, callback) {
                                     var size = 0,
                                         Properties, members, property;
 
                                     // Tests for bugs in the current environment's `for...in` algorithm. The
                                     // `valueOf` property inherits the non-enumerable flag from
                                     // `Object.prototype` in older versions of IE, Netscape, and Mozilla.
-                                    (Properties = function() {
+                                    (Properties = function () {
                                         this.valueOf = 0;
                                     }).prototype.valueOf = 0;
 
@@ -2285,7 +2285,7 @@
                                         members = ["valueOf", "toString", "toLocaleString", "propertyIsEnumerable", "isPrototypeOf", "hasOwnProperty", "constructor"];
                                         // IE <= 8, Mozilla 1.0, and Netscape 6.2 ignore shadowed non-enumerable
                                         // properties.
-                                        forEach = function(object, callback) {
+                                        forEach = function (object, callback) {
                                             var isFunction = getClass.call(object) == functionClass,
                                                 property, length;
                                             var hasProperty = !isFunction && typeof object.constructor != "function" && objectTypes[typeof object.hasOwnProperty] && object.hasOwnProperty || isProperty;
@@ -2301,7 +2301,7 @@
                                         };
                                     } else if (size == 2) {
                                         // Safari <= 2.0.4 enumerates shadowed properties twice.
-                                        forEach = function(object, callback) {
+                                        forEach = function (object, callback) {
                                             // Create a set of iterated properties.
                                             var members = {},
                                                 isFunction = getClass.call(object) == functionClass,
@@ -2317,7 +2317,7 @@
                                         };
                                     } else {
                                         // No bugs detected; use the standard `for...in` algorithm.
-                                        forEach = function(object, callback) {
+                                        forEach = function (object, callback) {
                                             var isFunction = getClass.call(object) == functionClass,
                                                 property, isConstructor;
                                             for (property in object) {
@@ -2356,7 +2356,7 @@
                                     // Internal: Converts `value` into a zero-padded string such that its
                                     // length is at least equal to `width`. The `width` must be <= 6.
                                     var leadingZeroes = "000000";
-                                    var toPaddedString = function(width, value) {
+                                    var toPaddedString = function (width, value) {
                                         // The `|| 0` expression is necessary to work around a bug in
                                         // Opera <= 7.54u2 where `0 == -0`, but `String(-0) !== "0"`.
                                         return (leadingZeroes + (value || 0)).slice(-width);
@@ -2367,7 +2367,7 @@
                                     // their escaped equivalents. This is an implementation of the
                                     // `Quote(value)` operation defined in ES 5.1 section 15.12.3.
                                     var unicodePrefix = "\\u00";
-                                    var quote = function(value) {
+                                    var quote = function (value) {
                                         var result = '"',
                                             index = 0,
                                             length = value.length,
@@ -2400,12 +2400,12 @@
 
                                     // Internal: Recursively serializes an object. Implements the
                                     // `Str(key, holder)`, `JO(value)`, and `JA(value)` operations.
-                                    var serialize = function(property, object, callback, properties, whitespace, indentation, stack) {
+                                    var serialize = function (property, object, callback, properties, whitespace, indentation, stack) {
                                         var value, className, year, month, date, time, hours, minutes, seconds, milliseconds, results, element, index, length, prefix, result;
                                         try {
                                             // Necessary for host object support.
                                             value = object[property];
-                                        } catch (exception) {}
+                                        } catch (exception) { }
                                         if (typeof value == "object" && value) {
                                             className = getClass.call(value);
                                             if (className == dateClass && !isProperty.call(value, "toJSON")) {
@@ -2507,7 +2507,7 @@
                                                 // Recursively serialize object members. Members are selected from
                                                 // either a user-specified list of property names, or the object
                                                 // itself.
-                                                forEach(properties || value, function(property) {
+                                                forEach(properties || value, function (property) {
                                                     var element = serialize(property, value, callback, properties, whitespace, indentation, stack);
                                                     if (element !== undef) {
                                                         // According to ES 5.1 section 15.12.3: "If `gap` {whitespace}
@@ -2528,7 +2528,7 @@
                                     };
 
                                     // Public: `JSON.stringify`. See ES 5.1 section 15.12.3.
-                                    exports.stringify = function(source, filter, width) {
+                                    exports.stringify = function (source, filter, width) {
                                         var whitespace, callback, properties, className;
                                         if (objectTypes[typeof filter] && filter) {
                                             if ((className = getClass.call(filter)) == functionClass) {
@@ -2578,7 +2578,7 @@
                                     var Index, Source;
 
                                     // Internal: Resets the parser state and throws a `SyntaxError`.
-                                    var abort = function() {
+                                    var abort = function () {
                                         Index = Source = null;
                                         throw SyntaxError();
                                     };
@@ -2586,7 +2586,7 @@
                                     // Internal: Returns the next token, or `"$"` if the parser has reached
                                     // the end of the source string. A token may be a string, number, `null`
                                     // literal, or Boolean literal.
-                                    var lex = function() {
+                                    var lex = function () {
                                         var source = Source,
                                             length = source.length,
                                             value, begin, position, isSigned, charCode;
@@ -2761,7 +2761,7 @@
                                     };
 
                                     // Internal: Parses a JSON `value` token.
-                                    var get = function(value) {
+                                    var get = function (value) {
                                         var results, hasMembers;
                                         if (value == "$") {
                                             // Unexpected end of input.
@@ -2776,7 +2776,7 @@
                                             if (value == "[") {
                                                 // Parses a JSON array, returning a new JavaScript array.
                                                 results = [];
-                                                for (;; hasMembers || (hasMembers = true)) {
+                                                for (; ; hasMembers || (hasMembers = true)) {
                                                     value = lex();
                                                     // A closing square bracket marks the end of the array literal.
                                                     if (value == "]") {
@@ -2807,7 +2807,7 @@
                                             } else if (value == "{") {
                                                 // Parses a JSON object, returning a new JavaScript object.
                                                 results = {};
-                                                for (;; hasMembers || (hasMembers = true)) {
+                                                for (; ; hasMembers || (hasMembers = true)) {
                                                     value = lex();
                                                     // A closing curly brace marks the end of the object literal.
                                                     if (value == "}") {
@@ -2844,7 +2844,7 @@
                                     };
 
                                     // Internal: Updates a traversed object member.
-                                    var update = function(source, property, callback) {
+                                    var update = function (source, property, callback) {
                                         var element = walk(source, property, callback);
                                         if (element === undef) {
                                             delete source[property];
@@ -2856,7 +2856,7 @@
                                     // Internal: Recursively traverses a parsed JSON object, invoking the
                                     // `callback` function for each value. This is an implementation of the
                                     // `Walk(holder, name)` operation defined in ES 5.1 section 15.12.2.
-                                    var walk = function(source, property, callback) {
+                                    var walk = function (source, property, callback) {
                                         var value = source[property],
                                             length;
                                         if (typeof value == "object" && value) {
@@ -2868,7 +2868,7 @@
                                                     update(value, length, callback);
                                                 }
                                             } else {
-                                                forEach(value, function(property) {
+                                                forEach(value, function (property) {
                                                     update(value, property, callback);
                                                 });
                                             }
@@ -2877,7 +2877,7 @@
                                     };
 
                                     // Public: `JSON.parse`. See ES 5.1 section 15.12.2.
-                                    exports.parse = function(source, callback) {
+                                    exports.parse = function (source, callback) {
                                         var result, value;
                                         Index = 0;
                                         Source = "" + source;
@@ -2909,7 +2909,7 @@
                             var JSON3 = runInContext(root, (root["JSON3"] = {
                                 // Public: Restores the original value of the global `JSON` object and
                                 // returns a reference to the `JSON3` object.
-                                "noConflict": function() {
+                                "noConflict": function () {
                                     if (!isRestored) {
                                         isRestored = true;
                                         root.JSON = nativeJSON;
@@ -2928,7 +2928,7 @@
 
                         // Export for asynchronous module loaders.
                         if (isLoader) {
-                            define(function() {
+                            define(function () {
                                 return JSON3;
                             });
                         }
@@ -2936,17 +2936,17 @@
 
 
                     /* WEBPACK VAR INJECTION */
-                }.call(exports, __webpack_require__(12)(module), (function() { return this; }())))
+                }.call(exports, __webpack_require__(12)(module), (function () { return this; }())))
 
                 /***/
             },
             /* 12 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
-                module.exports = function(module) {
+                module.exports = function (module) {
                     if (!module.webpackPolyfill) {
-                        module.deprecate = function() {};
+                        module.deprecate = function () { };
                         module.paths = [];
                         // module.parent = undefined by default
                         module.children = [];
@@ -2960,7 +2960,7 @@
             },
             /* 13 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
 
                 /**
@@ -3004,10 +3004,10 @@
                  */
 
                 Emitter.prototype.on =
-                    Emitter.prototype.addEventListener = function(event, fn) {
+                    Emitter.prototype.addEventListener = function (event, fn) {
                         this._callbacks = this._callbacks || {};
                         (this._callbacks[event] = this._callbacks[event] || [])
-                        .push(fn);
+                            .push(fn);
                         return this;
                     };
 
@@ -3021,7 +3021,7 @@
                  * @api public
                  */
 
-                Emitter.prototype.once = function(event, fn) {
+                Emitter.prototype.once = function (event, fn) {
                     var self = this;
                     this._callbacks = this._callbacks || {};
 
@@ -3048,7 +3048,7 @@
                 Emitter.prototype.off =
                     Emitter.prototype.removeListener =
                     Emitter.prototype.removeAllListeners =
-                    Emitter.prototype.removeEventListener = function(event, fn) {
+                    Emitter.prototype.removeEventListener = function (event, fn) {
                         this._callbacks = this._callbacks || {};
 
                         // all
@@ -3087,7 +3087,7 @@
                  * @return {Emitter}
                  */
 
-                Emitter.prototype.emit = function(event) {
+                Emitter.prototype.emit = function (event) {
                     this._callbacks = this._callbacks || {};
                     var args = [].slice.call(arguments, 1),
                         callbacks = this._callbacks[event];
@@ -3110,7 +3110,7 @@
                  * @api public
                  */
 
-                Emitter.prototype.listeners = function(event) {
+                Emitter.prototype.listeners = function (event) {
                     this._callbacks = this._callbacks || {};
                     return this._callbacks[event] || [];
                 };
@@ -3123,7 +3123,7 @@
                  * @api public
                  */
 
-                Emitter.prototype.hasListeners = function(event) {
+                Emitter.prototype.hasListeners = function (event) {
                     return !!this.listeners(event).length;
                 };
 
@@ -3132,10 +3132,10 @@
             },
             /* 14 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
                 /* WEBPACK VAR INJECTION */
-                (function(global) { /*global Blob,File*/
+                (function (global) { /*global Blob,File*/
 
                     /**
                      * Module requirements
@@ -3154,7 +3154,7 @@
                      * @api public
                      */
 
-                    exports.deconstructPacket = function(packet) {
+                    exports.deconstructPacket = function (packet) {
                         var buffers = [];
                         var packetData = packet.data;
 
@@ -3196,7 +3196,7 @@
                      * @api public
                      */
 
-                    exports.reconstructPacket = function(packet, buffers) {
+                    exports.reconstructPacket = function (packet, buffers) {
                         var curPlaceHolder = 0;
 
                         function _reconstructPacket(data) {
@@ -3232,7 +3232,7 @@
                      * @api private
                      */
 
-                    exports.removeBlobs = function(data, callback) {
+                    exports.removeBlobs = function (data, callback) {
                         function _removeBlobs(obj, curKey, containingObject) {
                             if (!obj) return obj;
 
@@ -3243,7 +3243,7 @@
 
                                 // async filereader
                                 var fileReader = new FileReader();
-                                fileReader.onload = function() { // this.result == arraybuffer
+                                fileReader.onload = function () { // this.result == arraybuffer
                                     if (containingObject) {
                                         containingObject[curKey] = this.result;
                                     } else {
@@ -3277,15 +3277,15 @@
                     };
 
                     /* WEBPACK VAR INJECTION */
-                }.call(exports, (function() { return window; }())))
+                }.call(exports, (function () { return window; }())))
 
                 /***/
             },
             /* 15 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
-                module.exports = Array.isArray || function(arr) {
+                module.exports = Array.isArray || function (arr) {
                     return Object.prototype.toString.call(arr) == '[object Array]';
                 };
 
@@ -3294,10 +3294,10 @@
             },
             /* 16 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
                 /* WEBPACK VAR INJECTION */
-                (function(global) {
+                (function (global) {
                     module.exports = isBuf;
 
                     /**
@@ -3312,17 +3312,17 @@
                     }
 
                     /* WEBPACK VAR INJECTION */
-                }.call(exports, (function() { return window; }())))
+                }.call(exports, (function () { return window; }())))
 
                 /***/
             },
             /* 17 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
                 'use strict';
 
-                var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function(obj) { return typeof obj; } : function(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+                var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
                 /**
                  * Module dependencies.
@@ -3399,7 +3399,7 @@
                  * @api private
                  */
 
-                Manager.prototype.emitAll = function() {
+                Manager.prototype.emitAll = function () {
                     this.emit.apply(this, arguments);
                     for (var nsp in this.nsps) {
                         if (has.call(this.nsps, nsp)) {
@@ -3414,7 +3414,7 @@
                  * @api private
                  */
 
-                Manager.prototype.updateSocketIds = function() {
+                Manager.prototype.updateSocketIds = function () {
                     for (var nsp in this.nsps) {
                         if (has.call(this.nsps, nsp)) {
                             this.nsps[nsp].id = this.engine.id;
@@ -3436,7 +3436,7 @@
                  * @api public
                  */
 
-                Manager.prototype.reconnection = function(v) {
+                Manager.prototype.reconnection = function (v) {
                     if (!arguments.length) return this._reconnection;
                     this._reconnection = !!v;
                     return this;
@@ -3450,7 +3450,7 @@
                  * @api public
                  */
 
-                Manager.prototype.reconnectionAttempts = function(v) {
+                Manager.prototype.reconnectionAttempts = function (v) {
                     if (!arguments.length) return this._reconnectionAttempts;
                     this._reconnectionAttempts = v;
                     return this;
@@ -3464,14 +3464,14 @@
                  * @api public
                  */
 
-                Manager.prototype.reconnectionDelay = function(v) {
+                Manager.prototype.reconnectionDelay = function (v) {
                     if (!arguments.length) return this._reconnectionDelay;
                     this._reconnectionDelay = v;
                     this.backoff && this.backoff.setMin(v);
                     return this;
                 };
 
-                Manager.prototype.randomizationFactor = function(v) {
+                Manager.prototype.randomizationFactor = function (v) {
                     if (!arguments.length) return this._randomizationFactor;
                     this._randomizationFactor = v;
                     this.backoff && this.backoff.setJitter(v);
@@ -3486,7 +3486,7 @@
                  * @api public
                  */
 
-                Manager.prototype.reconnectionDelayMax = function(v) {
+                Manager.prototype.reconnectionDelayMax = function (v) {
                     if (!arguments.length) return this._reconnectionDelayMax;
                     this._reconnectionDelayMax = v;
                     this.backoff && this.backoff.setMax(v);
@@ -3500,7 +3500,7 @@
                  * @api public
                  */
 
-                Manager.prototype.timeout = function(v) {
+                Manager.prototype.timeout = function (v) {
                     if (!arguments.length) return this._timeout;
                     this._timeout = v;
                     return this;
@@ -3513,7 +3513,7 @@
                  * @api private
                  */
 
-                Manager.prototype.maybeReconnectOnOpen = function() {
+                Manager.prototype.maybeReconnectOnOpen = function () {
                     // Only try to reconnect if it's the first time we're connecting
                     if (!this.reconnecting && this._reconnection && this.backoff.attempts === 0) {
                         // keeps reconnection from firing twice for the same reconnection loop
@@ -3529,7 +3529,7 @@
                  * @api public
                  */
 
-                Manager.prototype.open = Manager.prototype.connect = function(fn, opts) {
+                Manager.prototype.open = Manager.prototype.connect = function (fn, opts) {
                     debug('readyState %s', this.readyState);
                     if (~this.readyState.indexOf('open')) return this;
 
@@ -3541,13 +3541,13 @@
                     this.skipReconnect = false;
 
                     // emit `open`
-                    var openSub = on(socket, 'open', function() {
+                    var openSub = on(socket, 'open', function () {
                         self.onopen();
                         fn && fn();
                     });
 
                     // emit `connect_error`
-                    var errorSub = on(socket, 'error', function(data) {
+                    var errorSub = on(socket, 'error', function (data) {
                         debug('connect_error');
                         self.cleanup();
                         self.readyState = 'closed';
@@ -3568,7 +3568,7 @@
                         debug('connect attempt will timeout after %d', timeout);
 
                         // set timer
-                        var timer = setTimeout(function() {
+                        var timer = setTimeout(function () {
                             debug('connect attempt timed out after %d', timeout);
                             openSub.destroy();
                             socket.close();
@@ -3595,7 +3595,7 @@
                  * @api private
                  */
 
-                Manager.prototype.onopen = function() {
+                Manager.prototype.onopen = function () {
                     debug('open');
 
                     // clear old subs
@@ -3621,7 +3621,7 @@
                  * @api private
                  */
 
-                Manager.prototype.onping = function() {
+                Manager.prototype.onping = function () {
                     this.lastPing = new Date();
                     this.emitAll('ping');
                 };
@@ -3632,7 +3632,7 @@
                  * @api private
                  */
 
-                Manager.prototype.onpong = function() {
+                Manager.prototype.onpong = function () {
                     this.emitAll('pong', new Date() - this.lastPing);
                 };
 
@@ -3642,7 +3642,7 @@
                  * @api private
                  */
 
-                Manager.prototype.ondata = function(data) {
+                Manager.prototype.ondata = function (data) {
                     this.decoder.add(data);
                 };
 
@@ -3652,7 +3652,7 @@
                  * @api private
                  */
 
-                Manager.prototype.ondecoded = function(packet) {
+                Manager.prototype.ondecoded = function (packet) {
                     this.emit('packet', packet);
                 };
 
@@ -3662,7 +3662,7 @@
                  * @api private
                  */
 
-                Manager.prototype.onerror = function(err) {
+                Manager.prototype.onerror = function (err) {
                     debug('error', err);
                     this.emitAll('error', err);
                 };
@@ -3674,14 +3674,14 @@
                  * @api public
                  */
 
-                Manager.prototype.socket = function(nsp, opts) {
+                Manager.prototype.socket = function (nsp, opts) {
                     var socket = this.nsps[nsp];
                     if (!socket) {
                         socket = new Socket(this, nsp, opts);
                         this.nsps[nsp] = socket;
                         var self = this;
                         socket.on('connecting', onConnecting);
-                        socket.on('connect', function() {
+                        socket.on('connect', function () {
                             socket.id = self.engine.id;
                         });
 
@@ -3706,7 +3706,7 @@
                  * @param {Socket} socket
                  */
 
-                Manager.prototype.destroy = function(socket) {
+                Manager.prototype.destroy = function (socket) {
                     var index = indexOf(this.connecting, socket);
                     if (~index) this.connecting.splice(index, 1);
                     if (this.connecting.length) return;
@@ -3721,7 +3721,7 @@
                  * @api private
                  */
 
-                Manager.prototype.packet = function(packet) {
+                Manager.prototype.packet = function (packet) {
                     debug('writing packet %j', packet);
                     var self = this;
                     if (packet.query && packet.type === 0) packet.nsp += '?' + packet.query;
@@ -3729,7 +3729,7 @@
                     if (!self.encoding) {
                         // encode, then write to engine with result
                         self.encoding = true;
-                        this.encoder.encode(packet, function(encodedPackets) {
+                        this.encoder.encode(packet, function (encodedPackets) {
                             for (var i = 0; i < encodedPackets.length; i++) {
                                 self.engine.write(encodedPackets[i], packet.options);
                             }
@@ -3749,7 +3749,7 @@
                  * @api private
                  */
 
-                Manager.prototype.processPacketQueue = function() {
+                Manager.prototype.processPacketQueue = function () {
                     if (this.packetBuffer.length > 0 && !this.encoding) {
                         var pack = this.packetBuffer.shift();
                         this.packet(pack);
@@ -3762,7 +3762,7 @@
                  * @api private
                  */
 
-                Manager.prototype.cleanup = function() {
+                Manager.prototype.cleanup = function () {
                     debug('cleanup');
 
                     var subsLength = this.subs.length;
@@ -3784,7 +3784,7 @@
                  * @api private
                  */
 
-                Manager.prototype.close = Manager.prototype.disconnect = function() {
+                Manager.prototype.close = Manager.prototype.disconnect = function () {
                     debug('disconnect');
                     this.skipReconnect = true;
                     this.reconnecting = false;
@@ -3804,7 +3804,7 @@
                  * @api private
                  */
 
-                Manager.prototype.onclose = function(reason) {
+                Manager.prototype.onclose = function (reason) {
                     debug('onclose');
 
                     this.cleanup();
@@ -3823,7 +3823,7 @@
                  * @api private
                  */
 
-                Manager.prototype.reconnect = function() {
+                Manager.prototype.reconnect = function () {
                     if (this.reconnecting || this.skipReconnect) return this;
 
                     var self = this;
@@ -3838,7 +3838,7 @@
                         debug('will wait %dms before reconnect attempt', delay);
 
                         this.reconnecting = true;
-                        var timer = setTimeout(function() {
+                        var timer = setTimeout(function () {
                             if (self.skipReconnect) return;
 
                             debug('attempting reconnect');
@@ -3848,7 +3848,7 @@
                             // check again for the case socket closed in above events
                             if (self.skipReconnect) return;
 
-                            self.open(function(err) {
+                            self.open(function (err) {
                                 if (err) {
                                     debug('reconnect attempt error');
                                     self.reconnecting = false;
@@ -3875,7 +3875,7 @@
                  * @api private
                  */
 
-                Manager.prototype.onreconnect = function() {
+                Manager.prototype.onreconnect = function () {
                     var attempt = this.backoff.attempts;
                     this.reconnecting = false;
                     this.backoff.reset();
@@ -3887,7 +3887,7 @@
             },
             /* 18 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
 
                 module.exports = __webpack_require__(19);
@@ -3897,7 +3897,7 @@
             },
             /* 19 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
 
                 module.exports = __webpack_require__(20);
@@ -3915,10 +3915,10 @@
             },
             /* 20 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
                 /* WEBPACK VAR INJECTION */
-                (function(global) {
+                (function (global) {
                     /**
                      * Module dependencies.
                      */
@@ -4074,7 +4074,7 @@
                      * @api private
                      */
 
-                    Socket.prototype.createTransport = function(name) {
+                    Socket.prototype.createTransport = function (name) {
                         debug('creating transport "%s"', name);
                         var query = clone(this.query);
 
@@ -4133,14 +4133,14 @@
                      *
                      * @api private
                      */
-                    Socket.prototype.open = function() {
+                    Socket.prototype.open = function () {
                         var transport;
                         if (this.rememberUpgrade && Socket.priorWebsocketSuccess && this.transports.indexOf('websocket') !== -1) {
                             transport = 'websocket';
                         } else if (0 === this.transports.length) {
                             // Emit error on next tick so it can be listened to
                             var self = this;
-                            setTimeout(function() {
+                            setTimeout(function () {
                                 self.emit('error', 'No transports available');
                             }, 0);
                             return;
@@ -4168,7 +4168,7 @@
                      * @api private
                      */
 
-                    Socket.prototype.setTransport = function(transport) {
+                    Socket.prototype.setTransport = function (transport) {
                         debug('setting transport %s', transport.name);
                         var self = this;
 
@@ -4182,16 +4182,16 @@
 
                         // set up transport listeners
                         transport
-                            .on('drain', function() {
+                            .on('drain', function () {
                                 self.onDrain();
                             })
-                            .on('packet', function(packet) {
+                            .on('packet', function (packet) {
                                 self.onPacket(packet);
                             })
-                            .on('error', function(e) {
+                            .on('error', function (e) {
                                 self.onError(e);
                             })
-                            .on('close', function() {
+                            .on('close', function () {
                                 self.onClose('transport close');
                             });
                     };
@@ -4203,7 +4203,7 @@
                      * @api private
                      */
 
-                    Socket.prototype.probe = function(name) {
+                    Socket.prototype.probe = function (name) {
                         debug('probing transport "%s"', name);
                         var transport = this.createTransport(name, { probe: 1 });
                         var failed = false;
@@ -4220,7 +4220,7 @@
 
                             debug('probe transport "%s" opened', name);
                             transport.send([{ type: 'ping', data: 'probe' }]);
-                            transport.once('packet', function(msg) {
+                            transport.once('packet', function (msg) {
                                 if (failed) return;
                                 if ('pong' === msg.type && 'probe' === msg.data) {
                                     debug('probe transport "%s" pong', name);
@@ -4230,7 +4230,7 @@
                                     Socket.priorWebsocketSuccess = 'websocket' === transport.name;
 
                                     debug('pausing current transport "%s"', self.transport.name);
-                                    self.transport.pause(function() {
+                                    self.transport.pause(function () {
                                         if (failed) return;
                                         if ('closed' === self.readyState) return;
                                         debug('changing transport and sending upgrade packet');
@@ -4319,7 +4319,7 @@
                      * @api public
                      */
 
-                    Socket.prototype.onOpen = function() {
+                    Socket.prototype.onOpen = function () {
                         debug('socket open');
                         this.readyState = 'open';
                         Socket.priorWebsocketSuccess = 'websocket' === this.transport.name;
@@ -4342,7 +4342,7 @@
                      * @api private
                      */
 
-                    Socket.prototype.onPacket = function(packet) {
+                    Socket.prototype.onPacket = function (packet) {
                         if ('opening' === this.readyState || 'open' === this.readyState ||
                             'closing' === this.readyState) {
                             debug('socket receive: type "%s", data "%s"', packet.type, packet.data);
@@ -4385,7 +4385,7 @@
                      * @api private
                      */
 
-                    Socket.prototype.onHandshake = function(data) {
+                    Socket.prototype.onHandshake = function (data) {
                         this.emit('handshake', data);
                         this.id = data.sid;
                         this.transport.query.sid = data.sid;
@@ -4408,10 +4408,10 @@
                      * @api private
                      */
 
-                    Socket.prototype.onHeartbeat = function(timeout) {
+                    Socket.prototype.onHeartbeat = function (timeout) {
                         clearTimeout(this.pingTimeoutTimer);
                         var self = this;
-                        self.pingTimeoutTimer = setTimeout(function() {
+                        self.pingTimeoutTimer = setTimeout(function () {
                             if ('closed' === self.readyState) return;
                             self.onClose('ping timeout');
                         }, timeout || (self.pingInterval + self.pingTimeout));
@@ -4424,10 +4424,10 @@
                      * @api private
                      */
 
-                    Socket.prototype.setPing = function() {
+                    Socket.prototype.setPing = function () {
                         var self = this;
                         clearTimeout(self.pingIntervalTimer);
-                        self.pingIntervalTimer = setTimeout(function() {
+                        self.pingIntervalTimer = setTimeout(function () {
                             debug('writing ping packet - expecting pong within %sms', self.pingTimeout);
                             self.ping();
                             self.onHeartbeat(self.pingTimeout);
@@ -4440,9 +4440,9 @@
                      * @api private
                      */
 
-                    Socket.prototype.ping = function() {
+                    Socket.prototype.ping = function () {
                         var self = this;
-                        this.sendPacket('ping', function() {
+                        this.sendPacket('ping', function () {
                             self.emit('ping');
                         });
                     };
@@ -4453,7 +4453,7 @@
                      * @api private
                      */
 
-                    Socket.prototype.onDrain = function() {
+                    Socket.prototype.onDrain = function () {
                         this.writeBuffer.splice(0, this.prevBufferLen);
 
                         // setting prevBufferLen = 0 is very important
@@ -4474,7 +4474,7 @@
                      * @api private
                      */
 
-                    Socket.prototype.flush = function() {
+                    Socket.prototype.flush = function () {
                         if ('closed' !== this.readyState && this.transport.writable &&
                             !this.upgrading && this.writeBuffer.length) {
                             debug('flushing %d packets in socket', this.writeBuffer.length);
@@ -4497,7 +4497,7 @@
                      */
 
                     Socket.prototype.write =
-                        Socket.prototype.send = function(msg, options, fn) {
+                        Socket.prototype.send = function (msg, options, fn) {
                             this.sendPacket('message', msg, options, fn);
                             return this;
                         };
@@ -4512,7 +4512,7 @@
                      * @api private
                      */
 
-                    Socket.prototype.sendPacket = function(type, data, options, fn) {
+                    Socket.prototype.sendPacket = function (type, data, options, fn) {
                         if ('function' === typeof data) {
                             fn = data;
                             data = undefined;
@@ -4547,14 +4547,14 @@
                      * @api private
                      */
 
-                    Socket.prototype.close = function() {
+                    Socket.prototype.close = function () {
                         if ('opening' === this.readyState || 'open' === this.readyState) {
                             this.readyState = 'closing';
 
                             var self = this;
 
                             if (this.writeBuffer.length) {
-                                this.once('drain', function() {
+                                this.once('drain', function () {
                                     if (this.upgrading) {
                                         waitForUpgrade();
                                     } else {
@@ -4595,7 +4595,7 @@
                      * @api private
                      */
 
-                    Socket.prototype.onError = function(err) {
+                    Socket.prototype.onError = function (err) {
                         debug('socket error %j', err);
                         Socket.priorWebsocketSuccess = false;
                         this.emit('error', err);
@@ -4608,7 +4608,7 @@
                      * @api private
                      */
 
-                    Socket.prototype.onClose = function(reason, desc) {
+                    Socket.prototype.onClose = function (reason, desc) {
                         if ('opening' === this.readyState || 'open' === this.readyState || 'closing' === this.readyState) {
                             debug('socket close with reason: "%s"', reason);
                             var self = this;
@@ -4650,7 +4650,7 @@
                      *
                      */
 
-                    Socket.prototype.filterUpgrades = function(upgrades) {
+                    Socket.prototype.filterUpgrades = function (upgrades) {
                         var filteredUpgrades = [];
                         for (var i = 0, j = upgrades.length; i < j; i++) {
                             if (~index(this.transports, upgrades[i])) filteredUpgrades.push(upgrades[i]);
@@ -4659,16 +4659,16 @@
                     };
 
                     /* WEBPACK VAR INJECTION */
-                }.call(exports, (function() { return window; }())))
+                }.call(exports, (function () { return window; }())))
 
                 /***/
             },
             /* 21 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
                 /* WEBPACK VAR INJECTION */
-                (function(global) {
+                (function (global) {
                     /**
                      * Module dependencies
                      */
@@ -4724,20 +4724,20 @@
                     }
 
                     /* WEBPACK VAR INJECTION */
-                }.call(exports, (function() { return window; }())))
+                }.call(exports, (function () { return window; }())))
 
                 /***/
             },
             /* 22 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
                 /* WEBPACK VAR INJECTION */
-                (function(global) { // browser shim for xmlhttprequest module
+                (function (global) { // browser shim for xmlhttprequest module
 
                     var hasCORS = __webpack_require__(23);
 
-                    module.exports = function(opts) {
+                    module.exports = function (opts) {
                         var xdomain = opts.xdomain;
 
                         // scheme must be same when usign XDomainRequest
@@ -4753,7 +4753,7 @@
                             if ('undefined' !== typeof XMLHttpRequest && (!xdomain || hasCORS)) {
                                 return new XMLHttpRequest();
                             }
-                        } catch (e) {}
+                        } catch (e) { }
 
                         // Use XDomainRequest for IE8 if enablesXDR is true
                         // because loading bar keeps flashing when using jsonp-polling
@@ -4762,23 +4762,23 @@
                             if ('undefined' !== typeof XDomainRequest && !xscheme && enablesXDR) {
                                 return new XDomainRequest();
                             }
-                        } catch (e) {}
+                        } catch (e) { }
 
                         if (!xdomain) {
                             try {
                                 return new global[['Active'].concat('Object').join('X')]('Microsoft.XMLHTTP');
-                            } catch (e) {}
+                            } catch (e) { }
                         }
                     };
 
                     /* WEBPACK VAR INJECTION */
-                }.call(exports, (function() { return window; }())))
+                }.call(exports, (function () { return window; }())))
 
                 /***/
             },
             /* 23 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
 
                 /**
@@ -4803,10 +4803,10 @@
             },
             /* 24 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
                 /* WEBPACK VAR INJECTION */
-                (function(global) {
+                (function (global) {
                     /**
                      * Module requirements.
                      */
@@ -4828,7 +4828,7 @@
                      * Empty function
                      */
 
-                    function empty() {}
+                    function empty() { }
 
                     /**
                      * XHR Polling constructor.
@@ -4877,7 +4877,7 @@
                      * @api private
                      */
 
-                    XHR.prototype.request = function(opts) {
+                    XHR.prototype.request = function (opts) {
                         opts = opts || {};
                         opts.uri = this.uri();
                         opts.xd = this.xd;
@@ -4910,12 +4910,12 @@
                      * @api private
                      */
 
-                    XHR.prototype.doWrite = function(data, fn) {
+                    XHR.prototype.doWrite = function (data, fn) {
                         var isBinary = typeof data !== 'string' && data !== undefined;
                         var req = this.request({ method: 'POST', data: data, isBinary: isBinary });
                         var self = this;
                         req.on('success', fn);
-                        req.on('error', function(err) {
+                        req.on('error', function (err) {
                             self.onError('xhr post error', err);
                         });
                         this.sendXhr = req;
@@ -4927,14 +4927,14 @@
                      * @api private
                      */
 
-                    XHR.prototype.doPoll = function() {
+                    XHR.prototype.doPoll = function () {
                         debug('xhr poll');
                         var req = this.request();
                         var self = this;
-                        req.on('data', function(data) {
+                        req.on('data', function (data) {
                             self.onData(data);
                         });
-                        req.on('error', function(err) {
+                        req.on('error', function (err) {
                             self.onError('xhr poll error', err);
                         });
                         this.pollXhr = req;
@@ -4987,7 +4987,7 @@
                      * @api private
                      */
 
-                    Request.prototype.create = function() {
+                    Request.prototype.create = function () {
                         var opts = { agent: this.agent, xdomain: this.xd, xscheme: this.xs, enablesXDR: this.enablesXDR };
 
                         // SSL options for Node.js client
@@ -5014,7 +5014,7 @@
                                         }
                                     }
                                 }
-                            } catch (e) {}
+                            } catch (e) { }
                             if (this.supportsBinary) {
                                 // This has to be done after open because Firefox is stupid
                                 // http://stackoverflow.com/questions/13216903/get-binary-data-with-xmlhttprequest-in-a-firefox-extension
@@ -5028,12 +5028,12 @@
                                     } else {
                                         xhr.setRequestHeader('Content-type', 'text/plain;charset=UTF-8');
                                     }
-                                } catch (e) {}
+                                } catch (e) { }
                             }
 
                             try {
                                 xhr.setRequestHeader('Accept', '*/*');
-                            } catch (e) {}
+                            } catch (e) { }
 
                             // ie6 check
                             if ('withCredentials' in xhr) {
@@ -5045,21 +5045,21 @@
                             }
 
                             if (this.hasXDR()) {
-                                xhr.onload = function() {
+                                xhr.onload = function () {
                                     self.onLoad();
                                 };
-                                xhr.onerror = function() {
+                                xhr.onerror = function () {
                                     self.onError(xhr.responseText);
                                 };
                             } else {
-                                xhr.onreadystatechange = function() {
+                                xhr.onreadystatechange = function () {
                                     if (4 !== xhr.readyState) return;
                                     if (200 === xhr.status || 1223 === xhr.status) {
                                         self.onLoad();
                                     } else {
                                         // make sure the `error` event handler that's user-set
                                         // does not throw in the same tick and gets caught here
-                                        setTimeout(function() {
+                                        setTimeout(function () {
                                             self.onError(xhr.status);
                                         }, 0);
                                     }
@@ -5072,7 +5072,7 @@
                             // Need to defer since .create() is called directly fhrom the constructor
                             // and thus the 'error' event can only be only bound *after* this exception
                             // occurs.  Therefore, also, we cannot throw here at all.
-                            setTimeout(function() {
+                            setTimeout(function () {
                                 self.onError(e);
                             }, 0);
                             return;
@@ -5090,7 +5090,7 @@
                      * @api private
                      */
 
-                    Request.prototype.onSuccess = function() {
+                    Request.prototype.onSuccess = function () {
                         this.emit('success');
                         this.cleanup();
                     };
@@ -5101,7 +5101,7 @@
                      * @api private
                      */
 
-                    Request.prototype.onData = function(data) {
+                    Request.prototype.onData = function (data) {
                         this.emit('data', data);
                         this.onSuccess();
                     };
@@ -5112,7 +5112,7 @@
                      * @api private
                      */
 
-                    Request.prototype.onError = function(err) {
+                    Request.prototype.onError = function (err) {
                         this.emit('error', err);
                         this.cleanup(true);
                     };
@@ -5123,7 +5123,7 @@
                      * @api private
                      */
 
-                    Request.prototype.cleanup = function(fromError) {
+                    Request.prototype.cleanup = function (fromError) {
                         if ('undefined' === typeof this.xhr || null === this.xhr) {
                             return;
                         }
@@ -5137,7 +5137,7 @@
                         if (fromError) {
                             try {
                                 this.xhr.abort();
-                            } catch (e) {}
+                            } catch (e) { }
                         }
 
                         if (global.document) {
@@ -5153,13 +5153,13 @@
                      * @api private
                      */
 
-                    Request.prototype.onLoad = function() {
+                    Request.prototype.onLoad = function () {
                         var data;
                         try {
                             var contentType;
                             try {
                                 contentType = this.xhr.getResponseHeader('Content-Type').split(';')[0];
-                            } catch (e) {}
+                            } catch (e) { }
                             if (contentType === 'application/octet-stream') {
                                 data = this.xhr.response || this.xhr.responseText;
                             } else {
@@ -5193,7 +5193,7 @@
                      * @api private
                      */
 
-                    Request.prototype.hasXDR = function() {
+                    Request.prototype.hasXDR = function () {
                         return 'undefined' !== typeof global.XDomainRequest && !this.xs && this.enablesXDR;
                     };
 
@@ -5203,7 +5203,7 @@
                      * @api public
                      */
 
-                    Request.prototype.abort = function() {
+                    Request.prototype.abort = function () {
                         this.cleanup();
                     };
 
@@ -5233,13 +5233,13 @@
                     }
 
                     /* WEBPACK VAR INJECTION */
-                }.call(exports, (function() { return window; }())))
+                }.call(exports, (function () { return window; }())))
 
                 /***/
             },
             /* 25 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
                 /**
                  * Module dependencies.
@@ -5262,7 +5262,7 @@
                  * Is XHR2 supported?
                  */
 
-                var hasXHR2 = (function() {
+                var hasXHR2 = (function () {
                     var XMLHttpRequest = __webpack_require__(22);
                     var xhr = new XMLHttpRequest({ xdomain: false });
                     return null != xhr.responseType;
@@ -5302,7 +5302,7 @@
                  * @api private
                  */
 
-                Polling.prototype.doOpen = function() {
+                Polling.prototype.doOpen = function () {
                     this.poll();
                 };
 
@@ -5313,7 +5313,7 @@
                  * @api private
                  */
 
-                Polling.prototype.pause = function(onPause) {
+                Polling.prototype.pause = function (onPause) {
                     var self = this;
 
                     this.readyState = 'pausing';
@@ -5330,7 +5330,7 @@
                         if (this.polling) {
                             debug('we are currently polling - waiting to pause');
                             total++;
-                            this.once('pollComplete', function() {
+                            this.once('pollComplete', function () {
                                 debug('pre-pause polling complete');
                                 --total || pause();
                             });
@@ -5339,7 +5339,7 @@
                         if (!this.writable) {
                             debug('we are currently writing - waiting to pause');
                             total++;
-                            this.once('drain', function() {
+                            this.once('drain', function () {
                                 debug('pre-pause writing complete');
                                 --total || pause();
                             });
@@ -5355,7 +5355,7 @@
                  * @api public
                  */
 
-                Polling.prototype.poll = function() {
+                Polling.prototype.poll = function () {
                     debug('polling');
                     this.polling = true;
                     this.doPoll();
@@ -5368,10 +5368,10 @@
                  * @api private
                  */
 
-                Polling.prototype.onData = function(data) {
+                Polling.prototype.onData = function (data) {
                     var self = this;
                     debug('polling got data %s', data);
-                    var callback = function(packet, index, total) {
+                    var callback = function (packet, index, total) {
                         // if its the first message we consider the transport open
                         if ('opening' === self.readyState) {
                             self.onOpen();
@@ -5410,7 +5410,7 @@
                  * @api private
                  */
 
-                Polling.prototype.doClose = function() {
+                Polling.prototype.doClose = function () {
                     var self = this;
 
                     function close() {
@@ -5437,15 +5437,15 @@
                  * @api private
                  */
 
-                Polling.prototype.write = function(packets) {
+                Polling.prototype.write = function (packets) {
                     var self = this;
                     this.writable = false;
-                    var callbackfn = function() {
+                    var callbackfn = function () {
                         self.writable = true;
                         self.emit('drain');
                     };
 
-                    parser.encodePayload(packets, this.supportsBinary, function(data) {
+                    parser.encodePayload(packets, this.supportsBinary, function (data) {
                         self.doWrite(data, callbackfn);
                     });
                 };
@@ -5456,7 +5456,7 @@
                  * @api private
                  */
 
-                Polling.prototype.uri = function() {
+                Polling.prototype.uri = function () {
                     var query = this.query || {};
                     var schema = this.secure ? 'https' : 'http';
                     var port = '';
@@ -5474,7 +5474,7 @@
 
                     // avoid port if default for schema
                     if (this.port && (('https' === schema && Number(this.port) !== 443) ||
-                            ('http' === schema && Number(this.port) !== 80))) {
+                        ('http' === schema && Number(this.port) !== 80))) {
                         port = ':' + this.port;
                     }
 
@@ -5492,7 +5492,7 @@
             },
             /* 26 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
                 /**
                  * Module dependencies.
@@ -5556,7 +5556,7 @@
                  * @api public
                  */
 
-                Transport.prototype.onError = function(msg, desc) {
+                Transport.prototype.onError = function (msg, desc) {
                     var err = new Error(msg);
                     err.type = 'TransportError';
                     err.description = desc;
@@ -5570,7 +5570,7 @@
                  * @api public
                  */
 
-                Transport.prototype.open = function() {
+                Transport.prototype.open = function () {
                     if ('closed' === this.readyState || '' === this.readyState) {
                         this.readyState = 'opening';
                         this.doOpen();
@@ -5585,7 +5585,7 @@
                  * @api private
                  */
 
-                Transport.prototype.close = function() {
+                Transport.prototype.close = function () {
                     if ('opening' === this.readyState || 'open' === this.readyState) {
                         this.doClose();
                         this.onClose();
@@ -5601,7 +5601,7 @@
                  * @api private
                  */
 
-                Transport.prototype.send = function(packets) {
+                Transport.prototype.send = function (packets) {
                     if ('open' === this.readyState) {
                         this.write(packets);
                     } else {
@@ -5615,7 +5615,7 @@
                  * @api private
                  */
 
-                Transport.prototype.onOpen = function() {
+                Transport.prototype.onOpen = function () {
                     this.readyState = 'open';
                     this.writable = true;
                     this.emit('open');
@@ -5628,7 +5628,7 @@
                  * @api private
                  */
 
-                Transport.prototype.onData = function(data) {
+                Transport.prototype.onData = function (data) {
                     var packet = parser.decodePacket(data, this.socket.binaryType);
                     this.onPacket(packet);
                 };
@@ -5637,7 +5637,7 @@
                  * Called with a decoded packet.
                  */
 
-                Transport.prototype.onPacket = function(packet) {
+                Transport.prototype.onPacket = function (packet) {
                     this.emit('packet', packet);
                 };
 
@@ -5647,7 +5647,7 @@
                  * @api private
                  */
 
-                Transport.prototype.onClose = function() {
+                Transport.prototype.onClose = function () {
                     this.readyState = 'closed';
                     this.emit('close');
                 };
@@ -5657,10 +5657,10 @@
             },
             /* 27 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
                 /* WEBPACK VAR INJECTION */
-                (function(global) {
+                (function (global) {
                     /**
                      * Module dependencies.
                      */
@@ -5711,9 +5711,9 @@
 
                     var packets = exports.packets = {
                         open: 0 // non-ws
-                            ,
+                        ,
                         close: 1 // non-ws
-                            ,
+                        ,
                         ping: 2,
                         pong: 3,
                         message: 4,
@@ -5751,7 +5751,7 @@
                      * @api private
                      */
 
-                    exports.encodePacket = function(packet, supportsBinary, utf8encode, callback) {
+                    exports.encodePacket = function (packet, supportsBinary, utf8encode, callback) {
                         if ('function' == typeof supportsBinary) {
                             callback = supportsBinary;
                             supportsBinary = false;
@@ -5822,7 +5822,7 @@
                         }
 
                         var fr = new FileReader();
-                        fr.onload = function() {
+                        fr.onload = function () {
                             packet.data = fr.result;
                             exports.encodePacket(packet, supportsBinary, true, callback);
                         };
@@ -5852,11 +5852,11 @@
                      * @return {String} base64 encoded message
                      */
 
-                    exports.encodeBase64Packet = function(packet, callback) {
+                    exports.encodeBase64Packet = function (packet, callback) {
                         var message = 'b' + exports.packets[packet.type];
                         if (Blob && packet.data instanceof global.Blob) {
                             var fr = new FileReader();
-                            fr.onload = function() {
+                            fr.onload = function () {
                                 var b64 = fr.result.split(',')[1];
                                 callback(message + b64);
                             };
@@ -5886,7 +5886,7 @@
                      * @api private
                      */
 
-                    exports.decodePacket = function(data, binaryType, utf8decode) {
+                    exports.decodePacket = function (data, binaryType, utf8decode) {
                         if (data === undefined) {
                             return err;
                         }
@@ -5940,7 +5940,7 @@
                      * @return {Object} with `type` and `data` (if any)
                      */
 
-                    exports.decodeBase64Packet = function(msg, binaryType) {
+                    exports.decodeBase64Packet = function (msg, binaryType) {
                         var type = packetslist[msg.charAt(0)];
                         if (!base64encoder) {
                             return { type: type, data: { base64: true, data: msg.substr(1) } };
@@ -5971,7 +5971,7 @@
                      * @api private
                      */
 
-                    exports.encodePayload = function(packets, supportsBinary, callback) {
+                    exports.encodePayload = function (packets, supportsBinary, callback) {
                         if (typeof supportsBinary == 'function') {
                             callback = supportsBinary;
                             supportsBinary = null;
@@ -5996,12 +5996,12 @@
                         }
 
                         function encodeOne(packet, doneCallback) {
-                            exports.encodePacket(packet, !isBinary ? false : supportsBinary, true, function(message) {
+                            exports.encodePacket(packet, !isBinary ? false : supportsBinary, true, function (message) {
                                 doneCallback(null, setLengthHeader(message));
                             });
                         }
 
-                        map(packets, encodeOne, function(err, results) {
+                        map(packets, encodeOne, function (err, results) {
                             return callback(results.join(''));
                         });
                     };
@@ -6014,8 +6014,8 @@
                         var result = new Array(ary.length);
                         var next = after(ary.length, done);
 
-                        var eachWithIndex = function(i, el, cb) {
-                            each(el, function(error, msg) {
+                        var eachWithIndex = function (i, el, cb) {
+                            each(el, function (error, msg) {
                                 result[i] = msg;
                                 cb(error, result);
                             });
@@ -6034,7 +6034,7 @@
                      * @api public
                      */
 
-                    exports.decodePayload = function(data, binaryType, callback) {
+                    exports.decodePayload = function (data, binaryType, callback) {
                         if (typeof data != 'string') {
                             return exports.decodePayloadAsBinary(data, binaryType, callback);
                         }
@@ -6110,19 +6110,19 @@
                      * @api private
                      */
 
-                    exports.encodePayloadAsArrayBuffer = function(packets, callback) {
+                    exports.encodePayloadAsArrayBuffer = function (packets, callback) {
                         if (!packets.length) {
                             return callback(new ArrayBuffer(0));
                         }
 
                         function encodeOne(packet, doneCallback) {
-                            exports.encodePacket(packet, true, true, function(data) {
+                            exports.encodePacket(packet, true, true, function (data) {
                                 return doneCallback(null, data);
                             });
                         }
 
-                        map(packets, encodeOne, function(err, encodedPackets) {
-                            var totalLength = encodedPackets.reduce(function(acc, p) {
+                        map(packets, encodeOne, function (err, encodedPackets) {
+                            var totalLength = encodedPackets.reduce(function (acc, p) {
                                 var len;
                                 if (typeof p === 'string') {
                                     len = p.length;
@@ -6135,7 +6135,7 @@
                             var resultArray = new Uint8Array(totalLength);
 
                             var bufferIndex = 0;
-                            encodedPackets.forEach(function(p) {
+                            encodedPackets.forEach(function (p) {
                                 var isString = typeof p === 'string';
                                 var ab = p;
                                 if (isString) {
@@ -6172,9 +6172,9 @@
                      * Encode as Blob
                      */
 
-                    exports.encodePayloadAsBlob = function(packets, callback) {
+                    exports.encodePayloadAsBlob = function (packets, callback) {
                         function encodeOne(packet, doneCallback) {
-                            exports.encodePacket(packet, true, true, function(encoded) {
+                            exports.encodePacket(packet, true, true, function (encoded) {
                                 var binaryIdentifier = new Uint8Array(1);
                                 binaryIdentifier[0] = 1;
                                 if (typeof encoded === 'string') {
@@ -6204,7 +6204,7 @@
                             });
                         }
 
-                        map(packets, encodeOne, function(err, results) {
+                        map(packets, encodeOne, function (err, results) {
                             return callback(new Blob(results));
                         });
                     };
@@ -6218,7 +6218,7 @@
                      * @api public
                      */
 
-                    exports.decodePayloadAsBinary = function(data, binaryType, callback) {
+                    exports.decodePayloadAsBinary = function (data, binaryType, callback) {
                         if (typeof binaryType === 'function') {
                             callback = binaryType;
                             binaryType = null;
@@ -6233,7 +6233,7 @@
                             var isString = tailArray[0] === 0;
                             var msgLength = '';
 
-                            for (var i = 1;; i++) {
+                            for (var i = 1; ; i++) {
                                 if (tailArray[i] == 255) break;
 
                                 if (msgLength.length > 310) {
@@ -6268,19 +6268,19 @@
                         }
 
                         var total = buffers.length;
-                        buffers.forEach(function(buffer, i) {
+                        buffers.forEach(function (buffer, i) {
                             callback(exports.decodePacket(buffer, binaryType, true), i, total);
                         });
                     };
 
                     /* WEBPACK VAR INJECTION */
-                }.call(exports, (function() { return window; }())))
+                }.call(exports, (function () { return window; }())))
 
                 /***/
             },
             /* 28 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
 
                 /**
@@ -6307,10 +6307,10 @@
             },
             /* 29 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
                 /* WEBPACK VAR INJECTION */
-                (function(global) {
+                (function (global) {
                     /*
                      * Module requirements.
                      */
@@ -6371,13 +6371,13 @@
                     }
 
                     /* WEBPACK VAR INJECTION */
-                }.call(exports, (function() { return window; }())))
+                }.call(exports, (function () { return window; }())))
 
                 /***/
             },
             /* 30 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
                 /**
                  * An abstraction for slicing an arraybuffer even when
@@ -6386,7 +6386,7 @@
                  * @api public
                  */
 
-                module.exports = function(arraybuffer, start, end) {
+                module.exports = function (arraybuffer, start, end) {
                     var bytes = arraybuffer.byteLength;
                     start = start || 0;
                     end = end || bytes;
@@ -6414,7 +6414,7 @@
             },
             /* 31 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
                 module.exports = after
 
@@ -6435,7 +6435,7 @@
                         if (err) {
                             bail = true
                             callback(err)
-                                // future error callbacks will go to error handler
+                            // future error callbacks will go to error handler
                             callback = err_cb
                         } else if (proxy.count === 0 && !bail) {
                             callback(null, result)
@@ -6443,18 +6443,18 @@
                     }
                 }
 
-                function noop() {}
+                function noop() { }
 
 
                 /***/
             },
             /* 32 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
                 var __WEBPACK_AMD_DEFINE_RESULT__; /* WEBPACK VAR INJECTION */
-                (function(module, global) { /*! https://mths.be/wtf8 v1.0.0 by @mathias */ ;
-                    (function(root) {
+                (function (module, global) { /*! https://mths.be/wtf8 v1.0.0 by @mathias */;
+                    (function (root) {
 
                         // Detect free variables `exports`
                         var freeExports = typeof exports == 'object' && exports;
@@ -6666,7 +6666,7 @@
                         if (
                             true
                         ) {
-                            !(__WEBPACK_AMD_DEFINE_RESULT__ = function() {
+                            !(__WEBPACK_AMD_DEFINE_RESULT__ = function () {
                                 return wtf8;
                             }.call(exports, __webpack_require__, exports, module), __WEBPACK_AMD_DEFINE_RESULT__ !== undefined && (module.exports = __WEBPACK_AMD_DEFINE_RESULT__));
                         } else if (freeExports && !freeExports.nodeType) {
@@ -6686,13 +6686,13 @@
                     }(this));
 
                     /* WEBPACK VAR INJECTION */
-                }.call(exports, __webpack_require__(12)(module), (function() { return this; }())))
+                }.call(exports, __webpack_require__(12)(module), (function () { return this; }())))
 
                 /***/
             },
             /* 33 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
                 /*
                  * base64-arraybuffer
@@ -6701,7 +6701,7 @@
                  * Copyright (c) 2012 Niklas von Hertzen
                  * Licensed under the MIT license.
                  */
-                (function() {
+                (function () {
                     "use strict";
 
                     var chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -6712,7 +6712,7 @@
                         lookup[chars.charCodeAt(i)] = i;
                     }
 
-                    exports.encode = function(arraybuffer) {
+                    exports.encode = function (arraybuffer) {
                         var bytes = new Uint8Array(arraybuffer),
                             i, len = bytes.length,
                             base64 = "";
@@ -6733,7 +6733,7 @@
                         return base64;
                     };
 
-                    exports.decode = function(base64) {
+                    exports.decode = function (base64) {
                         var bufferLength = base64.length * 0.75,
                             len = base64.length,
                             i, p = 0,
@@ -6769,10 +6769,10 @@
             },
             /* 34 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
                 /* WEBPACK VAR INJECTION */
-                (function(global) {
+                (function (global) {
                     /**
                      * Create a blob builder even when vendor prefixes exist
                      */
@@ -6786,7 +6786,7 @@
                      * Check if Blob constructor is supported
                      */
 
-                    var blobSupported = (function() {
+                    var blobSupported = (function () {
                         try {
                             var a = new Blob(['hi']);
                             return a.size === 2;
@@ -6800,7 +6800,7 @@
                      * Fails in Safari 6, so we need to map to ArrayBuffers there.
                      */
 
-                    var blobSupportsArrayBufferView = blobSupported && (function() {
+                    var blobSupportsArrayBufferView = blobSupported && (function () {
                         try {
                             var b = new Blob([new Uint8Array([1, 2])]);
                             return b.size === 2;
@@ -6860,7 +6860,7 @@
                         return new Blob(ary, options || {});
                     };
 
-                    module.exports = (function() {
+                    module.exports = (function () {
                         if (blobSupported) {
                             return blobSupportsArrayBufferView ? global.Blob : BlobConstructor;
                         } else if (blobBuilderSupported) {
@@ -6871,13 +6871,13 @@
                     })();
 
                     /* WEBPACK VAR INJECTION */
-                }.call(exports, (function() { return window; }())))
+                }.call(exports, (function () { return window; }())))
 
                 /***/
             },
             /* 35 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
 
                 /**
@@ -6923,10 +6923,10 @@
                  */
 
                 Emitter.prototype.on =
-                    Emitter.prototype.addEventListener = function(event, fn) {
+                    Emitter.prototype.addEventListener = function (event, fn) {
                         this._callbacks = this._callbacks || {};
                         (this._callbacks['$' + event] = this._callbacks['$' + event] || [])
-                        .push(fn);
+                            .push(fn);
                         return this;
                     };
 
@@ -6940,7 +6940,7 @@
                  * @api public
                  */
 
-                Emitter.prototype.once = function(event, fn) {
+                Emitter.prototype.once = function (event, fn) {
                     function on() {
                         this.off(event, on);
                         fn.apply(this, arguments);
@@ -6964,7 +6964,7 @@
                 Emitter.prototype.off =
                     Emitter.prototype.removeListener =
                     Emitter.prototype.removeAllListeners =
-                    Emitter.prototype.removeEventListener = function(event, fn) {
+                    Emitter.prototype.removeEventListener = function (event, fn) {
                         this._callbacks = this._callbacks || {};
 
                         // all
@@ -7003,7 +7003,7 @@
                  * @return {Emitter}
                  */
 
-                Emitter.prototype.emit = function(event) {
+                Emitter.prototype.emit = function (event) {
                     this._callbacks = this._callbacks || {};
                     var args = [].slice.call(arguments, 1),
                         callbacks = this._callbacks['$' + event];
@@ -7026,7 +7026,7 @@
                  * @api public
                  */
 
-                Emitter.prototype.listeners = function(event) {
+                Emitter.prototype.listeners = function (event) {
                     this._callbacks = this._callbacks || {};
                     return this._callbacks['$' + event] || [];
                 };
@@ -7039,7 +7039,7 @@
                  * @api public
                  */
 
-                Emitter.prototype.hasListeners = function(event) {
+                Emitter.prototype.hasListeners = function (event) {
                     return !!this.listeners(event).length;
                 };
 
@@ -7048,7 +7048,7 @@
             },
             /* 36 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
                 /**
                  * Compiles a querystring
@@ -7058,7 +7058,7 @@
                  * @api private
                  */
 
-                exports.encode = function(obj) {
+                exports.encode = function (obj) {
                     var str = '';
 
                     for (var i in obj) {
@@ -7078,7 +7078,7 @@
                  * @api private
                  */
 
-                exports.decode = function(qs) {
+                exports.decode = function (qs) {
                     var qry = {};
                     var pairs = qs.split('&');
                     for (var i = 0, l = pairs.length; i < l; i++) {
@@ -7093,11 +7093,11 @@
             },
             /* 37 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
 
-                module.exports = function(a, b) {
-                    var fn = function() {};
+                module.exports = function (a, b) {
+                    var fn = function () { };
                     fn.prototype = b.prototype;
                     a.prototype = new fn;
                     a.prototype.constructor = a;
@@ -7107,7 +7107,7 @@
             },
             /* 38 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
                 'use strict';
 
@@ -7183,10 +7183,10 @@
             },
             /* 39 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
                 /* WEBPACK VAR INJECTION */
-                (function(global) {
+                (function (global) {
                     /**
                      * Module requirements.
                      */
@@ -7217,7 +7217,7 @@
                      * Noop.
                      */
 
-                    function empty() {}
+                    function empty() { }
 
                     /**
                      * JSONP Polling constructor.
@@ -7244,7 +7244,7 @@
 
                         // add callback to jsonp global
                         var self = this;
-                        callbacks.push(function(msg) {
+                        callbacks.push(function (msg) {
                             self.onData(msg);
                         });
 
@@ -7253,7 +7253,7 @@
 
                         // prevent spurious errors from being emitted when the window is unloaded
                         if (global.document && global.addEventListener) {
-                            global.addEventListener('beforeunload', function() {
+                            global.addEventListener('beforeunload', function () {
                                 if (self.script) self.script.onerror = empty;
                             }, false);
                         }
@@ -7277,7 +7277,7 @@
                      * @api private
                      */
 
-                    JSONPPolling.prototype.doClose = function() {
+                    JSONPPolling.prototype.doClose = function () {
                         if (this.script) {
                             this.script.parentNode.removeChild(this.script);
                             this.script = null;
@@ -7298,7 +7298,7 @@
                      * @api private
                      */
 
-                    JSONPPolling.prototype.doPoll = function() {
+                    JSONPPolling.prototype.doPoll = function () {
                         var self = this;
                         var script = document.createElement('script');
 
@@ -7309,7 +7309,7 @@
 
                         script.async = true;
                         script.src = this.uri();
-                        script.onerror = function(e) {
+                        script.onerror = function (e) {
                             self.onError('jsonp poll error', e);
                         };
 
@@ -7324,7 +7324,7 @@
                         var isUAgecko = 'undefined' !== typeof navigator && /gecko/i.test(navigator.userAgent);
 
                         if (isUAgecko) {
-                            setTimeout(function() {
+                            setTimeout(function () {
                                 var iframe = document.createElement('iframe');
                                 document.body.appendChild(iframe);
                                 document.body.removeChild(iframe);
@@ -7340,7 +7340,7 @@
                      * @api private
                      */
 
-                    JSONPPolling.prototype.doWrite = function(data, fn) {
+                    JSONPPolling.prototype.doWrite = function (data, fn) {
                         var self = this;
 
                         if (!this.form) {
@@ -7405,10 +7405,10 @@
 
                         try {
                             this.form.submit();
-                        } catch (e) {}
+                        } catch (e) { }
 
                         if (this.iframe.attachEvent) {
-                            this.iframe.onreadystatechange = function() {
+                            this.iframe.onreadystatechange = function () {
                                 if (self.iframe.readyState === 'complete') {
                                     complete();
                                 }
@@ -7419,16 +7419,16 @@
                     };
 
                     /* WEBPACK VAR INJECTION */
-                }.call(exports, (function() { return window; }())))
+                }.call(exports, (function () { return window; }())))
 
                 /***/
             },
             /* 40 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
                 /* WEBPACK VAR INJECTION */
-                (function(global) {
+                (function (global) {
                     /**
                      * Module dependencies.
                      */
@@ -7444,7 +7444,7 @@
                     if (typeof window === 'undefined') {
                         try {
                             NodeWebSocket = __webpack_require__(41);
-                        } catch (e) {}
+                        } catch (e) { }
                     }
 
                     /**
@@ -7510,14 +7510,14 @@
                      * @api private
                      */
 
-                    WS.prototype.doOpen = function() {
+                    WS.prototype.doOpen = function () {
                         if (!this.check()) {
                             // let probe timeout
                             return;
                         }
 
                         var uri = this.uri();
-                        var protocols = void(0);
+                        var protocols = void (0);
                         var opts = {
                             agent: this.agent,
                             perMessageDeflate: this.perMessageDeflate
@@ -7564,19 +7564,19 @@
                      * @api private
                      */
 
-                    WS.prototype.addEventListeners = function() {
+                    WS.prototype.addEventListeners = function () {
                         var self = this;
 
-                        this.ws.onopen = function() {
+                        this.ws.onopen = function () {
                             self.onOpen();
                         };
-                        this.ws.onclose = function() {
+                        this.ws.onclose = function () {
                             self.onClose();
                         };
-                        this.ws.onmessage = function(ev) {
+                        this.ws.onmessage = function (ev) {
                             self.onData(ev.data);
                         };
-                        this.ws.onerror = function(e) {
+                        this.ws.onerror = function (e) {
                             self.onError('websocket error', e);
                         };
                     };
@@ -7588,7 +7588,7 @@
                      * @api private
                      */
 
-                    WS.prototype.write = function(packets) {
+                    WS.prototype.write = function (packets) {
                         var self = this;
                         this.writable = false;
 
@@ -7596,8 +7596,8 @@
                         // no need for encodePayload
                         var total = packets.length;
                         for (var i = 0, l = total; i < l; i++) {
-                            (function(packet) {
-                                parser.encodePacket(packet, self.supportsBinary, function(data) {
+                            (function (packet) {
+                                parser.encodePacket(packet, self.supportsBinary, function (data) {
                                     if (!self.usingBrowserWebSocket) {
                                         // always create a new object (GH-437)
                                         var opts = {};
@@ -7637,7 +7637,7 @@
 
                             // fake drain
                             // defer to next tick to allow Socket to clear writeBuffer
-                            setTimeout(function() {
+                            setTimeout(function () {
                                 self.writable = true;
                                 self.emit('drain');
                             }, 0);
@@ -7650,7 +7650,7 @@
                      * @api private
                      */
 
-                    WS.prototype.onClose = function() {
+                    WS.prototype.onClose = function () {
                         Transport.prototype.onClose.call(this);
                     };
 
@@ -7660,7 +7660,7 @@
                      * @api private
                      */
 
-                    WS.prototype.doClose = function() {
+                    WS.prototype.doClose = function () {
                         if (typeof this.ws !== 'undefined') {
                             this.ws.close();
                         }
@@ -7672,14 +7672,14 @@
                      * @api private
                      */
 
-                    WS.prototype.uri = function() {
+                    WS.prototype.uri = function () {
                         var query = this.query || {};
                         var schema = this.secure ? 'wss' : 'ws';
                         var port = '';
 
                         // avoid port if default for schema
                         if (this.port && (('wss' === schema && Number(this.port) !== 443) ||
-                                ('ws' === schema && Number(this.port) !== 80))) {
+                            ('ws' === schema && Number(this.port) !== 80))) {
                             port = ':' + this.port;
                         }
 
@@ -7711,18 +7711,18 @@
                      * @api public
                      */
 
-                    WS.prototype.check = function() {
+                    WS.prototype.check = function () {
                         return !!WebSocket && !('__initialize' in WebSocket && this.name === WS.prototype.name);
                     };
 
                     /* WEBPACK VAR INJECTION */
-                }.call(exports, (function() { return window; }())))
+                }.call(exports, (function () { return window; }())))
 
                 /***/
             },
             /* 41 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
                 /* (ignored) */
 
@@ -7730,12 +7730,12 @@
             },
             /* 42 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
 
                 var indexOf = [].indexOf;
 
-                module.exports = function(arr, obj) {
+                module.exports = function (arr, obj) {
                     if (indexOf) return arr.indexOf(obj);
                     for (var i = 0; i < arr.length; ++i) {
                         if (arr[i] === obj) return i;
@@ -7747,10 +7747,10 @@
             },
             /* 43 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
                 /* WEBPACK VAR INJECTION */
-                (function(global) {
+                (function (global) {
                     /**
                      * JSON parse.
                      *
@@ -7778,19 +7778,19 @@
                         }
 
                         if (rvalidchars.test(data.replace(rvalidescape, '@')
-                                .replace(rvalidtokens, ']')
-                                .replace(rvalidbraces, ''))) {
+                            .replace(rvalidtokens, ']')
+                            .replace(rvalidbraces, ''))) {
                             return (new Function('return ' + data))();
                         }
                     };
                     /* WEBPACK VAR INJECTION */
-                }.call(exports, (function() { return window; }())))
+                }.call(exports, (function () { return window; }())))
 
                 /***/
             },
             /* 44 */
             /***/
-            function(module, exports, __webpack_require__) {
+            function (module, exports, __webpack_require__) {
 
                 'use strict';
 
@@ -7875,7 +7875,7 @@
                  * @api private
                  */
 
-                Socket.prototype.subEvents = function() {
+                Socket.prototype.subEvents = function () {
                     if (this.subs) return;
 
                     var io = this.io;
@@ -7888,7 +7888,7 @@
                  * @api public
                  */
 
-                Socket.prototype.open = Socket.prototype.connect = function() {
+                Socket.prototype.open = Socket.prototype.connect = function () {
                     if (this.connected) return this;
 
                     this.subEvents();
@@ -7905,7 +7905,7 @@
                  * @api public
                  */
 
-                Socket.prototype.send = function() {
+                Socket.prototype.send = function () {
                     var args = toArray(arguments);
                     args.unshift('message');
                     this.emit.apply(this, args);
@@ -7921,7 +7921,7 @@
                  * @api public
                  */
 
-                Socket.prototype.emit = function(ev) {
+                Socket.prototype.emit = function (ev) {
                     if (events.hasOwnProperty(ev)) {
                         emit.apply(this, arguments);
                         return this;
@@ -7962,7 +7962,7 @@
                  * @api private
                  */
 
-                Socket.prototype.packet = function(packet) {
+                Socket.prototype.packet = function (packet) {
                     packet.nsp = this.nsp;
                     this.io.packet(packet);
                 };
@@ -7973,7 +7973,7 @@
                  * @api private
                  */
 
-                Socket.prototype.onopen = function() {
+                Socket.prototype.onopen = function () {
                     debug('transport is open - connecting');
 
                     // write connect packet if necessary
@@ -7993,7 +7993,7 @@
                  * @api private
                  */
 
-                Socket.prototype.onclose = function(reason) {
+                Socket.prototype.onclose = function (reason) {
                     debug('close (%s)', reason);
                     this.connected = false;
                     this.disconnected = true;
@@ -8008,7 +8008,7 @@
                  * @api private
                  */
 
-                Socket.prototype.onpacket = function(packet) {
+                Socket.prototype.onpacket = function (packet) {
                     if (packet.nsp !== this.nsp) return;
 
                     switch (packet.type) {
@@ -8049,7 +8049,7 @@
                  * @api private
                  */
 
-                Socket.prototype.onevent = function(packet) {
+                Socket.prototype.onevent = function (packet) {
                     var args = packet.data || [];
                     debug('emitting event %j', args);
 
@@ -8071,10 +8071,10 @@
                  * @api private
                  */
 
-                Socket.prototype.ack = function(id) {
+                Socket.prototype.ack = function (id) {
                     var self = this;
                     var sent = false;
-                    return function() {
+                    return function () {
                         // prevent double callbacks
                         if (sent) return;
                         sent = true;
@@ -8097,7 +8097,7 @@
                  * @api private
                  */
 
-                Socket.prototype.onack = function(packet) {
+                Socket.prototype.onack = function (packet) {
                     var ack = this.acks[packet.id];
                     if ('function' === typeof ack) {
                         debug('calling ack %s with %j', packet.id, packet.data);
@@ -8114,7 +8114,7 @@
                  * @api private
                  */
 
-                Socket.prototype.onconnect = function() {
+                Socket.prototype.onconnect = function () {
                     this.connected = true;
                     this.disconnected = false;
                     this.emit('connect');
@@ -8127,7 +8127,7 @@
                  * @api private
                  */
 
-                Socket.prototype.emitBuffered = function() {
+                Socket.prototype.emitBuffered = function () {
                     var i;
                     for (i = 0; i < this.receiveBuffer.length; i++) {
                         emit.apply(this, this.receiveBuffer[i]);
@@ -8146,7 +8146,7 @@
                  * @api private
                  */
 
-                Socket.prototype.ondisconnect = function() {
+                Socket.prototype.ondisconnect = function () {
                     debug('server disconnect (%s)', this.nsp);
                     this.destroy();
                     this.onclose('io server disconnect');
@@ -8160,7 +8160,7 @@
                  * @api private.
                  */
 
-                Socket.prototype.destroy = function() {
+                Socket.prototype.destroy = function () {
                     if (this.subs) {
                         // clean subscriptions to avoid reconnections
                         for (var i = 0; i < this.subs.length; i++) {
@@ -8179,7 +8179,7 @@
                  * @api public
                  */
 
-                Socket.prototype.close = Socket.prototype.disconnect = function() {
+                Socket.prototype.close = Socket.prototype.disconnect = function () {
                     if (this.connected) {
                         debug('performing disconnect (%s)', this.nsp);
                         this.packet({ type: parser.DISCONNECT });
@@ -8203,7 +8203,7 @@
                  * @api public
                  */
 
-                Socket.prototype.compress = function(compress) {
+                Socket.prototype.compress = function (compress) {
                     this.flags = this.flags || {};
                     this.flags.compress = compress;
                     return this;
@@ -8213,7 +8213,7 @@
             },
             /* 45 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
                 module.exports = toArray
 
@@ -8234,7 +8234,7 @@
             },
             /* 46 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
                 "use strict";
 
@@ -8266,7 +8266,7 @@
             },
             /* 47 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
                 /**
                  * Slice reference.
@@ -8283,11 +8283,11 @@
                  * @api public
                  */
 
-                module.exports = function(obj, fn) {
+                module.exports = function (obj, fn) {
                     if ('string' == typeof fn) fn = obj[fn];
                     if ('function' != typeof fn) throw new Error('bind() requires a function');
                     var args = slice.call(arguments, 2);
-                    return function() {
+                    return function () {
                         return fn.apply(obj, args.concat(slice.call(arguments)));
                     }
                 };
@@ -8297,7 +8297,7 @@
             },
             /* 48 */
             /***/
-            function(module, exports) {
+            function (module, exports) {
 
 
                 /**
@@ -8334,7 +8334,7 @@
                  * @api public
                  */
 
-                Backoff.prototype.duration = function() {
+                Backoff.prototype.duration = function () {
                     var ms = this.ms * Math.pow(this.factor, this.attempts++);
                     if (this.jitter) {
                         var rand = Math.random();
@@ -8350,7 +8350,7 @@
                  * @api public
                  */
 
-                Backoff.prototype.reset = function() {
+                Backoff.prototype.reset = function () {
                     this.attempts = 0;
                 };
 
@@ -8360,7 +8360,7 @@
                  * @api public
                  */
 
-                Backoff.prototype.setMin = function(min) {
+                Backoff.prototype.setMin = function (min) {
                     this.ms = min;
                 };
 
@@ -8370,7 +8370,7 @@
                  * @api public
                  */
 
-                Backoff.prototype.setMax = function(max) {
+                Backoff.prototype.setMax = function (max) {
                     this.max = max;
                 };
 
@@ -8380,7 +8380,7 @@
                  * @api public
                  */
 
-                Backoff.prototype.setJitter = function(jitter) {
+                Backoff.prototype.setJitter = function (jitter) {
                     this.jitter = jitter;
                 };
 

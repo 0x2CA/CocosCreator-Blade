@@ -1,0 +1,118 @@
+syntax = "proto3";
+
+option java_package = "lilith.server.protobuf.constant";
+option java_outer_classname = "MessageId";
+
+package protobuf;
+/**消息号定义*/
+enum MessageIds{
+
+		
+	/**请求服务器时间*/
+	C2SServerTime = 0;
+	S2CServerTime = 1;
+	
+	/**心跳*/
+	C2SHeartBeate = 3;
+	S2CHeartBeate = 4;
+
+	/**-------------------------登录-----------------------------*/
+	
+	/**认证*/
+	C2SAuth = 101;
+	S2CAuth = 102;
+
+	/**获取玩家信息 */
+	C2SGetPlayer = 201;
+	S2CGetPlayer = 202;
+
+	/**随机玩家名字 */
+	C2SRandName = 203;
+	S2CRandName = 204;
+
+	/**创建角色 */
+	C2SCreatePlayer = 205;
+	S2CCreatePlayer = 206;
+
+	/**登录 */
+	C2SLogin = 207;
+	S2CLogin = 208;
+	
+	/**登录成功(部分协议需要延迟同步) */
+	C2SLoginSuccess = 209;
+	S2CLoginSuccess = 210;
+		
+	/**-------------------玩家信息--------------------*/
+	
+	/**同步玩家基本信息*/
+	S2CPlayerBaseInfoSync = 302;
+	
+	/**同步玩家扩展信息*/
+	S2CPlayerExtInfoSync = 304;
+	
+	/**改名*/
+	C2SPlayerRename = 305;
+	S2CPlayerRename = 306;
+	
+	/**更换头像/头像框*/
+	C2SPlayerModifyHead = 307;
+	S2CPlayerModifyHead = 308;
+	
+	/**玩家信息更新*/
+	C2SPlayerInfoUpdate = 321;
+	S2CPlayerInfoUpdate = 322;
+	
+	/**-------------------Debug--------------------*/
+	
+	/**请求指令*/
+	C2SDebug = 401;
+	S2CDebug = 402;
+	
+	/**-------------------背包--------------------*/
+	
+	/**请求背包列表*/
+	C2SItemBagSync = 601;
+	S2CItemBagSync = 602;
+	
+	/**------------------邮件--------------------*/
+	
+	/** 邮件列表*/
+	C2SMailListSync = 1601;
+	S2CMailListSync = 1602;
+	
+	/** 邮件操作*/
+	C2SMailOp = 1603;
+	S2CMailOp = 1604;
+	
+
+	/**-----------------公告--------------------*/
+
+	/** 公告列表*/
+	C2SNoticeListSync = 1701;
+	S2CNoticeListSync = 1702;
+	
+	/**-----------------礼包码--------------------*/
+
+	/** 礼包码兑换*/
+	C2SGiftCodeExchange = 2001;
+	S2CGiftCodeExchange = 2002;
+
+
+
+	
+
+
+
+	
+	
+	
+	
+	
+	
+	
+
+
+}
+	
+	
+

@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+option java_package = "lilith.server.protobuf";//指定java代码的包路径
+option java_outer_classname = "ItemBagProto";//自定义生成java文件的名称
+
+package protobuf;
+/**
+ * 背包系统
+ */
+
+/** 道具基本信息 */
+message Item {
+	/** 道具refId */
+	string refId = 1;
+	/** 道具数量 */
+	int32 num = 2;
+}
+
+/**请求背包数据 */
+message C2SItemBagSync {
+
+}
+
+/** 同步背包数据 **/
+message S2CItemBagSync {
+	/**同步类型 0-全部  1-增加 2-修改 3-删除 */
+	int32 syncType = 1;
+	/** 玩家信息 **/
+	repeated Item items = 2;
+}
+
+

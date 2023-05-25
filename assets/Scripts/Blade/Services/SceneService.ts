@@ -1,27 +1,33 @@
+/*
+ * @作者: 0x2CA
+ * @创建时间: 2022-10-27
+ * @最后编辑时间: 2023-03-14
+ * @最后编辑者: 0x2CA
+ * @描述:
+ */
 import SingletonBase from "../Bases/SingletonBase";
 import Stack from "../Libs/Structs/Stack";
-import PlatformService from "./PlatformService";
 
 
-class SceneService extends SingletonBase {
+class SceneService extends SingletonBase<SceneService> {
 
     // 场景记录栈堆
-    private stack: Stack<SceneService.SceneRecord> = new Stack<SceneService.SceneRecord>();
+    private _stack: Stack<SceneService.SceneRecord> = new Stack<SceneService.SceneRecord>();
 
-    public onInitialize() {
-        this.stack.clear();
-        this.stack.push({ name: cc.director.getScene().name, params: PlatformService.getInstance().getPlatform().getLaunchOptions() });
+    protected onInitialize() {
+        this._stack.clear();
+        this._stack.push({ name: cc.director.getScene().name, params: blade.platform.get().getLaunchOptions() });
     }
 
-    public onDispose() {
+    protected onDispose() {
     }
 
     /**
     * 进入场景
     * @param sceneName
     */
-    public runScene(sceneName: string, params: {} = {}) {
-        this.stack.push({ name: sceneName, params });
+    public run(sceneName: string, params: {} = {}) {
+        this._stack.push({ name: sceneName, params });
 
         cc.director.loadScene(sceneName);
     }
@@ -31,7 +37,7 @@ class SceneService extends SingletonBase {
      * @param name
      * @param progressFun
      */
-    public preloadScene(name: string, progressFun?: (completedCount: number, totalCount: number, item: any) => void): Promise<boolean> {
+    public preload(name: string, progressFun?: (completedCount: number, totalCount: number, item: any) => void): Promise<boolean> {
         return new Promise((resolve, reject) => {
             cc.director.preloadScene(
                 name,
@@ -54,9 +60,9 @@ class SceneService extends SingletonBase {
     /**
     * 获取当前的场景参数, 场景初始化时可使用
     */
-    public getSceneParam(): any {
-        if (this.stack.size() > 0) {
-            const { params = {} } = this.stack.peek();
+    public getParam(): any {
+        if (this._stack.size() > 0) {
+            const { params = {} } = this._stack.peek();
             return params;
         }
         else {
@@ -67,13 +73,13 @@ class SceneService extends SingletonBase {
     /**
     * 返回上一个场景
     */
-    public backScene() {
-        if (this.stack.size() >= 2) {
-            this.stack.pop();
-            let info = this.stack.peek();
+    public back() {
+        if (this._stack.size() >= 2) {
+            this._stack.pop();
+            let info = this._stack.peek();
             cc.director.loadScene(info.name);
         } else {
-            cc.error("该场景为第一个,无法返回上一个场景！")
+            console.error("该场景为第一个,无法返回上一个场景！")
         }
     }
 }

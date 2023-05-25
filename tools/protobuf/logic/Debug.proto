@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+option java_package = "lilith.server.protobuf";
+option java_outer_classname = "DebugProto";
+
+package protobuf;
+
+message C2SDebug {
+    string commandStr = 1;
+}
+
+message S2CDebug {
+    string result = 1;
+}

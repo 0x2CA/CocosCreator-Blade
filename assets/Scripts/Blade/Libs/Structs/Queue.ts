@@ -108,7 +108,7 @@ export default class Queue<T> {
 		for (let index = 0; index < this.items.length; index++) {
 			tmp += JSON.stringify(this.items[index]) + "\n";
 		}
-		cc.log(tmp);
+		console.log(tmp);
 	}
 
 	/**

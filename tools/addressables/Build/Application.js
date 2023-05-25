@@ -23,13 +23,14 @@ var Application = /** @class */ (function () {
         var data = {};
         Application.ForeachFile(options.input, function (filePath) {
             var extension = path_1.default.extname(filePath);
-            if (extension == ".meta" || extension == "") {
+            if (extension == ".meta" || extension == ".pac" || extension == ".atlas" || extension == "") {
                 return;
             }
             var fileName = path_1.default.basename(filePath);
             if (fileName == "Addressables.json") {
                 return;
             }
+            // console.log("处理文件", fileName);
             filePath = filePath.split("resources/")[1].replace("\\", "/");
             if (data[fileName] != null) {
                 console.warn("重复文件名", fileName);
@@ -45,6 +46,9 @@ var Application = /** @class */ (function () {
         for (var direntsIndex = 0; direntsIndex < dirents.length; direntsIndex++) {
             var dirent = dirents[direntsIndex];
             if (dirent.isDirectory()) {
+                if (dirent.name == ".git" || dirent.name == ".svn") {
+                    continue;
+                }
                 var direntPath = dirPath + "/" + dirent.name;
                 Application.ForeachFile(direntPath, callback);
             }

@@ -1,0 +1,92 @@
+syntax = "proto3";
+
+option java_package = "lilith.server.protobuf";//指定java代码的包路径
+option java_outer_classname = "PlayerProto";//自定义生成java文件的名称
+
+package protobuf;
+
+
+
+
+/** 玩家Base信息(不经常变化的数据) */
+message BaseInfo {
+	/** 玩家id */
+	string playerId = 1;
+	/** 玩家账号 */
+	string identityId = 2;
+	/** 玩家名 */
+	string name = 3;
+	/** 性别：1男，2女 */
+	int32 gender = 4;
+	/** 头像 */
+	string headImageId = 5;
+	/** 头像框 */
+	string headImageRim = 6;
+	/** 出身 */
+	string roleBirth = 7;
+	/** 钻石 */
+	int32 diamond = 8;
+	/** 金币 */
+	int32 gold = 9;
+	/**创号时间戳 */
+	int64 createTime = 10;
+	/** 平台头像 */
+	string platFormHead = 11;
+	
+}
+
+/** 玩家扩展信息(经常变化的数据) */
+message ExtInfo {
+	
+}
+
+/** 玩家信息同步到 (不经常变化的数据)**/
+message S2CPlayerBaseInfoSync {
+	/** 玩家信息 **/
+	BaseInfo baseInfo = 1;
+}
+
+
+/** 玩家扩展信息同步(经常变化的数据)*/
+message S2CPlayerExtInfoSync {
+	/** 扩展信息 **/
+	ExtInfo info = 1;
+}
+
+/**改名 */
+message C2SPlayerRename {
+	/** 新名字**/
+	string newName = 1;
+}
+/**改名 */
+message S2CPlayerRename {
+	/**已改名次数*/
+	int32 renameTimes = 1;
+}
+
+
+/**更换头像/头像框 */
+message C2SPlayerModifyHead {
+	/**修改类型 (op=1 修改头像  |op=2修改头像框) */
+	int32 op = 1;
+	/**头像/头像框 */
+	string head = 2;
+}
+
+
+/**更换头像/头像框 */
+message S2CPlayerModifyHead {
+
+}
+
+
+/** 玩家信息更新 */
+message C2SPlayerInfoUpdate {
+	/** 平台头像 */
+	string platFormHead = 1;
+}
+
+message S2CPlayerInfoUpdate {
+	
+}
+

@@ -228,6 +228,11 @@ declare namespace wx {
     }
 
     /**
+     * 获取实时日志管理器实例
+     */
+    function getRealtimeLogManager(): RealtimeLogManager;
+
+    /**
      * 获取系统信息
      */
     function getSystemInfo(object: { success: (res: systemInfo) => void, fail: (err: any) => void, complete?: (res?: any) => void }): void;
@@ -578,7 +583,7 @@ declare namespace wx {
 
     /**
      * 创建 banner 广告组件。请通过 wx.getSystemInfoSync() 返回对象的 SDKVersion 判断基础库版本号 >= 2.6.0 后再使用该 API。
-     * @param Option 
+     * @param Option
      */
     function createInterstitialAd(Option: { adUnitId: string }): InterstitialAd;
 
@@ -878,26 +883,37 @@ declare namespace wx {
         send(obj: { address: string, port: number, message: string | ArrayBuffer, offset?: number, length?: number }): void;
     }
 
-    /** 
+    /**
      * 更新转发属性
-     * 
+     *
      */
     function updateShareMenu(object: { withShareTicket?: boolean, isUpdatableMessage?: boolean, activityId?: string, templateInfo?: { parameterList: Array<{ name: string, value: string }> }, success?: (res?: any) => void, fail?: (res?: any) => void, complete?: (res?: any) => void }): void;
 
     /**
+     * 打开分享图片弹窗，可以将图片发送给朋友、收藏或下载
+     * @param object
+     */
+    function showShareImageMenu(object: {
+        path: string,
+        success?: (res?: any) => void,
+        fail?: (res?: any) => void,
+        complete?: (res?: any) => void
+    }): void;
+
+    /**
      * 显示当前页面的转发按钮
      */
-    function showShareMenu(object: { withShareTicket?: boolean, success?: (res?: any) => void, fail?: (res?: any) => void, complete?: (res?: any) => void }): void;
+    function showShareMenu(object: { withShareTicket?: boolean, menus?: string[], success?: (res?: any) => void, fail?: (res?: any) => void, complete?: (res?: any) => void }): void;
 
     /**
      * 隐藏转发按钮
-     * 
+     *
      */
     function hideShareMenu(object: { success?: (res?: any) => void, fail?: (res?: any) => void, complete?: (res?: any) => void }): void;
 
     /**
      * 获取转发详细信息
-     *  
+     *
      */
     function getShareInfo(object: {
         shareTicket: string,
@@ -930,6 +946,14 @@ declare namespace wx {
         query: string
     }) => void): void;
 
+    /**
+     * 监听用户点击右上角菜单的“转发朋友圈”按钮时触发的事件
+     */
+    function onShareTimeline(callback: (res: {
+        title: string,
+        imageUrl: string,
+        query: string
+    }) => void): void;
 
     /**
     * 发起米大师支付
@@ -1935,7 +1959,16 @@ declare namespace wx {
             fontSize: number,
             lineHeight: number
         },
-        icon: 'green' | 'white' | 'dark' | 'light'
+        icon: 'green' | 'white' | 'dark' | 'light',
+        show(): void;
+
+        hide(): void;
+
+        destroy(): void;
+
+        onTap(callback: () => void): void;
+
+        offTap(callback: () => void): void;
     }
 
     /** 创建游戏圈按钮。游戏圈按钮被点击后会跳转到小游戏的游戏圈。更多关于游戏圈的信息见 游戏圈使用指南*/
@@ -2107,7 +2140,7 @@ declare namespace wx {
         complete?: (res?: any) => void
     }): void;
 
-    /** 
+    /**
      * 监听内存不足告警事件。
      * 当 iOS/Android 向小程序进程发出内存警告时，触发该事件。触发该事件不意味小程序被杀，大部分情况下仅仅是告警，开发者可在收到通知后回收一些不必要资源避免进一步加剧内存紧张。
      */
@@ -2482,7 +2515,7 @@ interface AggregationOperators {
 //  */
 // declare var WebGLRenderingContext: {
 //     /**
-//      * 
+//      *
 //      * @param texture WebGL 的纹理类型枚举值
 //      * @param canvas 需要绑定为 Texture 的 Canvas
 //      */

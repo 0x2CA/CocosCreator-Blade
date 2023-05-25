@@ -1,4 +1,4 @@
-import { BigSource } from "../Libs/Big/Big";
+import { BigSource } from "../Libs/Big/big";
 
 export default class BigHelper {
     private static Unit: string[] = [
@@ -37,7 +37,7 @@ export default class BigHelper {
 
 	/**
      * 格式化数值
-     * @param Number 
+     * @param Number
      */
     public static toFormat(bigSource: BigSource) {
         try {
@@ -80,7 +80,7 @@ export default class BigHelper {
             }
             return str + BigHelper.Unit[count - 1];
         } catch (error) {
-            cc.log(error);
+            console.log(error);
             return "0";
         }
     }
@@ -88,8 +88,8 @@ export default class BigHelper {
 
     /**
      * 缩小数值
-     * @param Number 
-     * @param level 
+     * @param Number
+     * @param level
      */
     public static toSmall(bigSource: BigSource, level = 5) {
         try {
@@ -128,7 +128,7 @@ export default class BigHelper {
             let result = (parseInt(num.join("").substr(0, 3 * level - 1)) + Math.pow(10, 3 * level - 1) + "").substr(1);
             return parseInt(unitStr + result);
         } catch (error) {
-            cc.log(error);
+            console.log(error);
             return 0;
         }
     }

@@ -1,3 +1,4 @@
+
 /**
  * 取消一个先前通过调用 requestAnimationFrame 方法添加到计划中的动画帧请求
  */
@@ -59,11 +60,57 @@ declare function setInterval(callback: () => void, delay: number, ...rest): numb
  */
 declare namespace tt {
 
+    /**
+    * 发起支付
+    * 提示
+    * 调用该方法时，需要保证用户已经登录。可以调用tt.checkSession检测用户登录状态，以避免用户处于未登录状态时支付订单，在登录后无法关联订单与登录后的账户。
+    * 异常情况下，充值有可能存在游戏币延迟到账问题，建议游戏在收到支付结果回调后，向服务端轮询最新游戏币余额，间隔 3 秒，持续约 1 分钟，可以根据返回值的 save_amt 的变化来确定是否充值成功。 同时也存在一些异常情况，导致充值成功后结果回调失败，因此建议游戏在启用游戏时主动查询游戏币余额，并且提供给用户主动刷新余额的功能。（不要将查询余额作为进入游戏的必要条件，查询失败时，可在显示余额的界面显示异常，不要拒绝用户进入游戏，更不要直接显示 0） 强烈建议请求中填入 customId 和 extraInfo 字段（字段意义见下方表格），如果未填，支付结果回调将不包含游戏开发者的订单号，导致开发者无法确定回调是对应哪个订单，从而影响游戏道具发放。如果遇到此类问题，开发者可调用queryPayState 接口进行订单状态确认。
+    * 以上三条均属建议，供游戏参考。
+    * @param mode 支付的类型, 目前仅为"game"
+    * @param env 环境配置，目前合法值仅为"0"
+    * @param currencyType 币种, 目前仅为"CNY"
+    * @param platform 申请接入时的平台，目前仅为"android"
+    * @param buyQuantity 金币购买数量，金币数量必须满足：金币数量*金币单价 = 限定价格等级（详见下方 buyQuantity 限制说明。开发者可以在字节小游戏平台的“支付”tab 设置游戏币单价）
+    * @param zoneId 游戏服务区 id，开发者自定义。游戏不分大区则默认填写"1"。如果应用支持多角色，则角色 ID 接在分区 ID 后，用"_"连接
+    * @param customId 游戏开发者自定义的唯一订单号，订单支付成功后通过服务端支付结果回调回传,必须具有唯一性，如果不传或重复传相同值，则会报错
+    * @param extraInfo 游戏开发者自定义的其他信息，订单支付成功后通过服务端支付结果回调回传。字符串长度最大不能超过 256。
+    */
+    function requestGamePayment(
+        object: {
+            mode: "game",
+            env: 0,
+            currencyType: "CNY",
+            platform: "android",
+            buyQuantity: number,
+            zoneId?: string,
+            customId: string,
+            extraInfo?: string
+            success: (res: any) => void,
+            fail: (err: { errCode: number, errMsg: string }) => void,
+            complete?: (res?: any) => void
+        }
+    ): void;
+
     type ENV = {
         USER_DATA_PATH: string;
     }
 
     var env: ENV;
+
+    type SafeArea = {
+        /** 安全区域左上角横坐标*/
+        left: number;
+        /** 安全区域右下角横坐标*/
+        right: number;
+        /** 安全区域左上角纵坐标*/
+        top: number;
+        /** 安全区域右下角纵坐标*/
+        bottom: number;
+        /** 安全区域的宽度，单位逻辑像素*/
+        width: number;
+        /** 安全区域的高度，单位逻辑像素*/
+        height: number;
+    }
 
     type systemInfo = {
         /** 手机品牌*/
@@ -96,6 +143,9 @@ declare namespace tt {
         SDKVersion: string;
         /** 性能等级*/
         benchmarkLevel: number;
+        /** 在竖屏正方向下的安全区域*/
+        safeArea: SafeArea;
+
     }
 
     type launchOption = {
@@ -551,7 +601,7 @@ declare namespace tt {
 
     /**
      * 创建 banner 广告组件。请通过 tt.getSystemInfoSync() 返回对象的 SDKVersion 判断基础库版本号 >= 2.6.0 后再使用该 API。
-     * @param Option 
+     * @param Option
      */
     function createInterstitialAd(Option: { adUnitId: string }): InterstitialAd;
 
@@ -838,9 +888,9 @@ declare namespace tt {
         send(obj: { address: string, port: number, message: string | ArrayBuffer, offset?: number, length?: number }): void;
     }
 
-    /** 
+    /**
      * 更新转发属性
-     * 
+     *
      */
     function updateShareMenu(object: { withShareTicket?: boolean, isUpdatableMessage?: boolean, activityId?: string, templateInfo?: { parameterList: Array<{ name: string, value: string }> }, success?: (res?: any) => void, fail?: (res?: any) => void, complete?: (res?: any) => void }): void;
 
@@ -851,13 +901,13 @@ declare namespace tt {
 
     /**
      * 隐藏转发按钮
-     * 
+     *
      */
     function hideShareMenu(object: { success?: (res?: any) => void, fail?: (res?: any) => void, complete?: (res?: any) => void }): void;
 
     /**
      * 获取转发详细信息
-     *  
+     *
      */
     function getShareInfo(object: {
         shareTicket: string,
@@ -876,14 +926,25 @@ declare namespace tt {
      */
     function shareAppMessage(object:
         {
-            channel?: "article" | "video" | "token",
+            channel?: "invite" | "video" | "token" | "article",
             templateId?: string,
             title?: string,
             desc?: string,
             imageUrl?: string,
             query?: string,
-            extra?: object,
-            success?: () => void;
+            extra?: {
+                withVideoId?: boolean,
+                videoPath?: string,
+                videoTopics?: string[],
+                createChallenge?: boolean = false,
+                video_title?: string = "",
+                hashtag_list?: string[],
+                videoTag?: string,
+                defaultBgm?: string,
+                cutTemplateId?: string,
+                abortWhenCutTemplateUnavailable?: boolean = false
+            },
+            success?: (res: { videoId?: string }) => void;
             fail?: (error) => void;
         }): void;
 
@@ -1529,7 +1590,17 @@ declare namespace tt {
         path?: string,
         extraData?: {},
         envVersion?: string,
-        success?: (res?: any) => void, fail?: (res?: any) => void, complete?: (res?: any) => void
+        success?: (res?: any) => void,
+        fail?: (res?: any) => void,
+        complete?: (res?: any) => void
+    }): void;
+
+    /** 跳转到分享的视频播放页面 */
+    function navigateToVideoView(object: {
+        videoId: string,
+        success?: (res?: any) => void,
+        fail?: (res?: any) => void,
+        complete?: (res?: any) => void
     }): void;
 
     /**
@@ -1644,7 +1715,7 @@ declare namespace tt {
     /**
      * 调用接口获取登录凭证（code）进而换取用户登录态信息，包括用户的唯一标识（openid） 及本次登录的 会话密钥（session_key）等。用户数据的加解密通讯需要依赖会话密钥完成。
      */
-    function login(object: { timeout?: number, success?: (res: { code: string }) => void, fail?: (res?: any) => void, complete?: (res?: any) => void }): void;
+    function login(object: { force?: boolean, success?: (res: { code: string, anonymousCode: string, isLogin: string }) => void, fail?: (res?: any) => void, complete?: (res?: any) => void }): void;
 
     /**
      * 只有开放数据域能调用，获取主域和开放数据域共享的 sharedCanvas
@@ -1961,17 +2032,51 @@ declare namespace tt {
         icon: 'green' | 'white' | 'dark' | 'light'
     }): GameClubButton;
 
-    /** 进入客服会话。要求在用户发生过至少一次 touch 事件后才能调用。后台接入方式与小程序一致，详见 客服消息接入*/
+    /**
+     * tt.openCustomerServiceConversation是平台提供的小游戏客服能力，按钮界面由开发者绘制后，使用该 api 进行调用
+     * 本方法仅支持抖音&抖 lite，其他宿主请使用tt.createContactButton接入客服
+     * @param object
+     */
     function openCustomerServiceConversation(object: {
         sessionFrom?: string,
-        showMessageCard?: boolean,
-        sendMessageTitle?: string,
-        sendMessagePath?: string,
-        sendMessageImg?: string,
+        type?: 1 | 2,
         success?: (res?: any) => void,
         fail?: (res?: any) => void,
         complete?: (res?: any) => void
     }): void;
+
+    /** 客服按钮对象 */
+    interface ContactButton {
+        show(): void;
+
+        hide(): void;
+
+        destroy(): void;
+
+        onTap(callback: () => void): void;
+
+        offTap(callback: () => void): void;
+    }
+
+    /** 创建客服按钮。 */
+    function createContactButton(object: {
+        type: 'text' | 'image',
+        text?: string,
+        image?: string,
+        style: {
+            left: number,
+            top: number,
+            width: number,
+            height: number,
+            backgroundColor: string,
+            borderColor: string,
+            borderWidth: number,
+            borderRadius: number,
+            textAlign: 'left' | 'center' | 'right',
+            fontSize: number,
+            lineHeight: number
+        },
+    }): ContactButton;
 
     /** 获取用户过去三十天微信运动步数。需要先调用 tt.login 接口。步数信息会在用户主动进入小程序时更新。*/
     function getWeRunData(object: {
@@ -2109,7 +2214,7 @@ declare namespace tt {
         complete?: (res?: any) => void
     }): void;
 
-    /** 
+    /**
      * 监听内存不足告警事件。
      * 当 iOS/Android 向小程序进程发出内存警告时，触发该事件。触发该事件不意味小程序被杀，大部分情况下仅仅是告警，开发者可在收到通知后回收一些不必要资源避免进一步加剧内存紧张。
      */
@@ -2484,7 +2589,7 @@ interface AggregationOperators {
 //  */
 // declare var WebGLRenderingContext: {
 //     /**
-//      * 
+//      *
 //      * @param texture WebGL 的纹理类型枚举值
 //      * @param canvas 需要绑定为 Texture 的 Canvas
 //      */

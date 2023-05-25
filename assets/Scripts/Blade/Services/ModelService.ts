@@ -1,21 +1,23 @@
 import ModelBase from "../Bases/ModelBase";
 import SingletonBase from "../Bases/SingletonBase";
 
-
 /**
  * Model服务
  */
-
-class ModelService extends SingletonBase {
+class ModelService extends SingletonBase<ModelService> {
 
     // Model列表
-    private modelInfos: Map<any, ModelService.ModelInfo> = new Map<any, ModelService.ModelInfo>();
+    private _models: Map<string, ModelBase> = new Map<string, ModelBase>();
 
-    public onInitialize() {
-        this.modelInfos.clear();
+    protected onInitialize() {
+        this._models.clear();
     }
 
-    public onDispose() {
+    protected onDispose() {
+    }
+
+    private getAlias<T extends ModelBase>(modelType: new () => T): string {
+        return Reflect.get(modelType, "_alias");
     }
 
     /**
@@ -25,23 +27,27 @@ class ModelService extends SingletonBase {
      * @param onFieldChangeFn
      * @param target
      */
-    public on<T extends ModelBase>(modelType: (new () => T), watchField: Array<keyof T>, onFieldChangeFn: ModelService.WatchCallback, target: any) {
-        const info = this.modelInfos.get(modelType);
+    public on<T extends ModelBase>(modelType: new () => T, watchField: Array<keyof T>, onFieldChangeFn: ModelService.WatchCallback, target: object = null) {
+        let alias = this.getAlias(modelType);
 
-        if (info == null) {
+        const model = this._models.get(alias);
+
+        if (model == null) {
             return;
         }
 
+        let event = Reflect.get(model, "_event") as cc.EventTarget;
+
         for (const field of watchField) {
             if (typeof field === "string") {
-                info.event.on(field, onFieldChangeFn, target)
+                event.on(field, onFieldChangeFn, target)
             }
         }
 
         // 发送一次通知
         for (const field of watchField) {
             if (typeof field === "string") {
-                info.event.emit(field, info.model, (info.model as any)[field], (info.model as any)[field])
+                event.emit(field, model, Reflect.get(model, field), Reflect.get(model, field));
             }
         }
     }
@@ -53,16 +59,20 @@ class ModelService extends SingletonBase {
      * @param onFieldChangeFn
      * @param target
      */
-    public off<T extends ModelBase>(modelType: (new () => T), watchField: Array<keyof T>, onFieldChangeFn: ModelService.WatchCallback, target: any) {
-        const info = this.modelInfos.get(modelType);
+    public off<T extends ModelBase>(modelType: new () => T, watchField: Array<keyof T>, onFieldChangeFn: ModelService.WatchCallback, target: object = null) {
+        let alias = this.getAlias(modelType);
 
-        if (info == null) {
+        const model = this._models.get(alias);
+
+        if (model == null) {
             return;
         }
 
+        let event = Reflect.get(model, "_event") as cc.EventTarget;
+
         for (const field of watchField) {
             if (typeof field === "string") {
-                info.event.off(field, onFieldChangeFn, target)
+                event.off(field, onFieldChangeFn, target)
             }
         }
     }
@@ -72,8 +82,10 @@ class ModelService extends SingletonBase {
      * 获取Model
      * @param modelType
      */
-    public getModel<T extends ModelBase>(modelType: new () => T): T {
-        let model = this.modelInfos.get(modelType)?.model as T;
+    public get<T extends ModelBase>(modelType: new () => T): T {
+        let alias = this.getAlias(modelType);
+
+        let model = this._models.get(alias) as T;
 
         if (model == null) {
             model = this.createModel(modelType);
@@ -82,17 +94,8 @@ class ModelService extends SingletonBase {
         return model;
     }
 
-
-    public getModelByAlias(alias) {
-        let model = null;
-
-        this.modelInfos.forEach((info) => {
-            if (info.alias == alias) {
-                model = info.model;
-            }
-        });
-
-        return model;
+    public getByAlias(alias: string) {
+        return this._models.get(alias);
     }
 
     /**
@@ -100,24 +103,33 @@ class ModelService extends SingletonBase {
      * @param modelType
      */
     private createModel<T extends ModelBase>(modelType: new () => T): T {
-        let model: T = new modelType();
-        let event = new cc.EventTarget();
+        let alias = this.getAlias(modelType);
 
-        this.modelInfos.set(modelType, {
-            event: new cc.EventTarget(),
-            alias: (model as any).alias,
-            model
-        });
-
-        if ((model as any).alias == null || (model as any).alias == "") {
+        if (alias == null || alias == "") {
             console.warn("Model的名称是空的，请检查是否使用了Model装饰器");
         }
 
+        let model: T = new modelType();
+
+        let event = new cc.EventTarget();
+
+        Reflect.set(model, "_event", event);
+
+        this._models.set(alias, model);
+
         this.bindProxy(model, event);
+
+        let socketEvents = Reflect.get(model, "_socketEvents") as Map<number, Set<string>>;
+        if (socketEvents) {
+            socketEvents.forEach((functionList, messageId) => {
+                functionList.forEach((functionName) => {
+                    blade.socket.on(messageId, model[functionName], model);
+                });
+            });
+        }
 
         return model
     }
-
 
     /**
      * 设置代理
@@ -156,18 +168,10 @@ class ModelService extends SingletonBase {
 
 }
 
-
-
 namespace ModelService {
     export interface WatchCallback {
         (model: ModelBase, field: string, newVal: any, oldVal?: any): void
     };
-
-    export class ModelInfo {
-        public model: ModelBase;
-        public event: cc.EventTarget;
-        public alias: string;
-    }
 
     export const INNER_DATA_FIELD = "_data_";
 }

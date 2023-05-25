@@ -1,11 +1,4 @@
 import PlatformBase from "../Bases/PlatformBase";
-import HttpHelper from "../Helpers/HttpHelper";
-import StringHelper from "../Helpers/StringHelper";
-import PromiseHelper from "../Helpers/PromiseHelper";
-import PlatformConfig from "../../Module/Defines/PlatformConfig";
-import TickerService from "../Services/TickerService";
-import AudioService from "../Services/AudioService";
-import TimerService from "../Services/TimerService";
 
 /**
  *  微信
@@ -13,41 +6,45 @@ import TimerService from "../Services/TimerService";
 export default class WxPlatform extends PlatformBase {
 
     // 启动参数
-    private launchOptions: wx.launchOption
-        = null;
+    private _launchOptions: wx.launchOption = null;
 
     // 授权按钮
-    private authorizeButton = null;
+    private _authorizeButton = null;
+    // 授权取消
+    private _authorizeCancelCallBack: Function = null;
 
     // 菜单分享
-    private shareMenuInfo: {
+    private _shareMenuInfo: {
         title: string,
         imageUrl: string,
         query: string,
         success: Function
     } = null;
 
-    private videoState: PlatformBase.AdState = PlatformBase.AdState.None;
-    private bannerState: PlatformBase.AdState = PlatformBase.AdState.None;
-    private interstitialState: PlatformBase.AdState = PlatformBase.AdState.None;
-    private gridAdState: PlatformBase.AdState = PlatformBase.AdState.None;
+    private _videoState: PlatformBase.AdState = PlatformBase.AdState.None;
+    private _bannerState: PlatformBase.AdState = PlatformBase.AdState.None;
+    private _interstitialState: PlatformBase.AdState = PlatformBase.AdState.None;
+    private _gridAdState: PlatformBase.AdState = PlatformBase.AdState.None;
 
     /**
     * 激励视频实例
     */
-    private video: wx.RewardedVideoAd = null;
+    private _video: wx.RewardedVideoAd = null;
 
-    private banner: wx.BannerAd = null;
+    private _banner: wx.BannerAd = null;
 
-    private interstitial: wx.InterstitialAd = null;
+    private _interstitial: wx.InterstitialAd = null;
 
-    private gridAd: wx.GridAd = null;
+    private _gridAd: wx.GridAd = null;
+
+    private _bannerActive: boolean = false;
 
 
-    private bannerActive: boolean = false;
+    private _configs: WxConfigBase = null;
 
+    protected onInitialize() {
+        this._configs = PlatformConfig[PlatformService.PlatformType.WX];
 
-    public onInitialize() {
         // 获取尝试用户信息
         this.getUserInfoTry()
 
@@ -58,12 +55,82 @@ export default class WxPlatform extends PlatformBase {
             this.emit(PlatformBase.EventType.OnShow, res)
         });
 
-        this.preloadBanner();
-        this.preloadInterstitial();
-        this.preloadRewardVideo();
-        this.preloadGridAd();
+        // this.preloadBanner();
+        // this.preloadInterstitial();
+        // this.preloadRewardVideo();
+        // this.preloadGridAd();
     }
 
+    public async login(isForce: boolean = false): Promise<void> {
+
+    }
+
+    public async pay(refId: string): Promise<void> {
+
+    }
+
+    private _isCheckUpdate: boolean = false;
+
+    public checkForUpdate(): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this.checkUpdate(resolve)
+        });
+    }
+
+    private checkUpdate(finishCallback: () => void) {
+        this._isCheckUpdate = false;
+
+        const updateManager = wx.getUpdateManager();
+
+        updateManager.onCheckForUpdate((res) => {
+            this._isCheckUpdate = true;
+
+            // 请求完新版本信息的回调
+            console.log("检查更新回调", res.hasUpdate);
+            if (!res.hasUpdate) {
+                //无更新
+                finishCallback();
+            }
+        })
+
+        updateManager.onUpdateReady(() => {
+            wx.showModal({
+                title: '更新提示',
+                content: '新版本已经准备好，是否重启应用？',
+                success: (res) => {
+                    if (res.confirm) {
+                        // 新的版本已经下载好，调用 applyUpdate 应用新版本并重启
+                        updateManager.applyUpdate()
+                    } else {
+                        this.checkUpdate(finishCallback);
+                    }
+                }
+            })
+        })
+
+        updateManager.onUpdateFailed(() => {
+            // 新版本下载失败
+            wx.showModal({
+                title: '更新失败',
+                content: '新版本下载失败，请重试!',
+                success: (res) => {
+                    // if (res.confirm) {
+                    //     this.checkUpdate(finishCallback);
+                    // }
+                    this.checkUpdate(finishCallback);
+                }
+            })
+        });
+
+        if (this._isCheckUpdate == false) {
+            blade.timer.startTimeout(1.5, () => {
+                if (this._isCheckUpdate == false) {
+                    //无更新
+                    finishCallback();
+                }
+            }, this);
+        }
+    }
 
     public getArchive(name: string): string {
         return wx.getStorageSync(name) as string;
@@ -74,10 +141,10 @@ export default class WxPlatform extends PlatformBase {
     }
 
     public getLaunchOptions() {
-        if (!this.launchOptions) {
-            this.launchOptions = wx.getLaunchOptionsSync();
+        if (!this._launchOptions) {
+            this._launchOptions = wx.getLaunchOptionsSync();
         }
-        return this.launchOptions;
+        return this._launchOptions;
     }
 
     /**
@@ -85,7 +152,7 @@ export default class WxPlatform extends PlatformBase {
      * @param value
      */
     private setLaunchOptions(value: wx.launchOption) {
-        this.launchOptions = value;
+        this._launchOptions = value;
     }
 
     /**
@@ -122,10 +189,13 @@ export default class WxPlatform extends PlatformBase {
             });
             return result;
         } catch (error) {
-            cc.error(error);
+            // console.error(error);
             return null
         }
     }
+
+    private _encryptedData: string = null;
+    private _iv: string = null;
 
     /**
     * 用户授权
@@ -138,8 +208,17 @@ export default class WxPlatform extends PlatformBase {
         height: number;
         callback?: Function;
         caller?: any;
-    }): Promise<any> {
+    }): Promise<void> {
+        if (this._authorizeButton) {
+            this._authorizeButton.destroy();
+            this._authorizeButton = null;
+        }
+        if (this._authorizeCancelCallBack) {
+            this._authorizeCancelCallBack();
+            this._authorizeCancelCallBack = null;
+        }
         return new Promise((resolve, reject) => {
+            this._authorizeCancelCallBack = reject;
             const handleInfo = (res) => {
                 if (res.rawData) {
                     const info = JSON.parse(res.rawData);
@@ -155,73 +234,71 @@ export default class WxPlatform extends PlatformBase {
                         device: sysInfo.model,
                     };
                     if (options && options.callback) {
-                        options.callback.call(options.caller);
+                        options.callback.call(options.caller, this.userInfo);
                     }
-                    resolve({
-                        encryptedData: res.encryptedData,
-                        iv: res.iv,
-                    });
-                } else {
-                    reject();
+                    this._encryptedData = res.encryptedData;
+                    this._iv = res.iv;
+                    resolve();
                 }
             };
             wx.getUserInfo({
                 success: handleInfo,
                 fail: (res: any) => {
-                    // 获取配置
-                    wx.getSetting({
+                    // // 获取配置
+                    // wx.getSetting({
+                    //     success: (res) => {
+                    wx.getSystemInfo({
                         success: (res) => {
-                            wx.getSystemInfo({
-                                success: (res) => {
-                                    if (options) {
-                                        options.height *= res.screenHeight;
-                                        options.width *= res.screenWidth;
-                                        options.left *= res.screenWidth;
-                                        options.top *= res.screenHeight;
-                                    } else {
-                                        options = {
-                                            left: 0,
-                                            top: 0,
-                                            width: res.screenWidth,
-                                            height: res.screenHeight,
-                                        };
-                                    }
-                                    const button = wx.createUserInfoButton({
-                                        type: "text",
-                                        text: "",
-                                        style: {
-                                            left: options.left,
-                                            top: options.top,
-                                            width: options.width,
-                                            height: options.height,
-                                            backgroundColor: "rgba(252,255,255,0)",
-                                            borderColor: "rgba(250,250,250,0)",
-                                            borderWidth: 0,
-                                            borderRadius: 0,
-                                            textAlign: "center",
-                                            fontSize: 30,
-                                            lineHeight: 32,
-                                        },
-                                        withCredentials: false,
-                                    });
-                                    this.authorizeButton = button;
-                                    button.onTap((res: any) => {
-                                        if (res.rawData) {
-                                            button.destroy();
-                                            this.authorizeButton = null;
-                                            if (options && options.callback) {
-                                                options.callback.call(options.caller);
-                                            }
-                                        }
-                                        handleInfo(res);
-                                    });
+                            if (options) {
+                                options.height *= res.screenHeight;
+                                options.width *= res.screenWidth;
+                                options.left *= res.screenWidth;
+                                options.top *= res.screenHeight;
+                            } else {
+                                options = {
+                                    left: 0,
+                                    top: 0,
+                                    width: res.screenWidth,
+                                    height: res.screenHeight,
+                                };
+                            }
+                            const button = wx.createUserInfoButton({
+                                type: "text",
+                                text: "",
+                                style: {
+                                    left: options.left,
+                                    top: options.top,
+                                    width: options.width,
+                                    height: options.height,
+                                    backgroundColor: "rgba(252,255,255,0)",
+                                    borderColor: "rgba(250,250,250,0)",
+                                    borderWidth: 0,
+                                    borderRadius: 0,
+                                    textAlign: "center",
+                                    fontSize: 30,
+                                    lineHeight: 32,
                                 },
-                                fail: (res) => {
-                                    reject();
-                                },
+                                withCredentials: false,
+                            });
+                            this._authorizeButton = button;
+                            button.onTap((res: any) => {
+                                if (res.rawData) {
+                                    button.destroy();
+                                    this._authorizeButton = null;
+                                }
+                                if (this._authorizeCancelCallBack) {
+                                    this._authorizeCancelCallBack();
+                                    this._authorizeCancelCallBack = null;
+                                }
+                                handleInfo(res);
                             });
                         },
+                        fail: (res) => {
+                            reject();
+                        },
                     });
+                    // },
+                    // });
                 },
             });
         });
@@ -231,32 +308,121 @@ export default class WxPlatform extends PlatformBase {
      * 取消授权
      */
     public unauthorize() {
-        if (this.authorizeButton) {
-            this.authorizeButton.destroy();
-            this.authorizeButton = null;
+        if (this._authorizeButton) {
+            this._authorizeButton.destroy();
+            this._authorizeButton = null;
+        }
+        if (this._authorizeCancelCallBack) {
+            this._authorizeCancelCallBack();
+            this._authorizeCancelCallBack = null;
         }
     }
 
+    private gameClubButton: wx.GameClubButton = null;
+
+    /**
+     * 显示游戏圈
+     * left、top、width、height 为相对界面的比例，0~1
+     * @param options
+     * @returns
+     */
+    public showGameClubButton(options?: {
+        left: number;
+        top: number;
+        width: number;
+        height: number;
+        callback?: Function;
+        caller?: any;
+    }) {
+        if (this.gameClubButton) {
+            this.gameClubButton.destroy();
+            this.gameClubButton = null;
+        }
+
+        return new Promise((resolve, reject) => {
+            wx.getSystemInfo({
+                success: (res) => {
+                    if (options) {
+                        options.height *= res.screenHeight;
+                        options.width *= res.screenWidth;
+                        options.left *= res.screenWidth;
+                        options.top *= res.screenHeight;
+                    } else {
+                        options = {
+                            left: 0,
+                            top: 0,
+                            width: res.screenWidth,
+                            height: res.screenHeight,
+                        };
+                    }
+                    const button = wx.createGameClubButton({
+                        type: "text",
+                        text: "",
+                        style: {
+                            left: options.left,
+                            top: options.top,
+                            width: options.width,
+                            height: options.height,
+                            backgroundColor: "rgba(252,255,255,0)",
+                            borderColor: "rgba(250,250,250,0)",
+                            borderWidth: 0,
+                            borderRadius: 0,
+                            textAlign: "center",
+                            fontSize: 30,
+                            lineHeight: 32,
+                        },
+                        icon: "green"
+                    })
+                    this.gameClubButton = button;
+                    button.onTap(() => {
+                        if (options.callback) {
+                            options.callback.call(options.caller);
+                        }
+                    });
+                },
+                fail: (res) => {
+                    reject();
+                },
+            });
+        });
+    }
+
+    /**
+     * 隐藏游戏圈
+     */
+    public hideGameClubButton() {
+        if (this.gameClubButton) {
+            this.gameClubButton.destroy();
+            this.gameClubButton = null;
+        }
+    }
 
     /**
     * 配置菜单分享内容
     */
     public async setShareMenuInfo(imageUrl: string, title: string, param: any, callback?: Function, caller?: any) {
-        if (this.shareMenuInfo == null) {
+        if (this._shareMenuInfo == null) {
             wx.showShareMenu({
                 withShareTicket: true,
+                menus: ['shareAppMessage', 'shareTimeline']
             });
 
             wx.onShareAppMessage(() => {
-                return this.shareMenuInfo
+                return this._shareMenuInfo
+            });
+
+            wx.onShareTimeline(() => {
+                return this._shareMenuInfo
             });
         }
 
-        param.shareTime = TimerService.getInstance().getTime();
+        param = param || {}
+
+        param.shareTime = blade.timer.getTime();
 
         let query = HttpHelper.formatParams(param);
 
-        this.shareMenuInfo = {
+        this._shareMenuInfo = {
             imageUrl, title, query, success: () => {
                 this.emit(PlatformBase.EventType.OpenShare, imageUrl, title, param);
                 if (callback) {
@@ -278,68 +444,68 @@ export default class WxPlatform extends PlatformBase {
      * 判断视频是否已经加载完成
      */
     public isVideoLoaded(): boolean {
-        return this.videoState == PlatformBase.AdState.Loaded;
+        return this._videoState == PlatformBase.AdState.Loaded;
     }
 
     /**
     * 预加载激励视频
     */
-    public async preloadRewardVideo(): Promise<any> {
+    public async preloadRewardVideo(): Promise<void> {
         if (!this.isSupportRewardVideo()) {
             return;
         }
 
         // 已经加载
-        if (this.videoState == PlatformBase.AdState.Loaded) {
+        if (this._videoState == PlatformBase.AdState.Loaded) {
             return;
         }
 
         // 正在加载, 等待加载结束
-        if (this.videoState == PlatformBase.AdState.Loading) {
-            return await PromiseHelper.waitUntil(() => this.videoState != PlatformBase.AdState.Loading);
+        if (this._videoState == PlatformBase.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => this._videoState != PlatformBase.AdState.Loading);
         }
 
-        this.videoState = PlatformBase.AdState.Loading;
+        this._videoState = PlatformBase.AdState.Loading;
 
-        if (this.video == null) {
+        if (this._video == null) {
             // 初次创建会调load方法
-            this.video = wx.createRewardedVideoAd({
-                adUnitId: PlatformConfig.wx.videoId,
+            this._video = wx.createRewardedVideoAd({
+                adUnitId: this._configs.videoId,
             });
             // 加载成功
-            this.video.onLoad(() => {
-                this.videoState = PlatformBase.AdState.Loaded;
+            this._video.onLoad(() => {
+                this._videoState = PlatformBase.AdState.Loaded;
             });
             // 加载失败
-            this.video.onError((err) => {
-                this.videoState = PlatformBase.AdState.None;
+            this._video.onError((err) => {
+                this._videoState = PlatformBase.AdState.None;
             });
-            this.video.onClose((res) => {
+            this._video.onClose((res) => {
                 let result = (res && res.isEnded) || res === undefined;
-                TickerService.getInstance().pause = false;
-                AudioService.getInstance().resumeAll();
+                // blade.ticker.pause = false;
+                blade.audio.resumeAll();
                 this.preloadRewardVideo();
                 // 发送结果
                 this.emit(PlatformBase.EventType.CloseVideo, result);
             })
         } else {
-            this.video.load();
+            this._video.load();
         }
 
-        this.video.load();
+        this._video.load();
 
         // 正在加载, 等待加载结束
-        return await PromiseHelper.waitUntil(() => this.videoState != PlatformBase.AdState.Loading);
+        return await PromiseHelper.waitUntil(() => this._videoState != PlatformBase.AdState.Loading);
     }
 
     /**
      * 播放激励视频
      */
     public async playRewardVideo(): Promise<boolean> {
-        if (this.video != null && this.videoState == PlatformBase.AdState.Loaded) {
-            this.videoState = PlatformBase.AdState.None;
-            TickerService.getInstance().pause = true;
-            AudioService.getInstance().pauseAll();
+        if (this._video != null && this._videoState == PlatformBase.AdState.Loaded) {
+            this._videoState = PlatformBase.AdState.None;
+            // blade.ticker.pause = true;
+            blade.audio.pauseAll();
 
             let result: boolean = await new Promise(async (resolve, reject) => {
                 const closeFunc = (result) => {
@@ -347,11 +513,11 @@ export default class WxPlatform extends PlatformBase {
                 };
                 this.once(PlatformBase.EventType.CloseVideo, closeFunc);
                 try {
-                    await this.video.show()
+                    await this._video.show()
                     this.emit(PlatformBase.EventType.OpenVideo);
                 } catch (error) {
-                    TickerService.getInstance().pause = false;
-                    AudioService.getInstance().resumeAll();
+                    // blade.ticker.pause = false;
+                    blade.audio.resumeAll();
                     this.preloadRewardVideo();
                     this.off(PlatformBase.EventType.CloseVideo, closeFunc);
                     resolve(false);
@@ -360,6 +526,7 @@ export default class WxPlatform extends PlatformBase {
 
             return result;
         } else {
+            this.preloadRewardVideo();
             return false;
         }
     }
@@ -375,29 +542,29 @@ export default class WxPlatform extends PlatformBase {
     /**
     * 预加载横幅
     */
-    public async preloadBanner(): Promise<any> {
+    public async preloadBanner(): Promise<void> {
         if (!this.isSupportBanner()) {
             return;
         }
 
         // 已经加载
-        if (this.bannerState == WxPlatform.AdState.Loaded) {
+        if (this._bannerState == WxPlatform.AdState.Loaded) {
             return;
         }
 
         // 正在加载, 等待加载结束
-        if (this.bannerState == WxPlatform.AdState.Loading) {
-            return await PromiseHelper.waitUntil(() => this.bannerState != WxPlatform.AdState.Loading);
+        if (this._bannerState == WxPlatform.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => this._bannerState != WxPlatform.AdState.Loading);
         }
 
-        if (this.banner) {
-            this.banner.destroy();
-            this.banner = null
+        if (this._banner) {
+            this._banner.destroy();
+            this._banner = null
         }
 
-        const sysInfo: wx.systemInfo = wx.getSystemInfoSync();
-        this.banner = wx.createBannerAd({
-            adUnitId: PlatformConfig.wx.bannerId,
+        const sysInfo = wx.getSystemInfoSync();
+        this._banner = wx.createBannerAd({
+            adUnitId: this._configs.bannerId,
             style: {
                 top: 0,
                 left: 0,
@@ -406,27 +573,27 @@ export default class WxPlatform extends PlatformBase {
             },
         });
 
-        this.banner.onLoad(async () => {
-            this.bannerState = WxPlatform.AdState.Loaded;
-            if (this.bannerActive) {
+        this._banner.onLoad(async () => {
+            this._bannerState = WxPlatform.AdState.Loaded;
+            if (this._bannerActive) {
                 this.emit(PlatformBase.EventType.OpenBanner);
-                this.banner.show();
+                this._banner.show();
             }
         });
 
-        this.banner.onError((err) => {
-            this.bannerState = WxPlatform.AdState.None;
+        this._banner.onError((err) => {
+            this._bannerState = WxPlatform.AdState.None;
         });
 
-        this.banner.onResize((res) => {
+        this._banner.onResize((res) => {
             // 重设横幅位置
-            this.banner.style.top =
-                sysInfo.windowHeight - this.banner.style.realHeight;
-            this.banner.style.left =
-                (sysInfo.windowWidth - this.banner.style.realWidth) / 2;
+            this._banner.style.top =
+                sysInfo.windowHeight - this._banner.style.realHeight;
+            this._banner.style.left =
+                (sysInfo.windowWidth - this._banner.style.realWidth) / 2;
         });
 
-        this.bannerState = PlatformBase.AdState.Loading;
+        this._bannerState = PlatformBase.AdState.Loading;
     }
 
 
@@ -435,28 +602,28 @@ export default class WxPlatform extends PlatformBase {
     * @param active
     */
     public activeBanner(active: boolean) {
-        if (this.banner == null) {
+        if (this._banner == null) {
             return false;
         }
 
         if (active) {
-            if (this.bannerState != PlatformBase.AdState.Loaded) {
+            if (this._bannerState != PlatformBase.AdState.Loaded) {
                 return false;
             }
 
             this.emit(PlatformBase.EventType.OpenBanner);
-            this.banner.show();
-            this.bannerState = PlatformBase.AdState.Opening;
+            this._banner.show();
+            this._bannerState = PlatformBase.AdState.Opening;
             return true;
         } else {
             // 直接销毁重新创建banner, 刷新广告
-            if (this.bannerState != PlatformBase.AdState.Opening) {
+            if (this._bannerState != PlatformBase.AdState.Opening) {
                 return false;
             }
             this.emit(PlatformBase.EventType.CloseBanner);
-            this.banner.destroy();
-            this.banner = null;
-            this.bannerState = PlatformBase.AdState.None;
+            this._banner.destroy();
+            this._banner = null;
+            this._bannerState = PlatformBase.AdState.None;
             this.preloadBanner();
             return true;
         }
@@ -467,7 +634,7 @@ export default class WxPlatform extends PlatformBase {
     }
 
     public isInterstitialLoaded() {
-        return this.interstitialState == PlatformBase.AdState.Loaded;
+        return this._interstitialState == PlatformBase.AdState.Loaded;
     }
 
     public async preloadInterstitial() {
@@ -475,30 +642,30 @@ export default class WxPlatform extends PlatformBase {
             return;
         }
 
-        if (this.interstitialState == PlatformBase.AdState.Loaded) {
+        if (this._interstitialState == PlatformBase.AdState.Loaded) {
             return;
         }
 
-        if (this.interstitialState == PlatformBase.AdState.Loading) {
+        if (this._interstitialState == PlatformBase.AdState.Loading) {
             return await PromiseHelper.waitUntil(() => {
-                return this.interstitialState != PlatformBase.AdState.Loading;
+                return this._interstitialState != PlatformBase.AdState.Loading;
             });
         }
 
-        this.interstitialState = PlatformBase.AdState.Loading;
-        if (this.interstitial == null) {
-            this.interstitial = wx.createInterstitialAd({ adUnitId: PlatformConfig.wx.interstitialId });
+        this._interstitialState = PlatformBase.AdState.Loading;
+        if (this._interstitial == null) {
+            this._interstitial = wx.createInterstitialAd({ adUnitId: this._configs.interstitialId });
 
-            this.interstitial.onLoad(() => {
-                this.interstitialState = PlatformBase.AdState.Loaded;
+            this._interstitial.onLoad(() => {
+                this._interstitialState = PlatformBase.AdState.Loaded;
             });
 
-            this.interstitial.onError(async (error) => {
-                this.interstitialState = PlatformBase.AdState.None;
+            this._interstitial.onError(async (error) => {
+                this._interstitialState = PlatformBase.AdState.None;
             });
 
-            this.interstitial.onClose(() => {
-                this.interstitialState = PlatformBase.AdState.None;
+            this._interstitial.onClose(() => {
+                this._interstitialState = PlatformBase.AdState.None;
                 this.emit(PlatformBase.EventType.CloseInterstitial);
             });
         }
@@ -506,20 +673,22 @@ export default class WxPlatform extends PlatformBase {
 
     async showInterstitial() {
         if (!this.isSupportInterstitial()) {
-            return;
+            return Promise.resolve(false);
         }
 
         if (!this.isInterstitialLoaded()) {
             this.preloadInterstitial();
-            return;
+            return Promise.resolve(false);
         }
 
         try {
-            await this.interstitial.show();
-            this.interstitialState = PlatformBase.AdState.Opening;
+            await this._interstitial.show();
+            this._interstitialState = PlatformBase.AdState.Opening;
             this.emit(PlatformBase.EventType.OpenInterstitial)
+            return Promise.resolve(true);
         } catch (error) {
-            cc.error(error);
+            console.error(error);
+            return Promise.resolve(false);
         }
     }
 
@@ -530,7 +699,7 @@ export default class WxPlatform extends PlatformBase {
 
 
     public isGridAdLoaded() {
-        return this.gridAdState == PlatformBase.AdState.Loaded;
+        return this._gridAdState == PlatformBase.AdState.Loaded;
     }
 
     public async preloadGridAd() {
@@ -538,21 +707,21 @@ export default class WxPlatform extends PlatformBase {
             return;
         }
 
-        if (this.gridAdState == PlatformBase.AdState.Loaded) {
+        if (this._gridAdState == PlatformBase.AdState.Loaded) {
             return;
         }
 
-        if (this.gridAdState == PlatformBase.AdState.Loading) {
+        if (this._gridAdState == PlatformBase.AdState.Loading) {
             return await PromiseHelper.waitUntil(() => {
-                return this.gridAdState != PlatformBase.AdState.Loading;
+                return this._gridAdState != PlatformBase.AdState.Loading;
             });
         }
 
-        const sysInfo: wx.systemInfo = wx.getSystemInfoSync();
-        this.gridAdState = PlatformBase.AdState.Loading;
-        if (this.gridAd == null) {
-            this.gridAd = wx.createGridAd({
-                adUnitId: PlatformConfig.wx.gridId,
+        const sysInfo = wx.getSystemInfoSync();
+        this._gridAdState = PlatformBase.AdState.Loading;
+        if (this._gridAd == null) {
+            this._gridAd = wx.createGridAd({
+                adUnitId: this._configs.gridId,
                 adTheme: "white",
                 gridCount: 8,
                 style: {
@@ -563,20 +732,20 @@ export default class WxPlatform extends PlatformBase {
                 }
             });
 
-            this.gridAd.onLoad(() => {
-                this.gridAdState = PlatformBase.AdState.Loaded;
+            this._gridAd.onLoad(() => {
+                this._gridAdState = PlatformBase.AdState.Loaded;
             });
 
-            this.gridAd.onError(async (error) => {
-                this.gridAdState = PlatformBase.AdState.None;
+            this._gridAd.onError(async (error) => {
+                this._gridAdState = PlatformBase.AdState.None;
             });
 
-            this.gridAd.onResize((res) => {
+            this._gridAd.onResize((res) => {
                 // 重设横幅位置
-                this.gridAd.style.top =
-                    (sysInfo.windowHeight - this.gridAd.style.realHeight) / 2;
-                this.gridAd.style.left =
-                    (sysInfo.windowWidth - this.gridAd.style.realWidth) / 2;
+                this._gridAd.style.top =
+                    (sysInfo.windowHeight - this._gridAd.style.realHeight) / 2;
+                this._gridAd.style.left =
+                    (sysInfo.windowWidth - this._gridAd.style.realWidth) / 2;
             });
 
         }
@@ -593,10 +762,10 @@ export default class WxPlatform extends PlatformBase {
         }
 
         if (active) {
-            this.gridAd.show();
+            this._gridAd.show();
             return true;
         } else {
-            this.gridAd.hide();
+            this._gridAd.hide();
             return true;
         }
     }
@@ -605,7 +774,7 @@ export default class WxPlatform extends PlatformBase {
     /**
      * 发送邀请
      */
-    public async sendInvite(imageUrl: string, title: string, param: any): Promise<any> {
+    public async sendInvite(imageUrl: string, title: string, param: any): Promise<void> {
         wx.shareAppMessage({
             title: title,
             imageUrl: imageUrl,
@@ -648,7 +817,7 @@ export default class WxPlatform extends PlatformBase {
                 path: path,
                 extraData: extraData,
                 success: () => {
-                    cc.log(`跳转 ${appid}`);
+                    console.log(`跳转 ${appid}`);
                     resolve(true);
                 },
                 fail: reject,
@@ -656,6 +825,27 @@ export default class WxPlatform extends PlatformBase {
         });
     }
 
+    public copyToClipBoard(string: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            wx.setClipboardData({
+                data: string, success: () => {
+                    console.log("已经复制到剪贴板");
+                    resolve();
+                }, fail: (error) => {
+                    console.log("复制到剪贴板失败");
+                    reject(error);
+                }
+            });
+        });
+    }
+
 }
 
+
+import PlatformConfig from "../../Module/Defines/PlatformConfig";
+import WxConfigBase from "../../Module/Defines/PlatformConfig/Bases/WxConfigBase";
+import HttpHelper from "../Helpers/HttpHelper";
+import PromiseHelper from "../Helpers/PromiseHelper";
+import StringHelper from "../Helpers/StringHelper";
+import PlatformService from "../Services/PlatformService";
 

@@ -1,10 +1,4 @@
 import PlatformBase from "../Bases/PlatformBase";
-import HttpHelper from "../Helpers/HttpHelper";
-import StringHelper from "../Helpers/StringHelper";
-import PromiseHelper from "../Helpers/PromiseHelper";
-import PlatformConfig from "../../Module/Defines/PlatformConfig";
-import AudioService from "../Services/AudioService";
-import TickerService from "../Services/TickerService";
 
 /**
  *  QQ
@@ -12,56 +6,57 @@ import TickerService from "../Services/TickerService";
 export default class QQPlatform extends PlatformBase {
 
     // 启动参数
-    private launchOptions: qq.launchOption
+    private _launchOptions: qq.launchOption
         = null;
 
     // 授权按钮
-    private authorizeButton = null;
+    private _authorizeButton = null;
 
     // 菜单分享
-    private shareMenuInfo: {
+    private _shareMenuInfo: {
         title: string,
         imageUrl: string,
         query: string,
         success: Function
     } = null;
 
-    private videoState: PlatformBase.AdState = PlatformBase.AdState.None;
-    private bannerState: PlatformBase.AdState = PlatformBase.AdState.None;
-    private interstitialState: PlatformBase.AdState = PlatformBase.AdState.None;
-    private blockState: PlatformBase.AdState = PlatformBase.AdState.None;
+    private _videoState: PlatformBase.AdState = PlatformBase.AdState.None;
+    private _bannerState: PlatformBase.AdState = PlatformBase.AdState.None;
+    private _interstitialState: PlatformBase.AdState = PlatformBase.AdState.None;
+    private _blockState: PlatformBase.AdState = PlatformBase.AdState.None;
 
     /**
     * 激励视频实例
     */
-    public video: qq.RewardedVideoAd = null;
+    public _video: qq.RewardedVideoAd = null;
 
-    public banner: qq.BannerAd = null;
+    public _banner: qq.BannerAd = null;
 
-    public bannerStyle: {
+    private _bannerStyle: {
         height: number,
         width: number
     } = { height: 0, width: 0 };
 
-    public interstitial: qq.InterstitialAd = null;
+    public _interstitial: qq.InterstitialAd = null;
 
-    public appBox: qq.AppBoxAd = null;
+    public _appBox: qq.AppBoxAd = null;
 
-    public block: qq.BlockAd = null;
+    public _block: qq.BlockAd = null;
 
-    public blockStyle: {
+    public _blockStyle: {
         height: number,
         width: number
     } = { height: 0, width: 0 };
 
-    private bannerActive: boolean = false;
+    private _bannerActive: boolean = false;
 
-    private blockActive: boolean = false;
+    private _blockActive: boolean = false;
 
+    private _configs: QQConfigBase = null;
 
+    protected onInitialize() {
+        this._configs = PlatformConfig[PlatformService.PlatformType.QQ];
 
-
-    public onInitialize() {
         // 获取尝试用户信息
         this.getUserInfoTry()
 
@@ -88,10 +83,10 @@ export default class QQPlatform extends PlatformBase {
     }
 
     public getLaunchOptions() {
-        if (!this.launchOptions) {
-            this.launchOptions = qq.getLaunchOptionsSync();
+        if (!this._launchOptions) {
+            this._launchOptions = qq.getLaunchOptionsSync();
         }
-        return this.launchOptions;
+        return this._launchOptions;
     }
 
     /**
@@ -99,7 +94,7 @@ export default class QQPlatform extends PlatformBase {
      * @param value
      */
     private setLaunchOptions(value: qq.launchOption) {
-        this.launchOptions = value;
+        this._launchOptions = value;
     }
 
     /**
@@ -136,10 +131,13 @@ export default class QQPlatform extends PlatformBase {
             });
             return result;
         } catch (error) {
-            cc.log(error);
+            console.log(error);
             return null
         }
     }
+
+    private _encryptedData: string = null;
+    private _iv: string = null;
 
     /**
     * 用户授权
@@ -152,7 +150,7 @@ export default class QQPlatform extends PlatformBase {
         height: number;
         callback?: Function;
         caller?: any;
-    }): Promise<any> {
+    }): Promise<void> {
         return new Promise((resolve, reject) => {
             const handleInfo = (res) => {
                 if (res.rawData) {
@@ -171,10 +169,9 @@ export default class QQPlatform extends PlatformBase {
                     if (options && options.callback) {
                         options.callback.call(options.caller);
                     }
-                    resolve({
-                        encryptedData: res.encryptedData,
-                        iv: res.iv,
-                    });
+                    this._encryptedData = res.encryptedData;
+                    this._iv = res.iv;
+                    resolve();
                 } else {
                     reject();
                 }
@@ -219,11 +216,11 @@ export default class QQPlatform extends PlatformBase {
                                         },
                                         withCredentials: false,
                                     });
-                                    this.authorizeButton = button;
+                                    this._authorizeButton = button;
                                     button.onTap((res: any) => {
                                         if (res.rawData) {
                                             button.destroy();
-                                            this.authorizeButton = null;
+                                            this._authorizeButton = null;
                                             if (options && options.callback) {
                                                 options.callback.call(options.caller);
                                             }
@@ -246,9 +243,9 @@ export default class QQPlatform extends PlatformBase {
      * 取消授权
      */
     public unauthorize() {
-        if (this.authorizeButton) {
-            this.authorizeButton.destroy();
-            this.authorizeButton = null;
+        if (this._authorizeButton) {
+            this._authorizeButton.destroy();
+            this._authorizeButton = null;
         }
     }
 
@@ -257,20 +254,20 @@ export default class QQPlatform extends PlatformBase {
     * 配置菜单分享内容
     */
     public async setShareMenuInfo(imageUrl: string, title: string, param: any, callback?: Function, caller?: any) {
-        if (this.shareMenuInfo == null) {
+        if (this._shareMenuInfo == null) {
             qq.showShareMenu({
                 withShareTicket: true,
             });
 
             qq.onShareAppMessage(() => {
-                return this.shareMenuInfo
+                return this._shareMenuInfo
             });
         }
 
         param.shareTime = blade.timer.getTime();
         let query = HttpHelper.formatParams(param);
 
-        this.shareMenuInfo = {
+        this._shareMenuInfo = {
             imageUrl, title, query, success: () => {
                 this.emit(PlatformBase.EventType.OpenShare, imageUrl, title, param);
                 if (callback) {
@@ -292,7 +289,7 @@ export default class QQPlatform extends PlatformBase {
      * 判断视频是否已经加载完成
      */
     public isVideoLoaded(): boolean {
-        let result = this.videoState == PlatformBase.AdState.Loaded;
+        let result = this._videoState == PlatformBase.AdState.Loaded;
         if (result == false) {
             this.preloadRewardVideo();
         }
@@ -302,62 +299,62 @@ export default class QQPlatform extends PlatformBase {
     /**
     * 预加载激励视频
     */
-    public async preloadRewardVideo(): Promise<any> {
+    public async preloadRewardVideo(): Promise<void> {
         if (!this.isSupportRewardVideo()) {
             return;
         }
 
         // 已经加载
-        if (this.videoState == PlatformBase.AdState.Loaded) {
+        if (this._videoState == PlatformBase.AdState.Loaded) {
             return;
         }
 
         // 正在加载, 等待加载结束
-        if (this.videoState == PlatformBase.AdState.Loading) {
-            return await PromiseHelper.waitUntil(() => this.videoState != PlatformBase.AdState.Loading);
+        if (this._videoState == PlatformBase.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => this._videoState != PlatformBase.AdState.Loading);
         }
 
-        this.videoState = PlatformBase.AdState.Loading;
+        this._videoState = PlatformBase.AdState.Loading;
 
-        if (this.video == null) {
+        if (this._video == null) {
             // 初次创建会调load方法
-            this.video = qq.createRewardedVideoAd({
-                adUnitId: PlatformConfig.qq.videoId,
+            this._video = qq.createRewardedVideoAd({
+                adUnitId: this._configs.videoId,
             });
             // 加载成功
-            this.video.onLoad(() => {
-                this.videoState = PlatformBase.AdState.Loaded;
+            this._video.onLoad(() => {
+                this._videoState = PlatformBase.AdState.Loaded;
             });
             // 加载失败
-            this.video.onError((err) => {
-                this.videoState = PlatformBase.AdState.None;
+            this._video.onError((err) => {
+                this._videoState = PlatformBase.AdState.None;
             });
-            this.video.onClose((res) => {
+            this._video.onClose((res) => {
                 let result = (res && res.isEnded) || res === undefined;
-                TickerService.getInstance().pause = false;
-                AudioService.getInstance().resumeAll();
+                // blade.ticker.pause = false;
+                blade.audio.resumeAll();
                 this.preloadRewardVideo();
                 // 发送结果
                 this.emit(PlatformBase.EventType.CloseVideo, result);
             })
         } else {
-            this.video.load();
+            this._video.load();
         }
 
-        this.video.load();
+        this._video.load();
 
         // 正在加载, 等待加载结束
-        return await PromiseHelper.waitUntil(() => this.videoState != PlatformBase.AdState.Loading);
+        return await PromiseHelper.waitUntil(() => this._videoState != PlatformBase.AdState.Loading);
     }
 
     /**
      * 播放激励视频
      */
     public async playRewardVideo(): Promise<boolean> {
-        if (this.video != null && this.videoState == PlatformBase.AdState.Loaded) {
-            this.videoState = PlatformBase.AdState.None;
-            TickerService.getInstance().pause = true;
-            AudioService.getInstance().pauseAll();
+        if (this._video != null && this._videoState == PlatformBase.AdState.Loaded) {
+            this._videoState = PlatformBase.AdState.None;
+            // blade.ticker.pause = true;
+            blade.audio.pauseAll();
 
             let result: boolean = await new Promise(async (resolve, reject) => {
                 const closeFunc = (result) => {
@@ -365,15 +362,15 @@ export default class QQPlatform extends PlatformBase {
                 };
                 this.once(PlatformBase.EventType.CloseVideo, closeFunc);
                 try {
-                    await this.video.show()
+                    await this._video.show()
                     this.emit(PlatformBase.EventType.OpenVideo);
                 } catch (error) {
                     this.off(PlatformBase.EventType.CloseVideo, closeFunc);
                     resolve(false);
                 }
             })
-            TickerService.getInstance().pause = false;
-            AudioService.getInstance().resumeAll();
+            // blade.ticker.pause = false;
+            blade.audio.resumeAll();
             this.preloadRewardVideo();
             return result;
         } else {
@@ -394,31 +391,31 @@ export default class QQPlatform extends PlatformBase {
     /**
     * 预加载横幅
     */
-    public async preloadBanner(): Promise<any> {
+    public async preloadBanner(): Promise<void> {
         if (!this.isSupportBanner()) {
             return;
         }
 
         // 已经加载
-        if (this.bannerState == PlatformBase.AdState.Loaded) {
+        if (this._bannerState == PlatformBase.AdState.Loaded) {
             return;
         }
 
         // 正在加载, 等待加载结束
-        if (this.bannerState == PlatformBase.AdState.Loading) {
-            return await PromiseHelper.waitUntil(() => this.bannerState != PlatformBase.AdState.Loading);
+        if (this._bannerState == PlatformBase.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => this._bannerState != PlatformBase.AdState.Loading);
         }
 
-        if (this.banner) {
-            this.banner.destroy();
-            this.banner = null
+        if (this._banner) {
+            this._banner.destroy();
+            this._banner = null
         }
 
         console.log("banner", "开始加载");
 
-        const sysInfo: qq.systemInfo = qq.getSystemInfoSync();
-        this.banner = qq.createBannerAd({
-            adUnitId: PlatformConfig.qq.bannerId,
+        const sysInfo = qq.getSystemInfoSync();
+        this._banner = qq.createBannerAd({
+            adUnitId: this._configs.bannerId,
             style: {
                 top: sysInfo.screenHeight,
                 left: 0,
@@ -427,34 +424,34 @@ export default class QQPlatform extends PlatformBase {
             },
         });
 
-        this.banner.onLoad(async () => {
+        this._banner.onLoad(async () => {
             console.log("banner", "加载成功");
-            this.bannerState = PlatformBase.AdState.Loaded;
-            if (this.bannerActive) {
+            this._bannerState = PlatformBase.AdState.Loaded;
+            if (this._bannerActive) {
                 this.emit(PlatformBase.EventType.OpenBanner);
-                this.banner.show();
+                this._banner.show();
             }
         });
 
-        this.banner.onError((err) => {
+        this._banner.onError((err) => {
             console.error("banner", "加载失败", err);
-            this.bannerState = PlatformBase.AdState.None;
+            this._bannerState = PlatformBase.AdState.None;
         });
 
-        this.banner.onResize((res) => {
+        this._banner.onResize((res) => {
             console.log(res);
 
             // 重设横幅位置
-            this.bannerStyle.height = res.height;
-            this.bannerStyle.width = res.width;
+            this._bannerStyle.height = res.height;
+            this._bannerStyle.width = res.width;
 
-            this.banner.style.top =
-                sysInfo.screenHeight - this.bannerStyle.height;
-            this.banner.style.left =
-                (sysInfo.screenWidth - this.bannerStyle.width) / 2;
+            this._banner.style.top =
+                sysInfo.screenHeight - this._bannerStyle.height;
+            this._banner.style.left =
+                (sysInfo.screenWidth - this._bannerStyle.width) / 2;
         });
 
-        this.bannerState = PlatformBase.AdState.Loading;
+        this._bannerState = PlatformBase.AdState.Loading;
     }
 
 
@@ -463,35 +460,30 @@ export default class QQPlatform extends PlatformBase {
     * @param active
     */
     public activeBanner(active: boolean) {
-        if (this.banner == null) {
+        if (this._banner == null) {
             this.preloadBanner();
             return false;
         }
 
         if (active) {
-            if (this.bannerState != PlatformBase.AdState.Loaded) {
+            if (this._bannerState != PlatformBase.AdState.Loaded) {
                 this.preloadBanner();
                 return false;
             }
 
             this.emit(PlatformBase.EventType.OpenBanner);
-            this.banner.show();
-            this.bannerState = PlatformBase.AdState.Opening;
+            this._banner.show();
+            this._bannerState = PlatformBase.AdState.Opening;
             return true;
         } else {
             // 直接销毁重新创建banner, 刷新广告
-            if (this.bannerState != PlatformBase.AdState.Opening) {
+            if (this._bannerState != PlatformBase.AdState.Opening) {
                 return false;
             }
-            // this.emit(IPlatform.EventType.CloseBanner);
-            // this.banner.destroy();
-            // this.banner = null;
-            // this.bannerState = IPlatform.AdState.None;
-            // this.preloadBanner();
 
             // XXX: 不销毁
-            this.banner.hide();
-            this.bannerState = PlatformBase.AdState.Loaded;
+            this._banner.hide();
+            this._bannerState = PlatformBase.AdState.Loaded;
             return true;
         }
     }
@@ -501,31 +493,31 @@ export default class QQPlatform extends PlatformBase {
         return StringHelper.compareVersion(qq.getSystemInfoSync().SDKVersion, "1.15.0") >= 0
     }
 
-    public async preloadBlockAd(): Promise<any> {
+    public async preloadBlockAd(): Promise<void> {
         if (!this.isSupportBlockAd()) {
             return;
         }
 
         // 已经加载
-        if (this.blockState == PlatformBase.AdState.Loaded) {
+        if (this._blockState == PlatformBase.AdState.Loaded) {
             return;
         }
 
         // 正在加载, 等待加载结束
-        if (this.blockState == PlatformBase.AdState.Loading) {
-            return await PromiseHelper.waitUntil(() => this.blockState != PlatformBase.AdState.Loading);
+        if (this._blockState == PlatformBase.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => this._blockState != PlatformBase.AdState.Loading);
         }
 
-        if (this.block) {
-            this.block.destroy();
-            this.block = null
+        if (this._block) {
+            this._block.destroy();
+            this._block = null
         }
 
         console.log("block", "开始加载");
 
-        const sysInfo: qq.systemInfo = qq.getSystemInfoSync();
-        this.block = qq.createBlockAd({
-            adUnitId: PlatformConfig.qq.blockId,
+        const sysInfo = qq.getSystemInfoSync();
+        this._block = qq.createBlockAd({
+            adUnitId: this._configs.blockId,
             style: {
                 top: sysInfo.screenHeight,
                 left: 0
@@ -534,58 +526,58 @@ export default class QQPlatform extends PlatformBase {
             size: 5
         });
 
-        this.block.onLoad(async () => {
+        this._block.onLoad(async () => {
             console.log("block", "加载成功");
-            this.blockState = PlatformBase.AdState.Loaded;
-            if (this.blockActive) {
-                this.block.show();
+            this._blockState = PlatformBase.AdState.Loaded;
+            if (this._blockActive) {
+                this._block.show();
             }
         });
 
-        this.block.onError((err) => {
+        this._block.onError((err) => {
             console.error("block", "错误", err);
-            this.blockState = PlatformBase.AdState.None;
+            this._blockState = PlatformBase.AdState.None;
         });
 
-        this.block.onResize((res) => {
+        this._block.onResize((res) => {
             console.log(res);
             // 重设横幅位置
-            this.blockStyle.height = res.height;
-            this.blockStyle.width = res.width;
+            this._blockStyle.height = res.height;
+            this._blockStyle.width = res.width;
 
-            this.block.style.top =
-                sysInfo.screenHeight - this.blockStyle.height;
-            this.block.style.left =
-                (sysInfo.screenWidth - this.blockStyle.width) / 2;
+            this._block.style.top =
+                sysInfo.screenHeight - this._blockStyle.height;
+            this._block.style.left =
+                (sysInfo.screenWidth - this._blockStyle.width) / 2;
         });
 
 
-        this.blockState = PlatformBase.AdState.Loading;
+        this._blockState = PlatformBase.AdState.Loading;
     }
 
     public activeBlockAd(active: boolean) {
-        if (this.block == null) {
+        if (this._block == null) {
             this.preloadBlockAd();
             return false;
         }
 
         if (active) {
-            if (this.blockState != PlatformBase.AdState.Loaded) {
+            if (this._blockState != PlatformBase.AdState.Loaded) {
                 this.preloadBlockAd();
                 return false;
             }
 
-            this.block.show();
-            this.blockState = PlatformBase.AdState.Opening;
+            this._block.show();
+            this._blockState = PlatformBase.AdState.Opening;
             return true;
         } else {
             // 直接销毁重新创建banner, 刷新广告
-            if (this.blockState != PlatformBase.AdState.Opening) {
+            if (this._blockState != PlatformBase.AdState.Opening) {
                 return false;
             }
-            this.block.destroy();
-            this.block = null;
-            this.blockState = PlatformBase.AdState.None;
+            this._block.destroy();
+            this._block = null;
+            this._blockState = PlatformBase.AdState.None;
             this.preloadBlockAd();
             return true;
         }
@@ -596,7 +588,7 @@ export default class QQPlatform extends PlatformBase {
     }
 
     public isInterstitialLoaded() {
-        return this.interstitialState == PlatformBase.AdState.Loaded;
+        return this._interstitialState == PlatformBase.AdState.Loaded;
     }
 
     public async preloadInterstitial() {
@@ -604,31 +596,31 @@ export default class QQPlatform extends PlatformBase {
             return;
         }
 
-        if (this.interstitialState == PlatformBase.AdState.Loaded) {
+        if (this._interstitialState == PlatformBase.AdState.Loaded) {
             return;
         }
 
-        if (this.interstitialState == PlatformBase.AdState.Loading) {
+        if (this._interstitialState == PlatformBase.AdState.Loading) {
             return await PromiseHelper.waitUntil(() => {
-                return this.interstitialState != PlatformBase.AdState.Loading;
+                return this._interstitialState != PlatformBase.AdState.Loading;
             });
         }
 
-        this.interstitialState = PlatformBase.AdState.Loading;
-        if (this.interstitial == null) {
-            this.interstitial = qq.createInterstitialAd({ adUnitId: PlatformConfig.qq.interstitialId });
+        this._interstitialState = PlatformBase.AdState.Loading;
+        if (this._interstitial == null) {
+            this._interstitial = qq.createInterstitialAd({ adUnitId: this._configs.interstitialId });
 
-            this.interstitial.onLoad(() => {
-                this.interstitialState = PlatformBase.AdState.Loaded;
+            this._interstitial.onLoad(() => {
+                this._interstitialState = PlatformBase.AdState.Loaded;
             });
 
-            this.interstitial.onError(async (error) => {
-                this.interstitialState = PlatformBase.AdState.None;
-                cc.log(error)
+            this._interstitial.onError(async (error) => {
+                this._interstitialState = PlatformBase.AdState.None;
+                console.log(error)
             });
 
-            this.interstitial.onClose(() => {
-                this.interstitialState = PlatformBase.AdState.None;
+            this._interstitial.onClose(() => {
+                this._interstitialState = PlatformBase.AdState.None;
                 this.emit(PlatformBase.EventType.CloseInterstitial);
             });
         }
@@ -636,19 +628,21 @@ export default class QQPlatform extends PlatformBase {
 
     async showInterstitial() {
         if (!this.isSupportInterstitial()) {
-            return;
+            return Promise.resolve(false);
         }
 
         if (!this.isInterstitialLoaded()) {
-            return;
+            return Promise.resolve(false);
         }
 
         try {
-            await this.interstitial.show();
-            this.interstitialState = PlatformBase.AdState.Opening;
+            await this._interstitial.show();
+            this._interstitialState = PlatformBase.AdState.Opening;
             this.emit(PlatformBase.EventType.OpenInterstitial)
+            return Promise.resolve(true);
         } catch (error) {
-            cc.log(error);
+            console.log(error);
+            return Promise.resolve(false);
         }
     }
 
@@ -662,16 +656,16 @@ export default class QQPlatform extends PlatformBase {
             return;
         }
 
-        if (this.appBox == null) {
-            this.appBox = qq.createAppBox({ adUnitId: PlatformConfig.qq.appBoxId });
+        if (this._appBox == null) {
+            this._appBox = qq.createAppBox({ adUnitId: this._configs.appBoxId });
         }
 
         try {
-            if (this.appBox != null) {
-                await this.appBox.load();
+            if (this._appBox != null) {
+                await this._appBox.load();
             }
         } catch (error) {
-            cc.log(JSON.stringify(error));
+            console.log(JSON.stringify(error));
         }
     }
 
@@ -681,11 +675,11 @@ export default class QQPlatform extends PlatformBase {
         }
 
         try {
-            if (this.appBox != null) {
-                await this.appBox.show();
+            if (this._appBox != null) {
+                await this._appBox.show();
             }
         } catch (error) {
-            cc.log(error);
+            console.log(error);
             this.preloadAppBox();
         }
     }
@@ -694,7 +688,7 @@ export default class QQPlatform extends PlatformBase {
     /**
      * 发送邀请
      */
-    public async sendInvite(imageUrl: string, title: string, param: any): Promise<any> {
+    public async sendInvite(imageUrl: string, title: string, param: any): Promise<void> {
         param.shareTime = blade.timer.getTime();
 
         qq.shareAppMessage({
@@ -739,7 +733,7 @@ export default class QQPlatform extends PlatformBase {
                 path: path,
                 extraData: extraData,
                 success: () => {
-                    cc.log(`跳转 ${appid}`);
+                    console.log(`跳转 ${appid}`);
                     resolve(true);
                 },
                 fail: reject,
@@ -748,4 +742,11 @@ export default class QQPlatform extends PlatformBase {
     }
 
 }
+
+import PlatformConfig from "../../Module/Defines/PlatformConfig";
+import QQConfigBase from "../../Module/Defines/PlatformConfig/Bases/QQConfigBase";
+import HttpHelper from "../Helpers/HttpHelper";
+import PromiseHelper from "../Helpers/PromiseHelper";
+import StringHelper from "../Helpers/StringHelper";
+import PlatformService from "../Services/PlatformService";
 

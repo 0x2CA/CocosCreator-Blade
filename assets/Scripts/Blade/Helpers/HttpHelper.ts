@@ -1,4 +1,3 @@
-import PlatformService from "../Services/PlatformService";
 
 /**
  * Http助手
@@ -17,16 +16,16 @@ class HttpHelper {
  *      headers?: { [key: string]: any }; 头部
  * }
  */
-    public static Request(
+    public static request<T>(
         url: string,
         options?: {
             method?: HttpHelper.RequestMethod;
-            contentType?: "TEXT" | "JSON";
+            contentType?: "TEXT" | "JSON" | "QUERY";
             dataType?: "TEXT" | "JSON";
             data?: string | Object;
             headers?: Object;
         }
-    ): Promise<any> {
+    ): Promise<T> {
         return new Promise((resolve, reject) => {
             options = options || {};
 
@@ -38,85 +37,58 @@ class HttpHelper {
                 options.headers = null;
             }
 
-            if (PlatformService.getInstance().getType() == PlatformService.PlatformType.WX) {
-                if (options.contentType != "JSON") {
-                    options.headers = options.headers || {};
-                    options.headers["Content-Type"] =
-                        "application/x-www-form-urlencoded; charset=utf-8";
-                }
-
-                wx.request({
-                    url: url,
-                    method: options.method,
-                    data: options.data,
-                    header: options.headers || {},
-                    responseType: 'text',
-                    dataType: options.dataType.toLowerCase(),
-                    success: (res) => {
-                        if (res.statusCode == 200) {
-                            return resolve(res.data);
+            let xhr = new XMLHttpRequest();
+            xhr.onreadystatechange = function () {
+                if (xhr.readyState == 4) {
+                    if (xhr.status >= 200 && xhr.status < 400) {
+                        let response = xhr.responseText;
+                        if (options.dataType == "TEXT") {
+                            return resolve(response as T);
                         } else {
-                            return reject({
-                                status: res.statusCode,
-                                errMsg: res.errMsg,
-                            });
+                            let dataObj;
+                            try {
+                                dataObj = JSON.parse(response);
+                            } catch (e) { }
+                            return resolve(dataObj);
                         }
-                    },
-                    fail: (err) => {
-                        return reject(err);
-                    },
-                });
-            } else {
-                var xhr = new XMLHttpRequest();
-                xhr.onreadystatechange = function () {
-                    if (xhr.readyState == 4) {
-                        if (xhr.status >= 200 && xhr.status < 400) {
-                            var response = xhr.responseText;
-                            if (options.dataType == "TEXT") {
-                                return resolve(response);
-                            } else {
-                                var dataObj;
-                                try {
-                                    dataObj = JSON.parse(response);
-                                } catch (e) { }
-                                return resolve(dataObj);
-                            }
-                        } else {
-                            return reject(xhr.status);
-                        }
+                    } else {
+                        return reject(xhr.status);
                     }
-                };
+                }
+            };
 
-                var body = null;
-                var headers = options.headers || {};
-                if (options.data) {
-                    if (options.method === "GET") {
+            let body = null;
+            let headers = options.headers || {};
+            if (options.data) {
+                if (options.method === "GET") {
+                    headers["Content-Type"] =
+                        "application/x-www-form-urlencoded; charset=utf-8";
+                    url += HttpHelper.formatParams(options.data, true);
+                } else if (options.method === "POST") {
+                    if (options.contentType === "JSON") {
+                        headers["Content-Type"] = "application/json; charset=utf-8";
+                        body = JSON.stringify(options.data);
+                    } else if (options.contentType === "QUERY") {
                         headers["Content-Type"] =
                             "application/x-www-form-urlencoded; charset=utf-8";
                         url += HttpHelper.formatParams(options.data, true);
-                    } else if (options.method === "POST") {
-                        if (options.contentType === "JSON") {
-                            headers["Content-Type"] = "application/json; charset=utf-8";
-                            body = JSON.stringify(options.data);
-                        } else {
-                            headers["Content-Type"] =
-                                "application/x-www-form-urlencoded; charset=utf-8";
-                            body = HttpHelper.formatParams2FromData(options.data);
-                        }
+                    } else {
+                        headers["Content-Type"] = "application/x-www-form-urlencoded; charset=utf-8";
+                        body = HttpHelper.formatParams(options.data);
                     }
                 }
-
-                xhr.open(options.method, url, true);
-
-                // 设置header
-                for (const key in headers) {
-                    if (typeof headers[key] == "string") {
-                        xhr.setRequestHeader(key, headers[key]);
-                    }
-                }
-
-                xhr.send(body);
             }
+
+            xhr.open(options.method, url, true);
+
+            // 设置header
+            for (const key in headers) {
+                if (typeof headers[key] == "string") {
+                    xhr.setRequestHeader(key, headers[key]);
+                }
+            }
+
+            xhr.send(body);
         });
     }
 
@@ -126,8 +98,34 @@ class HttpHelper {
     * @param withQuest 是否包含问号
     */
     public static formatParams(params: {}, withQuest: boolean = false) {
-        const keys = Object.keys(params);
-        return keys.length > 0 ? (withQuest ? '?' : '') + Object.keys(params).map((key) => `${key}=${encodeURIComponent(params[key])}`).join('&') : '';
+        const formatFun = (currentParams, prefix) => {
+            const query = [];
+            const keys = Object.keys(currentParams);
+            for (let index = 0; index < keys.length; index++) {
+                let key = keys[index];
+                const value = currentParams[key];
+
+                if (currentParams instanceof Array) {
+                    key = `${prefix}[]`;
+                } else if (currentParams instanceof Object || typeof currentParams == 'object') {
+                    key = (prefix ? `${prefix}[${key}]` : key);
+                } else if (typeof currentParams == 'function' || typeof currentParams == 'symbol' || typeof currentParams == 'undefined') {
+                    continue;
+                }
+
+                if (typeof value === 'object') {
+                    query.push(formatFun(value, key));
+                } else {
+                    query.push(`${key}=${encodeURIComponent(value)}`);
+                }
+            }
+
+            return [].concat.apply([], query).join('&');
+        }
+
+        let queryString = formatFun(params, null);
+
+        return queryString.length > 0 ? (withQuest ? '?' : '') + queryString : '';
     }
 
     /**
@@ -148,8 +146,8 @@ class HttpHelper {
     */
     public static getUrlParam(name: string) {
         if (typeof window != undefined) {
-            var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
-            var r = window.location.search.substr(1).match(reg);
+            let reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)");
+            let r = window.location.search.substr(1).match(reg);
             if (r != null) {
                 return unescape(r[2]);
             }
@@ -188,7 +186,7 @@ class HttpHelper {
      * @memberof HttpHelper
      */
     public static encodeUTF8(s) {
-        var i, r = [], c, x;
+        let i, r = [], c, x;
         for (i = 0; i < s.length; i++)
             if ((c = s.charCodeAt(i)) < 0x80) r.push(c);
             else if (c < 0x800) r.push(0xC0 + (c >> 6 & 0x1F), 0x80 + (c & 0x3F));

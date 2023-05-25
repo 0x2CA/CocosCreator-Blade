@@ -1,516 +1,339 @@
 /**
- * 动画缓动类
+ * 全局动画列表
  */
-export default class Tween extends cc.EventTarget {
-    /**
-     * 不做特殊处理
-     * @constant {number} Tween.NONE
-     * @private
-     */
-    private static NONE = 0;
-    /**
-     * 循环
-     * @constant {number} Tween.LOOP
-     * @private
-     */
-    private static LOOP = 1;
-    /**
-     * 倒序
-     * @constant {number} Tween.REVERSE
-     * @private
-     */
-    private static REVERSE = 2;
+const _tweens: Tween[] = [];
 
-    /**
-     * @private
-     */
-    private static _tweens: Tween[] = [];
-    /**
-     * @private
-     */
-    private static IGNORE = {};
-    /**
-     * @private
-     */
-    private static _plugins = {};
-    /**
-     * @private
-     */
-    private static _inited = false;
-    /**
-     * @private
-     */
-    private static _cumstomTick = false;
-    /**
-     * @private
-     */
-    private _target: any = null;
-    /**
-     * @private
-     */
-    private _useTicks: boolean = false;
-    /**
-     * @private
-     */
-    private manualTick: boolean = false;
-    /**
-     * @private
-     */
-    private ignoreGlobalPause: boolean = false;
-    /**
-     * @private
-     */
-    private loop: boolean = false;
-    /**
-     * @private
-     */
-    private pluginData = null;
-    /**
-     * @private
-     */
-    private _curQueueProps;
-    /**
-     * @private
-     */
-    private _initQueueProps;
-    /**
-     * @private
-     */
-    private _steps: any[] = null;
-    /**
-     * @private
-     */
-    private paused: boolean = false;
-    /**
-     * @private
-     */
-    private duration: number = 0;
-    /**
-     * @private
-     */
-    private _prevPos: number = -1;
-    /**
-     * @private
-     */
-    private position: number = null;
-    /**
-     * @private
-     */
-    private _prevPosition: number = 0;
-    /**
-     * @private
-     */
-    private _stepPosition: number = 0;
-    /**
-     * @private
-     */
-    private passive: boolean = false;
-    /**
-     * @private
-     */
+let _paused: boolean = false;
+
+let _timeScale: number = 1;
+
+let _delta: number = 0;
+
+/**
+ * 加入全局
+ * @param tween
+ */
+function addGlobal(tween: Tween) {
+    let target = tween.getTarget();
+    if (target != null) {
+        target["__tweenCount"] = target["__tweenCount"] > 0 ? target["__tweenCount"] + 1 : 1;
+    }
+    _tweens.push(tween);
+}
+
+/**
+ * 移除全局
+ * @param tween
+ * @returns
+ */
+function removeGlobal(tween: Tween) {
+    let target = tween.getTarget();
+    let i = _tweens.length;
+    while (i--) {
+        if (_tweens[i] == tween) {
+            if (target != null && target["__tweenCount"] > 0) {
+                target["__tweenCount"]--;
+            }
+            _tweens.splice(i, 1);
+            return;
+        }
+    }
+}
+
+class Step<T = any> {
+    public type: Step.StepType = Step.StepType.Step;
+    public time: number = 0;
+    public duration: number = 0;
+    public easing: Tween.IEasing = Tween.Easing.Linear.None;
+    public interpolation: Tween.IInterpolation = Tween.Interpolation.Linear;
+    public propsStart: { [key in keyof T]?: number } = {} as any;
+    public propsEnd: { [key in keyof T]?: number | number[] } = {} as any;
+}
+
+class Action extends Step {
+    public callback: Function = null;
+    public thisObj: any = null;
+    public params: any[] = [];
+}
+
+namespace Step {
+    export enum StepType {
+        Step,
+        Action
+    }
+}
+
+class Tween<T = any> {
+
+    private _target: T = null;
+
+    private _loop: boolean = false;
+
+    private _duration: number = 0;
+
+    private _paused: boolean = false;
+
+    private _ignoreGlobalPause: boolean = false;
+
     private _timeScale: number = 1;
 
-    /**
-     * 激活一个对象, 对其添加 Tween 动画
-     * @param target {any} 要激活 Tween 的对象
-     * @param props {any} 参数, 支持loop(循环播放) onChange(变化函数) onChangeObj(变化函数作用域)
-     * @param pluginData {any} 暂未实现
-     * @param override {boolean} 是否移除对象之前添加的tween, 默认值false
-     * 不建议使用, 可使用 Tween.removeTweens(target) 代替
-     */
-    public static get(
-        target: any,
-        props?: { loop?: boolean; manualTick?: boolean; onChange?: Function; onChangeObj?: any },
-        pluginData: any = null,
-        override: boolean = false
-    ): Tween {
-        if (override) {
-            Tween.removeTweens(target);
-        }
-        return new Tween(target, props, pluginData);
-    }
+    private _prevPosition: number = 0;
 
-    /**
-     * 删除一个对象上的全部 Tween 动画
-     * @param target  需要移除 Tween 的对象
-     */
-    public static removeTweens(target: any): void {
-        if (!target.__tweenCount) {
-            return;
-        }
-        let tweens: Tween[] = Tween._tweens;
-        for (let i = tweens.length - 1; i >= 0; i--) {
-            if (tweens[i]._target == target) {
-                tweens[i].paused = true;
-                tweens.splice(i, 1);
-            }
-        }
-        target.__tweenCount = 0;
-    }
+    private _prevTime: number = 0;
 
-    /**
-     * 暂停某个对象的所有 Tween
-     * @param target 要暂停 Tween 的对象
-     */
-    public static pauseTweens(target: any): void {
-        if (!target.__tweenCount) {
-            return;
-        }
-        let tweens: Tween[] = Tween._tweens;
-        for (let i = tweens.length - 1; i >= 0; i--) {
-            if (tweens[i]._target == target) {
-                tweens[i].paused = true;
-            }
-        }
-    }
+    private _steps: Step<T>[] = [];
 
-    /**
-     * 继续播放某个对象的所有缓动
-     * @param target 要继续播放 Tween 的对象
-     */
-    public static resumeTweens(target: any): void {
-        if (!target.__tweenCount) {
-            return;
-        }
-        let tweens: Tween[] = Tween._tweens;
-        for (let i = tweens.length - 1; i >= 0; i--) {
-            if (tweens[i]._target == target) {
-                tweens[i].paused = false;
-            }
-        }
-    }
+    private _propsInit: { [key in keyof T]?: number } = {} as any;
 
-    /**
-     * 是否设为自定义更新, 初始化前设置
-     * 需要自己每帧调用tick方法
-     */
-    public static set customTick(custom: boolean) {
-        if (Tween._cumstomTick != custom) {
-            Tween._cumstomTick = custom;
-            if (custom == true && Tween._inited && Tween._intervalId > 0) {
-                clearInterval(Tween._intervalId);
-                Tween._intervalId = -1;
-            }
-        }
-    }
+    private _props: { [key in keyof T]?: number } = {} as any;
 
-    /**
-     * 帧更新调用
-     * @param delta
-     * @param paused
-     */
-    public static tick(paused = false): boolean {
-        const timeStamp = Date.now();
-        if (Tween._lastTime <= 0) {
-            Tween._lastTime = timeStamp;
-            return;
-        }
-
-        const delta = timeStamp - Tween._lastTime;
-        Tween._lastTime = timeStamp;
-
-        let tweens: Tween[] = Tween._tweens.concat();
-        for (let i = tweens.length - 1; i >= 0; i--) {
-            let tween: Tween = tweens[i];
-            if ((paused && !tween.ignoreGlobalPause) || tween.paused || tween.manualTick) {
-                continue;
-            }
-            tween.tick(tween._useTicks ? 1 : delta);
-        }
-
-        return false;
-    }
-
-    private static _lastTime: number = 0;
-    private static _intervalId: any = -1;
-    /**
-     * @private
-     *
-     * @param tween
-     * @param value
-     */
-    private static _register(tween: Tween, value: boolean): void {
-        let target: any = tween._target;
-        let tweens: Tween[] = Tween._tweens;
-        if (value) {
-            if (target) {
-                target.__tweenCount = target.__tweenCount > 0 ? target.__tweenCount + 1 : 1;
-            }
-            tweens.push(tween);
-            if (!Tween._inited) {
-                Tween._lastTime = Date.now();
-                if (!Tween._cumstomTick) {
-                    Tween._intervalId = setInterval(Tween.tick, 1000 / cc.game.getFrameRate());
-                }
-                Tween._inited = true;
-            }
-        } else {
-            if (target) {
-                target.__tweenCount--;
-            }
-            let i = tweens.length;
-            while (i--) {
-                if (tweens[i] == tween) {
-                    tweens.splice(i, 1);
-                    return;
-                }
-            }
-        }
-    }
-
-    /**
-     * 删除所有 Tween
-     */
-    public static removeAllTweens(): void {
-        let tweens: Tween[] = Tween._tweens;
-        for (let i = 0, l = tweens.length; i < l; i++) {
-            let tween: Tween = tweens[i];
-            tween.paused = true;
-            tween._target.__tweenCount = 0;
-        }
-        tweens.length = 0;
-    }
-
-    /**
-     * 创建一个 Tween 对象
-     */
-    constructor(
-        target: any,
-        props: {
-            loop?: boolean;
-            manualTick?: boolean;
-            paused?: boolean;
-            onChange?: Function;
-            onChangeObj?: any;
-        },
-        pluginData: any = null
-    ) {
-        super();
-        this.initialize(target, props, pluginData);
-    }
-
-    /**
-     * @private
-     *
-     * @param target
-     * @param props
-     * @param pluginData
-     */
-    private initialize(target: any, props: any, pluginData: any): void {
+    public constructor(target: T) {
         this._target = target;
-        if (props) {
-            this._useTicks = props.useTicks;
-            this.manualTick = props.manualTick === true;
-            this.ignoreGlobalPause = props.ignoreGlobalPause;
-            this.loop = props.loop === true;
-            props.onChange && this.on("change", props.onChange, props.onChangeObj);
-            if (props.override) {
-                Tween.removeTweens(target);
-            }
-        }
-
-        this.pluginData = pluginData || {};
-        this._curQueueProps = {};
-        this._initQueueProps = {};
-        this._steps = [];
-        if (props && props.paused) {
-            this.paused = true;
-        } else {
-            Tween._register(this, true);
-        }
-        if (props && props.position != null) {
-            this.setPosition(props.position, Tween.NONE);
-        }
+        addGlobal(this);
     }
 
-    /**
-     * 重置时间
-     */
-    public resetPosition() {
-        this._prevPosition = 0;
-        this._prevPos = -1;
+    public getTarget() {
+        return this._target;
     }
 
-    /**
-     * @private
-     *
-     * @param value
-     * @param actionsMode
-     * @returns
-     */
-    private setPosition(value: number, actionsMode: number = 1): boolean {
-        if (value < 0) {
-            value = 0;
-        }
+    public getPaused(): boolean {
+        return this._paused;
+    }
 
-        //正常化位置
-        let t: number = value;
-        let end: boolean = false;
-        if (t >= this.duration) {
-            if (this.loop) {
-                var newTime = t % this.duration;
-                if (t > 0 && newTime === 0) {
-                    t = this.duration;
-                } else {
-                    t = newTime;
-                }
+    private setPaused(pause: boolean) {
+        if (this._paused != pause) {
+            this._paused = pause;
+            if (pause == true) {
+                removeGlobal(this);
             } else {
-                t = this.duration;
-                end = true;
+                addGlobal(this);
             }
-        }
-        if (t == this._prevPos) {
-            return end;
-        }
-
-        if (end) {
-            this.setPaused(true);
-        }
-
-        let prevPos = this._prevPos;
-        this.position = this._prevPos = t;
-        this._prevPosition = value;
-
-        if (this._target) {
-            if (this._steps.length > 0) {
-                // 找到新的tween
-                let l = this._steps.length;
-                let stepIndex = -1;
-                for (let i = 0; i < l; i++) {
-                    if (this._steps[i].type == "step") {
-                        stepIndex = i;
-                        if (this._steps[i].t <= t && this._steps[i].t + this._steps[i].d >= t) {
-                            break;
-                        }
-                    }
-                }
-                for (let i = 0; i < l; i++) {
-                    if (this._steps[i].type == "action") {
-                        //执行actions
-                        if (actionsMode != 0) {
-                            if (this._useTicks) {
-                                this._runAction(this._steps[i], t, t);
-                            } else if (actionsMode == 1 && t < prevPos) {
-                                if (prevPos != this.duration) {
-                                    this._runAction(this._steps[i], prevPos, this.duration);
-                                }
-                                this._runAction(this._steps[i], 0, t, true);
-                            } else {
-                                this._runAction(this._steps[i], prevPos, t);
-                            }
-                        }
-                    } else if (this._steps[i].type == "step") {
-                        if (stepIndex == i) {
-                            let step = this._steps[stepIndex];
-                            this._updateTargetProps(
-                                step,
-                                Math.min((this._stepPosition = t - step.t) / step.d, 1)
-                            );
-                        }
-                    }
-                }
-            }
-        }
-
-        this.emit("change");
-        return end;
-    }
-
-    /**
-     * @private
-     *
-     * @param startPos
-     * @param endPos
-     * @param includeStart
-     */
-    private _runAction(
-        action: any,
-        startPos: number,
-        endPos: number,
-        includeStart: boolean = false
-    ) {
-        let sPos: number = startPos;
-        let ePos: number = endPos;
-        if (startPos > endPos) {
-            //把所有的倒置
-            sPos = endPos;
-            ePos = startPos;
-        }
-        let pos = action.t;
-        if (pos == ePos || (pos > sPos && pos < ePos) || (includeStart && pos == startPos)) {
-            action.f.apply(action.o, action.p);
-        }
-    }
-
-    /**
-     * @private
-     *
-     * @param step
-     * @param ratio
-     */
-    private _updateTargetProps(step: any, ratio: number) {
-        let p0, p1, v, v0, v1, arr;
-        if (!step && ratio == 1) {
-            this.passive = false;
-            p0 = p1 = this._curQueueProps;
-        } else {
-            this.passive = !!step.v;
-            //不更新props.
-            if (this.passive) {
-                return;
-            }
-            //使用ease
-            if (step.e) {
-                ratio = step.e(ratio, 0, 1, 1);
-            }
-            p0 = step.p0;
-            p1 = step.p1;
-        }
-
-        for (let n in this._initQueueProps) {
-            if ((v0 = p0[n]) == null) {
-                p0[n] = v0 = this._initQueueProps[n];
-            }
-            if ((v1 = p1[n]) == null) {
-                p1[n] = v1 = v0;
-            }
-            if (v0 == v1 || ratio == 0 || ratio == 1 || typeof v0 != "number") {
-                v = ratio == 1 ? v1 : v0;
-            } else {
-                v = v0 + (v1 - v0) * ratio;
-            }
-
-            let ignore = false;
-            if ((arr = Tween._plugins[n])) {
-                for (let i = 0, l = arr.length; i < l; i++) {
-                    let v2 = arr[i].tween(this, n, v, p0, p1, ratio, !!step && p0 == p1, !step);
-                    if (v2 == Tween.IGNORE) {
-                        ignore = true;
-                    } else {
-                        v = v2;
-                    }
-                }
-            }
-            if (!ignore) {
-                this._target[n] = v;
-            }
-        }
-    }
-
-    /**
-     * 设置是否暂停
-     * @param value {boolean} 是否暂停
-     * @returns Tween对象本身
-     */
-    public setPaused(value: boolean): Tween {
-        if (this.paused == value) {
-            return this;
-        }
-        this.paused = value;
-        if (!this.manualTick) {
-            Tween._register(this, !value);
         }
         return this;
+    }
+
+    public getIgnoreGlobalPause(): boolean {
+        return this._ignoreGlobalPause;
+    }
+
+    public setIgnoreGlobalPause(ignoreGlobalPause: boolean) {
+        this._ignoreGlobalPause = ignoreGlobalPause;
+        return this;
+    }
+
+    public getTimeScale(): number {
+        return this._timeScale;
+    }
+
+    public setTimeScale(timeScale: number) {
+        this._timeScale = Math.max(timeScale, 0);
+        return this;
+    }
+
+    /**
+     * 附加属性
+     * @param props
+     * @returns
+     */
+    private appendProps(props: { [key in keyof T]?: number | number[] }) {
+        let oldValue: number = null;
+
+        let newProps: { [key in keyof T]?: number | number[] } = this.cloneProps(this._props);
+
+        for (const key in props) {
+            if (Object.prototype.hasOwnProperty.call(props, key)) {
+                const value = props[key];
+
+                if (this._propsInit[key] == null) {
+                    //初始没有存在
+                    if (typeof this._target[key] == "number") {
+                        oldValue = this._target[key] as number;
+                    }
+
+                    if (oldValue != null) {
+                        this._propsInit[key] = this._props[key] = oldValue;
+                    }
+                }
+
+                oldValue = this._props[key];
+
+                if (value instanceof Array) {
+                    if (value.length > 0) {
+                        this._props[key] = value[value.length - 1];
+                        newProps[key] = [oldValue].concat(value);
+                    }
+                } else if (typeof value == "number") {
+                    this._props[key] = value;
+                    newProps[key] = value;
+                }
+            }
+        }
+
+        return newProps;
+    }
+
+    /**
+     * 克隆属性
+     * @param props
+     * @returns
+     */
+    private cloneProps<K>(props: K) {
+        let o: K = {} as any;
+        for (let n in props) {
+            o[n] = props[n];
+        }
+        return o;
+    }
+
+    /**
+     * 添加步骤
+     * @param step
+     * @returns
+     */
+    private addStep(step: Step) {
+        if (step.duration > 0) {
+            step.type = Step.StepType.Step;
+            this._steps.push(step);
+            step.time = this._duration;
+            this._duration += step.duration;
+        }
+        return this;
+    }
+
+    /**
+     * 添加动作
+     * @param step
+     * @returns
+     */
+    private addAction(step: Step): Tween {
+        step.time = this._duration;
+        step.type = Step.StepType.Action;
+        this._steps.push(step);
+        return this;
+    }
+
+    /**
+     * 设置属性
+     * @param props
+     */
+    private setProps(props: { [key in keyof T]?: number | number[] }) {
+        for (const key in props) {
+            if (Object.prototype.hasOwnProperty.call(props, key)) {
+                const value = props[key];
+                const oldValue = this._target[key];
+                if (typeof oldValue == "number") {
+                    if (value instanceof Array) {
+                        if (value.length > 0) {
+                            this._target[key] = value[value.length - 1] as any;
+                        }
+                    } else if (typeof value == "number") {
+                        this._target[key] = value as any;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * 立即将指定对象的属性修改为指定值
+     * @param props
+     * @returns
+     */
+    public set(props: { [key in keyof T]?: number }) {
+        let newProps = this.appendProps(props);
+
+        // 如果总延迟0说明是开始的Set
+        if (this._duration == 0) {
+            this.setProps(newProps);
+        }
+
+        let action = new Action();
+
+        action.callback = (currentProps) => {
+            this.setProps(currentProps);
+        };
+        action.params = [newProps];
+        action.thisObj = this;
+
+        return this.addAction(action);
+    }
+
+    /**
+     * 等待指定毫秒后执行下一个动画
+     * @param duration
+     * @returns
+     */
+    public wait(duration: number): Tween {
+        if (duration == null || duration <= 0) {
+            return this;
+        }
+
+        let step = new Step<T>();
+
+        step.duration = duration || 0;
+
+        step.propsEnd = step.propsStart = this.cloneProps(this._props);
+
+        return this.addStep(step);
+    }
+
+    /**
+     * 将指定对象的属性修改为指定值
+     * @param props
+     * @param duration
+     * @param easing
+     * @param interpolation
+     * @returns
+     */
+    public to(props: { [key in keyof T]?: number | number[] }, duration: number, easing: Tween.IEasing = Tween.Easing.Linear.None, interpolation: Tween.IInterpolation = Tween.Interpolation.Linear) {
+        if (isNaN(duration) || duration < 0) {
+            duration = 0;
+        }
+
+        let step = new Step<T>();
+
+        step.duration = duration || 0;
+
+        step.propsStart = this.cloneProps(this._props);
+        step.propsEnd = this.appendProps(props);
+
+        step.easing = easing;
+        step.interpolation = interpolation;
+
+        this.addStep(step);
+
+        return this;
+    }
+
+    /**
+     * 执行回调函数
+     * @param callback
+     * @param thisObj
+     * @param params
+     * @returns
+     */
+    public call(callback: Function, thisObj: any = null, params: any[] = null) {
+        let action = new Action();
+
+        action.callback = callback;
+        action.params = params || [];
+        action.thisObj = thisObj;
+
+        return this.addAction(action);
+    }
+
+    /**
+     * 播放
+     */
+    public play() {
+        this.setPaused(false);
+    }
+
+    /**
+     * 暂停
+     */
+    public pause() {
+        this.setPaused(true);
     }
 
     /**
@@ -522,224 +345,634 @@ export default class Tween extends cc.EventTarget {
     }
 
     /**
-     * @private
-     *
-     * @param props
+     * 直接完成
      * @returns
      */
-    private _cloneProps(props: any): any {
-        let o = {};
-        for (let n in props) {
-            o[n] = props[n];
+    public finish() {
+        if (this._paused == true) {
+            return;
         }
-        return o;
+
+        this.setPosition(this._duration);
     }
 
     /**
-     * @private
-     *
-     * @param o
-     * @returns
+     * 设置循环
+     * @param loop
+     * @param sync
      */
-    private _addStep(o): Tween {
-        if (o.d > 0) {
-            o.type = "step";
-            this._steps.push(o);
-            o.t = this.duration;
-            this.duration += o.d;
+    public setLoop(loop: boolean, sync: boolean = true) {
+        this._loop = loop;
+        if (this._loop == true && sync == true) {
+            // 同步循环动画
+            this.resetPosition();
+            this.tick(_delta);
         }
-        return this;
-    }
-
-    /**
-     * @private
-     *
-     * @param o
-     * @returns
-     */
-    private _appendQueueProps(o): any {
-        let arr, oldValue, i, l, injectProps;
-        for (let n in o) {
-            if (this._initQueueProps[n] === undefined) {
-                oldValue = this._target[n];
-                //设置plugins
-                if ((arr = Tween._plugins[n])) {
-                    for (i = 0, l = arr.length; i < l; i++) {
-                        oldValue = arr[i].init(this, n, oldValue);
-                    }
-                }
-                this._initQueueProps[n] = this._curQueueProps[n] =
-                    oldValue === undefined ? null : oldValue;
-            } else {
-                oldValue = this._curQueueProps[n];
-            }
-        }
-
-        for (let n in o) {
-            oldValue = this._curQueueProps[n];
-            if ((arr = Tween._plugins[n])) {
-                injectProps = injectProps || {};
-                for (i = 0, l = arr.length; i < l; i++) {
-                    if (arr[i].step) {
-                        arr[i].step(this, n, oldValue, o[n], injectProps);
-                    }
-                }
-            }
-            this._curQueueProps[n] = o[n];
-        }
-        if (injectProps) {
-            this._appendQueueProps(injectProps);
-        }
-        return this._curQueueProps;
-    }
-
-    /**
-     * @private
-     *
-     * @param o
-     * @returns
-     */
-    private _addAction(o): Tween {
-        o.t = this.duration;
-        o.type = "action";
-        this._steps.push(o);
-        return this;
-    }
-
-    /**
-     * @private
-     *
-     * @param props
-     * @param o
-     */
-    private _set(props: any, o): void {
-        for (let n in props) {
-            o[n] = props[n];
-        }
-    }
-
-    /**
-     * 等待指定毫秒后执行下一个动画
-     * @param duration {number} 要等待的时间, 以毫秒为单位
-     * @param passive {boolean} 等待期间属性是否会更新
-     * @returns Tween对象本身
-     */
-    public wait(duration: number, passive?: boolean): Tween {
-        if (duration == null || duration <= 0) {
-            return this;
-        }
-        let o = this._cloneProps(this._curQueueProps);
-        return this._addStep({ d: duration, p0: o, p1: o, v: passive });
-    }
-
-    /**
-     * 将指定对象的属性修改为指定值
-     * @param props {Object} 对象的属性集合
-     * @param duration {number} 持续时间
-     * @param ease {Ease} 缓动算法
-     * @returns {Tween} Tween对象本身
-     */
-    public to(props: any, duration?: number, ease: Function = undefined) {
-        if (isNaN(duration) || duration < 0) {
-            duration = 0;
-        }
-        this._addStep({
-            d: duration || 0,
-            p0: this._cloneProps(this._curQueueProps),
-            e: ease,
-            p1: this._cloneProps(this._appendQueueProps(props)),
-        });
-        //加入一步set, 防止游戏极其卡顿时候, to后面的call取到的属性值不对
-        return this.set(props);
     }
 
     /**
      * 执行回调函数
-     * @param callback {Function} 回调方法
-     * @param thisObj {any} 回调方法this作用域
-     * @param params {any[]} 回调方法参数
-     * @returns {Tween} Tween对象本身
-     * @example
-     * <pre>
-     *  Tween.get(display).call(function (a:number, b:string) {
-     *      cc.log("a: " + a); //对应传入的第一个参数 233
-     *      cc.log("b: " + b); //对应传入的第二个参数 “hello”
-     *  }, this, [233, "hello"]);
-     * </pre>
+     * @param action
+     * @param startPosition
+     * @param endPosition
+     * @param includeStart
      */
-    public call(callback: Function, thisObj: any = undefined, params: any[] = undefined): Tween {
-        return this._addAction({
-            f: callback,
-            p: params ? params : [],
-            o: thisObj ? thisObj : this._target,
-        });
-    }
-
-    /**
-     * 立即将指定对象的属性修改为指定值
-     * @param props {Object} 对象的属性集合
-     * @param target 要继续播放 Tween 的对象
-     * @returns {Tween} Tween对象本身
-     */
-    public set(props: any, target = null): Tween {
-        //更新当前数据, 保证缓动流畅性
-        this._appendQueueProps(props);
-        return this._addAction({
-            f: this._set,
-            o: this,
-            p: [props, target ? target : this._target],
-        });
-    }
-
-    /**
-     * 设置时间倍数
-     * @param scale
-     */
-    public setTimeScale(scale: number): Tween {
-        this._timeScale = scale;
-        return this;
-    }
-
-    /**
-     * 获取当前时间倍数
-     */
-    public timeScale() {
-        return this._timeScale;
-    }
-
-    /**
-     * 执行
-     * @param tween {Tween} 需要操作的 Tween 对象, 默认this
-     * @returns {Tween} Tween对象本身
-     */
-    public play(tween?: Tween): Tween {
-        if (!tween) {
-            tween = this;
+    private runAction(
+        action: Action,
+        startPosition: number,
+        endPosition: number,
+        includeStart: boolean = false
+    ) {
+        if (startPosition > endPosition) {
+            //把所有的倒置
+            let tmp = startPosition;
+            startPosition = endPosition;
+            endPosition = tmp;
         }
-        return this.call(tween.setPaused, tween, [false]);
+        let position = action.time;
+        if (position == endPosition || (position > startPosition && position < endPosition) || (includeStart && position == startPosition)) {
+            action.callback.apply(action.thisObj, action.params);
+        }
     }
 
     /**
-     * 暂停
-     * @param tween {Tween} 需要操作的 Tween 对象, 默认this
-     * @returns {Tween} Tween对象本身
+     * 更新属性
+     * @param step
+     * @param ratio
+     * @returns
      */
-    public pause(tween?: Tween): Tween {
-        if (!tween) {
-            tween = this;
+    private updateTargetProps(step: Step, ratio: number) {
+        if (step.propsStart == step.propsEnd) {
+            // 相等的属性不需要更新
+            return;
         }
-        return this.call(tween.setPaused, tween, [true]);
+
+        // 缓动
+        if (step.easing != null) {
+            ratio = step.easing(ratio);
+        }
+
+        let propsStart: number = null;
+        let propsEnd: number | number[] = null;
+
+        for (const key in this._propsInit) {
+            if (Object.prototype.hasOwnProperty.call(this._propsInit, key)) {
+                if ((propsStart = step.propsStart[key]) == null) {
+                    step.propsStart[key] = propsStart = this._propsInit[key];
+                }
+                if ((propsEnd = step.propsEnd[key]) == null) {
+                    step.propsEnd[key] = propsEnd = propsStart;
+                }
+
+                let prop: number = null;
+
+                if (propsStart == propsEnd || ratio == 0 || ratio == 1) {
+                    if (ratio == 0) {
+                        prop = propsStart;
+                    } else {
+                        if (propsEnd instanceof Array) {
+                            prop = propsEnd[propsEnd.length - 1];
+                        } else {
+                            prop = propsEnd;
+                        }
+                    }
+                } else {
+                    if (propsEnd instanceof Array) {
+                        prop = step.interpolation(propsEnd, ratio);
+                    } else {
+                        prop = propsStart + (propsEnd - propsStart) * ratio;
+                    }
+                }
+
+                if (prop != null) {
+                    this._target[key] = prop as any;
+                }
+            }
+        }
+    }
+
+    private resetPosition() {
+        this._prevPosition = 0;
+        this._prevTime = 0;
+    }
+
+    private setPosition(position: number, runAction: boolean = true): boolean {
+        if (position < 0) {
+            position = 0;
+        }
+
+        //正常化位置
+        let time: number = position;
+        let end: boolean = false;
+        // 超过时间处理
+        if (time >= this._duration) {
+            if (this._loop) {
+                let newTime = time % this._duration;
+                if (time > 0 && newTime === 0) {
+                    time = this._duration;
+                } else {
+                    time = newTime;
+                }
+            } else {
+                time = this._duration;
+                end = true;
+            }
+        }
+
+        // 如果时间没有走动跳过
+        if (time == this._prevTime) {
+            return end;
+        }
+
+        // 检查是否结束
+        if (end) {
+            this.setPaused(true);
+        }
+
+        let prevTime = this._prevTime;
+        this._prevTime = time;
+        this._prevPosition = position;
+
+        if (this._target != null) {
+            if (this._steps.length > 0) {
+                // 查找当前时间在那个Step内
+                let stepLength = this._steps.length;
+                let stepIndex = -1;
+                for (let i = 0; i < stepLength; i++) {
+                    if (this._steps[i].type == Step.StepType.Step) {
+                        stepIndex = i;
+                        if (this._steps[i].time <= time && this._steps[i].time + this._steps[i].duration >= time) {
+                            break;
+                        }
+                    }
+                }
+                for (let i = 0; i < stepLength; i++) {
+                    if (this._steps[i].type == Step.StepType.Action) {
+                        let action = this._steps[i] as Action;
+                        //执行actions
+                        if (runAction == true) {
+                            if (time < prevTime) {
+                                // 循环中的动作
+                                if (prevTime != this._duration) {
+                                    this.runAction(action, prevTime, this._duration);
+                                }
+                                this.runAction(action, 0, time, true);
+                            } else {
+                                this.runAction(action, prevTime, time);
+                            }
+                        }
+                    } else if (this._steps[i].type == Step.StepType.Step) {
+                        if (stepIndex == i) {
+                            let step = this._steps[stepIndex];
+                            this.updateTargetProps(
+                                step,
+                                Math.min((time - step.time) / step.duration, 1)
+                            );
+                        }
+                    }
+                }
+            }
+        }
+
+        return end;
     }
 
     /**
      * 帧更新
-     * @param delta {number}
-     * @private
+     * @param delta
      */
     public tick(delta: number): void {
-        if (this.paused || delta <= 0) {
+        if (this._paused == true) {
             return;
         }
-        this.setPosition(this._prevPosition + delta * this._timeScale);
+
+        if (this.setPosition(this._prevPosition + delta * this._timeScale)) {
+            this.setPaused(true);
+        }
     }
 }
+
+namespace Tween {
+
+    /**
+     * 对对象添加一个动画
+     * @param target
+     * @returns
+     */
+    export function get<T>(target: T) {
+        return new Tween<T>(target);
+    }
+
+    export function getPaused(): boolean {
+        return _paused;
+    }
+
+    export function setPaused(pause: boolean) {
+        _paused = pause;
+    }
+
+    export function getTimeScale(): number {
+        return this._timeScale;
+    }
+
+    export function setTimeScale(timeScale: number) {
+        this._timeScale = Math.max(timeScale, 0);
+    }
+
+    /**
+     * 获取所有动画
+     * @returns
+     */
+    export function getAllTweens() {
+        return _tweens;
+    }
+
+    /**
+     * 移除所有动画
+     */
+    export function removeAllTweens(): void {
+        for (let i = 0, l = _tweens.length; i < l; i++) {
+            let tween: Tween = _tweens[i];
+            tween["_paused"] = true;
+            let target = tween.getTarget();
+            if (target != null) {
+                target["__tweenCount"] = 0;
+            }
+        }
+        _tweens.length = 0;
+    }
+
+    /**
+     * 移除对象上所有动画
+     * @param target
+     * @returns
+     */
+    export function removeTweens<T>(target: T): void {
+        if (target["__tweenCount"] == null) {
+            return;
+        }
+        for (let i = _tweens.length - 1; i >= 0; i--) {
+            if (_tweens[i].getTarget() == target) {
+                _tweens[i]["_paused"] = true;
+                _tweens.splice(i, 1);
+            }
+        }
+        target["__tweenCount"] = 0;
+    }
+
+    /**
+     * 暂停对象上所有动画
+     * @param target
+     * @returns
+     */
+    export function pauseTweens<T>(target: T): void {
+        if (target["__tweenCount"] == null) {
+            return;
+        }
+        for (let i = _tweens.length - 1; i >= 0; i--) {
+            if (_tweens[i].getTarget() == target) {
+                _tweens[i]["_paused"] = true;
+            }
+        }
+    }
+
+    /**
+     * 恢复对象上所有动画
+     * @param target
+     * @returns
+     */
+    export function resumeTweens<T>(target: T): void {
+        if (target["__tweenCount"] == null) {
+            return;
+        }
+        for (let i = _tweens.length - 1; i >= 0; i--) {
+            if (_tweens[i].getTarget() == target) {
+                _tweens[i]["_paused"] = false;
+            }
+        }
+    }
+
+    /**
+     * 完成播放某个对象的所有缓动
+     * @param target
+     * @returns
+     */
+    export function finishTweens<T>(target: T): void {
+        if (target["__tweenCount"] == null) {
+            return;
+        }
+        for (let i = _tweens.length - 1; i >= 0; i--) {
+            if (_tweens[i].getTarget() == target) {
+                _tweens[i].finish();
+            }
+        }
+    }
+
+    /**
+     *  帧更新
+     * @param delta
+     */
+    export function tick(delta: number) {
+        if (_tweens.length === 0) {
+            return;
+        }
+
+        _delta += delta * _timeScale;
+
+        for (let i = _tweens.length - 1; i >= 0; i--) {
+            let tween: Tween = _tweens[i];
+            // 暂停判断
+            if ((_paused == true && tween.getIgnoreGlobalPause() == false) || tween.getPaused() == true) {
+                continue;
+            }
+            try {
+                tween.tick(delta * _timeScale);
+            } catch (error) {
+                console.warn("Tween动画错误", tween, error);
+                removeGlobal(tween);
+            }
+        }
+    }
+
+    /**
+     * 差值接口
+     */
+    export interface IInterpolation {
+        (v: number[], k: number): number;
+    }
+
+    /**
+     * 差值算法
+     */
+    export namespace Interpolation {
+
+        /**
+         * 线性
+         * @param v
+         * @param k
+         * @returns
+         */
+        export const Linear: IInterpolation = function (v, k) {
+            let m = v.length - 1, f = m * k, i = Math.floor(f), fn = Utils.Linear;
+
+            if (k < 0) return fn(v[0], v[1], f);
+            if (k > 1) return fn(v[m], v[m - 1], m - f);
+
+            return fn(v[i], v[i + 1 > m ? m : i + 1], f - i);
+        }
+
+        /**
+         * 贝塞尔曲线
+         * @param v
+         * @param k
+         * @returns
+         */
+        export const Bezier: IInterpolation = function (v, k) {
+            let b = 0, n = v.length - 1, pw = Math.pow, bn = Utils.Bernstein, i;
+
+            for (i = 0; i <= n; i++) {
+                b += pw(1 - k, n - i) * pw(k, i) * v[i] * bn(n, i);
+            }
+
+            return b;
+        }
+
+        /**
+         * 条样曲线
+         * @param v
+         * @param k
+         * @returns
+         */
+        export const CatmullRom: IInterpolation = function (v, k) {
+            let m = v.length - 1, f = m * k, i = Math.floor(f), fn = Utils.CatmullRom;
+
+            if (v[0] === v[m]) {
+                if (k < 0) i = Math.floor(f = m * (1 + k));
+
+                return fn(v[(i - 1 + m) % m], v[i], v[(i + 1) % m], v[(i + 2) % m], f - i);
+            } else {
+                if (k < 0) return v[0] - (fn(v[0], v[0], v[1], v[1], -f) - v[0]);
+                if (k > 1) return v[m] - (fn(v[m], v[m], v[m - 1], v[m - 1], f - m) - v[m]);
+
+                return fn(v[i ? i - 1 : 0], v[i], v[m < i + 1 ? m : i + 1], v[m < i + 2 ? m : i + 2], f - i);
+            }
+        }
+
+        /**
+         * 差值工具
+         */
+        namespace Utils {
+            export function Linear(p0: number, p1: number, t: number) {
+                return (p1 - p0) * t + p0;
+            }
+
+            export function Bernstein(n: number, i: number) {
+                let fc = Utils.Factorial;
+                return fc(n) / fc(i) / fc(n - i);
+            }
+
+            export let Factorial = (function () {
+                let a = [1];
+
+                return function (n: number) {
+                    let s = 1, i;
+                    if (a[n]) return a[n];
+                    for (i = n; i > 1; i--) s *= i;
+                    return a[n] = s;
+                };
+
+            })()
+
+            export function CatmullRom(p0: number, p1: number, p2: number, p3: number, t: number) {
+                let v0 = (p2 - p0) * 0.5, v1 = (p3 - p1) * 0.5, t2 = t * t, t3 = t * t2;
+                return (2 * p1 - 2 * p2 + v0 + v1) * t3 + (- 3 * p1 + 3 * p2 - 2 * v0 - v1) * t2 + v0 * t + p1;
+            }
+        }
+    }
+
+    /**
+     *  缓动接口
+     */
+    export interface IEasing {
+        (k: number): number;
+    }
+
+    /**
+     * 缓动算法
+     */
+    export namespace Easing {
+        export namespace Linear {
+            export const None: IEasing = function (k) {
+                return k;
+            }
+        }
+
+        export namespace Quadratic {
+            export const In: IEasing = function (k) {
+                return k * k;
+            }
+            export const Out: IEasing = function (k) {
+                return k * (2 - k);
+            }
+            export const InOut: IEasing = function (k) {
+                if ((k *= 2) < 1) return 0.5 * k * k;
+                return -0.5 * (--k * (k - 2) - 1);
+            }
+        }
+
+        export namespace Cubic {
+            export const In: IEasing = function (k) {
+                return k * k * k;
+            }
+            export const Out: IEasing = function (k) {
+                return --k * k * k + 1;
+            }
+            export const InOut: IEasing = function (k) {
+                if ((k *= 2) < 1) return 0.5 * k * k * k;
+                return 0.5 * ((k -= 2) * k * k + 2);
+            }
+        }
+
+        export namespace Quartic {
+            export const In: IEasing = function (k) {
+                return k * k * k * k;
+            }
+            export const Out: IEasing = function (k) {
+                return 1 - (--k * k * k * k);
+            }
+            export const InOut: IEasing = function (k) {
+                if ((k *= 2) < 1) return 0.5 * k * k * k * k;
+                return -0.5 * ((k -= 2) * k * k * k - 2);
+            }
+        }
+
+        export namespace Quintic {
+            export const In: IEasing = function (k) {
+                return k * k * k * k * k;
+            }
+            export const Out: IEasing = function (k) {
+                return --k * k * k * k * k + 1;
+            }
+            export const InOut: IEasing = function (k) {
+                if ((k *= 2) < 1) return 0.5 * k * k * k * k * k;
+                return 0.5 * ((k -= 2) * k * k * k * k + 2);
+            }
+        }
+
+        export namespace Sinusoidal {
+            export const In: IEasing = function (k) {
+                return 1 - Math.cos(k * Math.PI / 2);
+            }
+            export const Out: IEasing = function (k) {
+                return Math.sin(k * Math.PI / 2);
+            }
+            export const InOut: IEasing = function (k) {
+                return 0.5 * (1 - Math.cos(Math.PI * k));
+            }
+        }
+
+        export namespace Exponential {
+            export const In: IEasing = function (k) {
+                return k === 0 ? 0 : Math.pow(1024, k - 1);
+            }
+            export const Out: IEasing = function (k) {
+                return k === 1 ? 1 : 1 - Math.pow(2, -10 * k);
+            }
+            export const InOut: IEasing = function (k) {
+                if (k === 0) return 0;
+                if (k === 1) return 1;
+                if ((k *= 2) < 1) return 0.5 * Math.pow(1024, k - 1);
+                return 0.5 * (-Math.pow(2, -10 * (k - 1)) + 2);
+            }
+        }
+
+        export namespace Circular {
+            export const In: IEasing = function (k) {
+                return 1 - Math.sqrt(1 - k * k);
+            }
+            export const Out: IEasing = function (k) {
+                return Math.sqrt(1 - (--k * k));
+            }
+            export const InOut: IEasing = function (k) {
+                if ((k *= 2) < 1) return -0.5 * (Math.sqrt(1 - k * k) - 1);
+                return 0.5 * (Math.sqrt(1 - (k -= 2) * k) + 1);
+            }
+        }
+
+        export namespace Elastic {
+            export const In: IEasing = function (k) {
+                var s, a = 0.1, p = 0.4;
+                if (k === 0) return 0;
+                if (k === 1) return 1;
+                if (!a || a < 1) {
+                    a = 1;
+                    s = p / 4;
+                }
+                else s = p * Math.asin(1 / a) / (2 * Math.PI);
+                return -(a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
+            }
+            export const Out: IEasing = function (k) {
+                var s, a = 0.1, p = 0.4;
+                if (k === 0) return 0;
+                if (k === 1) return 1;
+                if (!a || a < 1) {
+                    a = 1;
+                    s = p / 4;
+                }
+                else s = p * Math.asin(1 / a) / (2 * Math.PI);
+                return (a * Math.pow(2, -10 * k) * Math.sin((k - s) * (2 * Math.PI) / p) + 1);
+            }
+            export const InOut: IEasing = function (k) {
+                var s, a = 0.1, p = 0.4;
+                if (k === 0) return 0;
+                if (k === 1) return 1;
+                if (!a || a < 1) {
+                    a = 1;
+                    s = p / 4;
+                }
+                else s = p * Math.asin(1 / a) / (2 * Math.PI);
+                if ((k *= 2) < 1) return -0.5 * (a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
+                return a * Math.pow(2, -10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p) * 0.5 + 1;
+            }
+        }
+
+        export namespace Back {
+            export const In: IEasing = function (k) {
+                var s = 1.70158;
+                return k * k * ((s + 1) * k - s);
+            }
+            export const Out: IEasing = function (k) {
+                var s = 1.70158;
+                return --k * k * ((s + 1) * k + s) + 1;
+            }
+            export const InOut: IEasing = function (k) {
+                var s = 1.70158 * 1.525;
+                if ((k *= 2) < 1) return 0.5 * (k * k * ((s + 1) * k - s));
+                return 0.5 * ((k -= 2) * k * ((s + 1) * k + s) + 2);
+            }
+        }
+
+        export namespace Bounce {
+            export const In: IEasing = function (k) {
+                return 1 - Easing.Bounce.Out(1 - k);
+            }
+            export const Out: IEasing = function (k) {
+                if (k < (1 / 2.75)) {
+                    return 7.5625 * k * k;
+                } else if (k < (2 / 2.75)) {
+                    return 7.5625 * (k -= (1.5 / 2.75)) * k + 0.75;
+                } else if (k < (2.5 / 2.75)) {
+                    return 7.5625 * (k -= (2.25 / 2.75)) * k + 0.9375;
+                } else {
+                    return 7.5625 * (k -= (2.625 / 2.75)) * k + 0.984375;
+                }
+            }
+            export const InOut: IEasing = function (k) {
+                if (k < 0.5) return Easing.Bounce.In(k * 2) * 0.5;
+                return Easing.Bounce.Out(k * 2 - 1) * 0.5 + 0.5;
+            }
+        }
+    }
+}
+
+export default Tween;

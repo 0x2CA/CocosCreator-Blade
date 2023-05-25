@@ -1,7 +1,3 @@
-import LocalizedItem from "./LocalizedItem";
-import LocalizedService from "../../Services/LocalizedService";
-import TimerService from "../../Services/TimerService";
-
 const { ccclass, property, executeInEditMode, menu, requireComponent, executionOrder } = cc._decorator;
 
 /**
@@ -32,7 +28,7 @@ export default class LocalizedLabel extends cc.Component implements LocalizedIte
             this._label = this.getComponent(cc.Label);
         }
         if (this._label == null) {
-            cc.warn('不存在cc.Label节点', this.node.name);
+            console.warn('不存在cc.Label节点', this.node.name);
         }
         return this._label;
     }
@@ -45,7 +41,7 @@ export default class LocalizedLabel extends cc.Component implements LocalizedIte
         }),
         tooltip: '文本类型:\n1.正常\n2.全大写\n3.全小写'
     })
-    textType: any = 0;
+    textType: number = 0;
 
     @property({
         type: [cc.String],
@@ -57,19 +53,22 @@ export default class LocalizedLabel extends cc.Component implements LocalizedIte
 
     onLoad() {
         this.updateLang();
-        LocalizedService.getInstance().on(LocalizedService.EventType.LanguageChange, this.updateLang, this);
+        blade.locale.on(LocalizedService.EventType.LanguageChange, this.updateLang, this);
 
         // 编辑器模式, 执行定时更新
-        if (CC_EDITOR) {
-            this.updateInterval = TimerService.getInstance().startTimer(LocalizedService.getInstance().EditorRefreshInterval, this.updateLang.bind(this));
+        if (cc.sys.platform == cc.sys.EDITOR_PAGE || cc.sys.platform == cc.sys.EDITOR_CORE) {
+            this.updateInterval = blade.timer.startTimer(blade.locale.EditorRefreshInterval, this.updateLang.bind(this));
+            if (blade.locale.hasLangConfig(blade.locale.getLang()) == false) {
+                blade.locale.loadLangConfig(blade.locale.getLang());
+            }
         }
     }
 
     onDestroy() {
-        LocalizedService.getInstance().off(LocalizedService.EventType.LanguageChange, this.updateLang, this);
+        blade.locale.off(LocalizedService.EventType.LanguageChange, this.updateLang, this);
 
         if (this.updateInterval) {
-            TimerService.getInstance().stopTimer(this.updateInterval);
+            blade.timer.stop(this.updateInterval);
         }
     }
 
@@ -78,7 +77,7 @@ export default class LocalizedLabel extends cc.Component implements LocalizedIte
             return;
         }
 
-        const text = (this.langArgs && this.langArgs.length > 0) ? LocalizedService.getInstance().value(this.langID, ...this.langArgs) : LocalizedService.getInstance().value(this.langID);
+        const text = (this.langArgs && this.langArgs.length > 0) ? blade.locale.value(this.langID, ...this.langArgs) : blade.locale.value(this.langID);
         switch (this.textType) {
             case 0:
             default:
@@ -112,3 +111,8 @@ export default class LocalizedLabel extends cc.Component implements LocalizedIte
         this.updateLang();
     }
 }
+
+import LocalizedService from "../../Services/LocalizedService";
+import TimerService from "../../Services/TimerService";
+import LocalizedItem from "./LocalizedItem";
+

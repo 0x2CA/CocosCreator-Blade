@@ -1,10 +1,4 @@
 import PlatformBase from "../Bases/PlatformBase";
-import HttpHelper from "../Helpers/HttpHelper";
-import StringHelper from "../Helpers/StringHelper";
-import PromiseHelper from "../Helpers/PromiseHelper";
-import PlatformConfig from "../../Module/Defines/PlatformConfig";
-import AudioService from "../Services/AudioService";
-import TickerService from "../Services/TickerService";
 
 /**
  *  字节跳动
@@ -12,14 +6,14 @@ import TickerService from "../Services/TickerService";
 export default class TTPlatform extends PlatformBase {
 
     // 启动参数
-    private launchOptions: tt.launchOption
+    private _launchOptions: tt.launchOption
         = null;
 
-    // 授权按钮
-    private authorizeButton = null;
+    // // 授权按钮
+    // private authorizeButton = null;
 
     // 菜单分享
-    private shareMenuInfo: {
+    private _shareMenuInfo: {
         templateId?: string,
         title?: string,
         imageUrl?: string,
@@ -27,26 +21,28 @@ export default class TTPlatform extends PlatformBase {
         success: Function
     } = null;
 
-    private videoState: PlatformBase.AdState = PlatformBase.AdState.None;
-    private bannerState: PlatformBase.AdState = PlatformBase.AdState.None;
-    private interstitialState: PlatformBase.AdState = PlatformBase.AdState.None;
+    private _videoState: PlatformBase.AdState = PlatformBase.AdState.None;
+    private _bannerState: PlatformBase.AdState = PlatformBase.AdState.None;
+    private _interstitialState: PlatformBase.AdState = PlatformBase.AdState.None;
 
     /**
     * 激励视频实例
     */
-    private video: tt.RewardedVideoAd = null;
+    private _video: tt.RewardedVideoAd = null;
 
-    private banner: tt.BannerAd = null;
+    private _banner: tt.BannerAd = null;
 
-    private interstitial: tt.InterstitialAd = null;
+    private _interstitial: tt.InterstitialAd = null;
 
-    private bannerActive: boolean = false;
+    private _bannerActive: boolean = false;
 
+    private _configs: TTConfigBase = null;
 
+    protected onInitialize() {
+        this._configs = PlatformConfig[PlatformService.PlatformType.BYTEDANCE];
 
-    public onInitialize() {
         // 获取尝试用户信息
-        this.getUserInfoTry()
+        this.getUserInfoTry();
 
         tt.onShow((res) => {
             // 更新启动参数
@@ -55,13 +51,86 @@ export default class TTPlatform extends PlatformBase {
             this.emit(PlatformBase.EventType.OnShow, res)
         });
 
-        this.preloadBanner();
-        this.preloadInterstitial();
-        this.preloadRewardVideo();
+        // this.preloadBanner();
+        // this.preloadInterstitial();
+        // this.preloadRewardVideo();
+    }
+
+    public async login(isForce: boolean = true): Promise<void> {
+    }
+
+    private _isCheckUpdate: boolean = false;
+
+    public checkForUpdate(): Promise<void> {
+        return new Promise<void>((resolve, reject) => {
+            this.checkUpdate(resolve)
+        });
+    }
+
+    private checkUpdate(finishCallback: () => void) {
+        this._isCheckUpdate = false;
+
+        const updateManager = tt.getUpdateManager();
+
+        updateManager.onCheckForUpdate((res) => {
+            this._isCheckUpdate = true;
+
+            // 请求完新版本信息的回调
+            console.log("检查更新回调", res.hasUpdate);
+            if (!res.hasUpdate) {
+                //无更新
+                finishCallback();
+            }
+        })
+
+        updateManager.onUpdateReady(() => {
+            tt.showModal({
+                title: '更新提示',
+                content: '新版本已经准备好，是否重启应用？',
+                success: (res) => {
+                    if (res.confirm) {
+                        // 新的版本已经下载好，调用 applyUpdate 应用新版本并重启
+                        updateManager.applyUpdate()
+                    } else {
+                        this.checkUpdate(finishCallback);
+                    }
+                }
+            })
+        })
+
+        updateManager.onUpdateFailed(() => {
+            // 新版本下载失败
+            tt.showModal({
+                title: '更新失败',
+                content: '新版本下载失败，请重试!',
+                success: (res) => {
+                    // if (res.confirm) {
+                    //     this.checkUpdate(finishCallback);
+                    // }
+                    this.checkUpdate(finishCallback);
+                }
+            })
+        });
+
+        if (this._isCheckUpdate == false) {
+            blade.timer.startTimeout(1.5, () => {
+                if (this._isCheckUpdate == false) {
+                    //无更新
+                    finishCallback();
+                }
+            }, this);
+        }
     }
 
     public getArchive(name: string): string {
         return tt.getStorageSync(name) as string;
+    }
+
+    /**
+     * 获取分享信息
+     * @returns
+     */
+    public getShareInfo() {
     }
 
     public saveArchive(name: string, data: string) {
@@ -69,10 +138,10 @@ export default class TTPlatform extends PlatformBase {
     }
 
     public getLaunchOptions() {
-        if (!this.launchOptions) {
-            this.launchOptions = tt.getLaunchOptionsSync();
+        if (!this._launchOptions) {
+            this._launchOptions = tt.getLaunchOptionsSync();
         }
-        return this.launchOptions;
+        return this._launchOptions;
     }
 
     /**
@@ -80,7 +149,7 @@ export default class TTPlatform extends PlatformBase {
      * @param value
      */
     private setLaunchOptions(value: tt.launchOption) {
-        this.launchOptions = value;
+        this._launchOptions = value;
     }
 
     /**
@@ -92,41 +161,52 @@ export default class TTPlatform extends PlatformBase {
         }
         try {
             let result = await new Promise((resolve, reject) => {
-                tt.getUserInfo({
+                tt.getSetting({
                     success: (res) => {
-                        if (res.rawData) {
-                            const info = JSON.parse(res.rawData);
-                            const sysInfo = tt.getSystemInfoSync();
-                            this.userInfo = {
-                                avatar: info.avatarUrl || "",
-                                nickname: info.nickName || "",
-                                gender: info.gender || 0,
-                                province: info.province,
-                                city: info.city,
-                                country: info.country,
-                                platform: sysInfo.platform,
-                                device: sysInfo.model,
-                            };
-                            resolve(this.userInfo);
-                        } else {
-                            reject(res);
+                        if (res.authSetting != null) {
+                            if (res.authSetting["scope.userInfo"] == true) {
+                                tt.getUserInfo({
+                                    success: (res) => {
+                                        if (res.rawData) {
+                                            const info = JSON.parse(res.rawData);
+                                            const sysInfo = tt.getSystemInfoSync();
+                                            this.userInfo = {
+                                                avatar: info.avatarUrl || "",
+                                                nickname: info.nickName || "",
+                                                gender: info.gender || 0,
+                                                province: info.province,
+                                                city: info.city,
+                                                country: info.country,
+                                                platform: sysInfo.platform,
+                                                device: sysInfo.model,
+                                            };
+                                            resolve(this.userInfo);
+                                        } else {
+                                            reject(res);
+                                        }
+                                    },
+                                    fail: reject,
+                                });
+                            }
                         }
                     },
                     fail: reject,
-                });
+                })
             });
             return result;
         } catch (error) {
-            cc.log(error);
+            console.log(error);
             return null
         }
     }
 
+    private _encryptedData: string = null;
+    private _iv: string = null;
+
     /**
     * 用户授权
-    * left、top、width、height 为相对界面的比例，0~1
     */
-    public authorize(): Promise<any> {
+    public authorize(): Promise<void> {
         return new Promise((resolve, reject) => {
             const handleInfo = (res) => {
                 if (res.rawData) {
@@ -142,10 +222,9 @@ export default class TTPlatform extends PlatformBase {
                         platform: sysInfo.platform,
                         device: sysInfo.model,
                     };
-                    resolve({
-                        encryptedData: res.encryptedData,
-                        iv: res.iv,
-                    });
+                    this._encryptedData = res.encryptedData;
+                    this._iv = res.iv;
+                    resolve();
                 } else {
                     reject();
                 }
@@ -171,6 +250,7 @@ export default class TTPlatform extends PlatformBase {
             });
         });
     }
+
     // public authorize(options?: {
     //     left: number;
     //     top: number;
@@ -178,7 +258,7 @@ export default class TTPlatform extends PlatformBase {
     //     height: number;
     //     callback?: Function;
     //     caller?: any;
-    // }): Promise<any> {
+    // }): Promise<void> {
     //     return new Promise((resolve, reject) => {
     //         const handleInfo = (res) => {
     //             if (res.rawData) {
@@ -268,35 +348,158 @@ export default class TTPlatform extends PlatformBase {
     //     });
     // }
 
+    // /**
+    //  * 取消授权
+    //  */
+    // public unauthorize() {
+    //     if (this.authorizeButton) {
+    //         this.authorizeButton.destroy();
+    //         this.authorizeButton = null;
+    //     }
+    // }
+
     /**
-     * 取消授权
+     * 打开客服（仅限抖音）
+     * @returns
      */
-    public unauthorize() {
-        if (this.authorizeButton) {
-            this.authorizeButton.destroy();
-            this.authorizeButton = null;
-        }
+    public openCustomerServiceConversation() {
+        return new Promise<void>((resolve, reject) => {
+            /**
+               * 1 ：小 6 客服 2 :  抖音IM 客服（仅支持抖音）
+               */
+            tt.openCustomerServiceConversation({
+                type: 1,
+                success: (res) => {
+                    resolve();
+                },
+                fail: (res) => {
+                    let error = "未知错误";
+                    if (res != null && res.errMsg != null) {
+                        let message = res.errMsg.split("openCustomerServiceConversation:fail ")?.[1];
+                        if (message != null) {
+                            error = message;
+                        }
+                    }
+                    reject(error);
+                },
+            });
+        });
     }
 
+    private contactButton: tt.ContactButton = null;
 
+    /**
+     * 显示客服按钮
+     * left、top、width、height 为相对界面的比例，0~1
+     * @param options
+     * @returns
+     */
+    public createContactButton(options?: {
+        left: number;
+        top: number;
+        width: number;
+        height: number;
+        callback?: Function;
+        caller?: any;
+        imagePath?: string;
+    }) {
+        if (this.contactButton) {
+            this.contactButton.destroy();
+            this.contactButton = null;
+        }
+
+        return new Promise((resolve, reject) => {
+            tt.getSystemInfo({
+                success: (res) => {
+                    if (options) {
+                        options.height *= res.screenHeight;
+                        options.width *= res.screenWidth;
+                        options.left *= res.screenWidth;
+                        options.top *= res.screenHeight;
+                    } else {
+                        options = {
+                            left: 0,
+                            top: 0,
+                            width: res.screenWidth,
+                            height: res.screenHeight,
+                        };
+                    }
+
+                    const button = tt.createContactButton({
+                        type: "image",
+                        image: options.imagePath,
+                        style: {
+                            left: options.left,
+                            top: options.top,
+                            width: options.width,
+                            height: options.height,
+                            backgroundColor: "rgba(252,255,255,0)",
+                            borderColor: "rgba(255,255,255,255)",
+                            borderWidth: 0,
+                            borderRadius: 0,
+                            textAlign: "center",
+                            fontSize: 30,
+                            lineHeight: 32,
+                        },
+                    })
+                    this.contactButton = button;
+                    button.onTap(() => {
+                        if (options.callback) {
+                            options.callback.call(options.caller);
+                        }
+                    });
+
+                },
+                fail: (res) => {
+                    reject();
+                },
+            });
+        });
+    }
+
+    /**
+     * 隐藏客服按钮
+     */
+    public hideContactButton() {
+        if (this.contactButton) {
+            this.contactButton.hide();
+        }
+    }
+    /**
+       * 显示客服按钮
+       */
+    public showContactButton() {
+        if (this.contactButton) {
+            this.contactButton.show();
+        }
+    }
+    /**
+       * 销毁客服按钮
+       */
+    public destroyContactButton() {
+        if (this.contactButton) {
+            this.contactButton.destroy();
+            this.contactButton = null;
+        }
+    }
     /**
     * 配置菜单分享内容
     */
     public async setShareMenuInfo(imageUrl: string, title: string, param: any, callback?: Function, caller?: any) {
-        if (this.shareMenuInfo == null) {
+        if (this._shareMenuInfo == null) {
             tt.showShareMenu({
                 withShareTicket: true,
             });
 
             tt.onShareAppMessage(() => {
-                return this.shareMenuInfo
+                return this._shareMenuInfo
             });
         }
 
         param.shareTime = blade.timer.getTime();
         let query = HttpHelper.formatParams(param);
 
-        this.shareMenuInfo = {
+        this._shareMenuInfo = {
             imageUrl, title, query, success: () => {
                 this.emit(PlatformBase.EventType.OpenShare, imageUrl, title, param);
                 if (callback) {
@@ -307,20 +510,20 @@ export default class TTPlatform extends PlatformBase {
     }
 
     public async setShareMenuInfoByID(id: string, imageUrl: string, title: string, param: any, callback?: Function, caller?: any) {
-        if (this.shareMenuInfo == null) {
+        if (this._shareMenuInfo == null) {
             tt.showShareMenu({
                 withShareTicket: true,
             });
 
             tt.onShareAppMessage(() => {
-                return this.shareMenuInfo
+                return this._shareMenuInfo
             });
         }
 
         param.shareTime = blade.timer.getTime();
         let query = HttpHelper.formatParams(param);
 
-        this.shareMenuInfo = {
+        this._shareMenuInfo = {
             templateId: id,
             imageUrl, title, query, success: () => {
                 this.emit(PlatformBase.EventType.OpenShare, imageUrl, title, param);
@@ -343,7 +546,7 @@ export default class TTPlatform extends PlatformBase {
      * 判断视频是否已经加载完成
      */
     public isVideoLoaded(): boolean {
-        let result = this.videoState == PlatformBase.AdState.Loaded;
+        let result = this._videoState == PlatformBase.AdState.Loaded;
         if (result == false) {
             this.preloadRewardVideo();
         }
@@ -353,61 +556,61 @@ export default class TTPlatform extends PlatformBase {
     /**
     * 预加载激励视频
     */
-    public async preloadRewardVideo(): Promise<any> {
+    public async preloadRewardVideo(): Promise<void> {
         if (!this.isSupportRewardVideo()) {
             return;
         }
 
         // 已经加载
-        if (this.videoState == PlatformBase.AdState.Loaded) {
+        if (this._videoState == PlatformBase.AdState.Loaded) {
             return;
         }
 
         // 正在加载, 等待加载结束
-        if (this.videoState == PlatformBase.AdState.Loading) {
-            return await PromiseHelper.waitUntil(() => this.videoState != PlatformBase.AdState.Loading);
+        if (this._videoState == PlatformBase.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => this._videoState != PlatformBase.AdState.Loading);
         }
 
-        this.videoState = PlatformBase.AdState.Loading;
+        this._videoState = PlatformBase.AdState.Loading;
 
-        if (this.video == null) {
+        if (this._video == null) {
             // 初次创建会调load方法
-            this.video = tt.createRewardedVideoAd({
-                adUnitId: PlatformConfig.tt.videoId,
+            this._video = tt.createRewardedVideoAd({
+                adUnitId: this._configs.videoId,
             });
             // 加载成功
-            this.video.onLoad(() => {
+            this._video.onLoad(() => {
                 console.log("loaded")
-                this.videoState = PlatformBase.AdState.Loaded;
+                this._videoState = PlatformBase.AdState.Loaded;
             });
             // 加载失败
-            this.video.onError((err) => {
-                this.videoState = PlatformBase.AdState.None;
+            this._video.onError((err) => {
+                this._videoState = PlatformBase.AdState.None;
             });
-            this.video.onClose((res) => {
+            this._video.onClose((res) => {
                 let result = (res && res.isEnded) || res === undefined;
-                TickerService.getInstance().pause = false;
-                AudioService.getInstance().resumeAll();
+                // blade.ticker.pause = false;
+                blade.audio.resumeAll();
                 this.preloadRewardVideo();
                 // 发送结果
                 this.emit(PlatformBase.EventType.CloseVideo, result);
             })
         }
 
-        this.video.load();
+        this._video.load();
 
         // 正在加载, 等待加载结束
-        return await PromiseHelper.waitUntil(() => this.videoState != PlatformBase.AdState.Loading);
+        return await PromiseHelper.waitUntil(() => this._videoState != PlatformBase.AdState.Loading);
     }
 
     /**
      * 播放激励视频
      */
     public async playRewardVideo(): Promise<boolean> {
-        if (this.video != null && this.videoState == PlatformBase.AdState.Loaded) {
-            this.videoState = PlatformBase.AdState.None;
-            TickerService.getInstance().pause = true;
-            AudioService.getInstance().pauseAll();
+        if (this._video != null && this._videoState == PlatformBase.AdState.Loaded) {
+            this._videoState = PlatformBase.AdState.None;
+            // blade.ticker.pause = true;
+            blade.audio.pauseAll();
 
             let result: boolean = await new Promise(async (resolve, reject) => {
                 const closeFunc = (result) => {
@@ -415,7 +618,7 @@ export default class TTPlatform extends PlatformBase {
                 };
                 this.once(PlatformBase.EventType.CloseVideo, closeFunc);
                 try {
-                    let result = await this.video.show()
+                    let result = await this._video.show()
                     console.log(result);
                     this.emit(PlatformBase.EventType.OpenVideo);
                 } catch (error) {
@@ -424,8 +627,8 @@ export default class TTPlatform extends PlatformBase {
                     resolve(false);
                 }
             })
-            TickerService.getInstance().pause = false;
-            AudioService.getInstance().resumeAll();
+            // blade.ticker.pause = false;
+            blade.audio.resumeAll();
             this.preloadRewardVideo();
             return result;
         } else {
@@ -445,29 +648,29 @@ export default class TTPlatform extends PlatformBase {
     /**
     * 预加载横幅
     */
-    public async preloadBanner(): Promise<any> {
+    public async preloadBanner(): Promise<void> {
         if (!this.isSupportBanner()) {
             return;
         }
 
         // 已经加载
-        if (this.bannerState == PlatformBase.AdState.Loaded) {
+        if (this._bannerState == PlatformBase.AdState.Loaded) {
             return;
         }
 
         // 正在加载, 等待加载结束
-        if (this.bannerState == PlatformBase.AdState.Loading) {
-            return await PromiseHelper.waitUntil(() => this.bannerState != PlatformBase.AdState.Loading);
+        if (this._bannerState == PlatformBase.AdState.Loading) {
+            return await PromiseHelper.waitUntil(() => this._bannerState != PlatformBase.AdState.Loading);
         }
 
-        if (this.banner) {
-            this.banner.destroy();
-            this.banner = null
+        if (this._banner) {
+            this._banner.destroy();
+            this._banner = null
         }
 
-        const sysInfo: tt.systemInfo = tt.getSystemInfoSync();
-        this.banner = tt.createBannerAd({
-            adUnitId: PlatformConfig.tt.bannerId,
+        const sysInfo = tt.getSystemInfoSync();
+        this._banner = tt.createBannerAd({
+            adUnitId: this._configs.bannerId,
             style: {
                 top: sysInfo.screenHeight,
                 left: 0,
@@ -476,27 +679,27 @@ export default class TTPlatform extends PlatformBase {
             },
         });
 
-        this.banner.onLoad(async () => {
-            this.bannerState = PlatformBase.AdState.Loaded;
-            if (this.bannerActive) {
+        this._banner.onLoad(async () => {
+            this._bannerState = PlatformBase.AdState.Loaded;
+            if (this._bannerActive) {
                 this.emit(PlatformBase.EventType.OpenBanner);
-                this.banner.show();
+                this._banner.show();
             }
         });
 
-        this.banner.onError((err) => {
-            this.bannerState = PlatformBase.AdState.None;
+        this._banner.onError((err) => {
+            this._bannerState = PlatformBase.AdState.None;
         });
 
-        this.banner.onResize((res) => {
+        this._banner.onResize((res) => {
             // 重设横幅位置
-            this.banner.style.top =
+            this._banner.style.top =
                 sysInfo.screenHeight - res.height;
-            this.banner.style.left =
+            this._banner.style.left =
                 (sysInfo.screenWidth - res.width) / 2;
         });
 
-        this.bannerState = PlatformBase.AdState.Loading;
+        this._bannerState = PlatformBase.AdState.Loading;
     }
 
 
@@ -505,30 +708,30 @@ export default class TTPlatform extends PlatformBase {
     * @param active
     */
     public activeBanner(active: boolean) {
-        if (this.banner == null) {
+        if (this._banner == null) {
             this.preloadBanner();
             return false;
         }
 
         if (active) {
-            if (this.bannerState != PlatformBase.AdState.Loaded) {
+            if (this._bannerState != PlatformBase.AdState.Loaded) {
                 this.preloadBanner();
                 return false;
             }
 
             this.emit(PlatformBase.EventType.OpenBanner);
-            this.banner.show();
-            this.bannerState = PlatformBase.AdState.Opening;
+            this._banner.show();
+            this._bannerState = PlatformBase.AdState.Opening;
             return true;
         } else {
             // 直接销毁重新创建banner, 刷新广告
-            if (this.bannerState != PlatformBase.AdState.Opening) {
+            if (this._bannerState != PlatformBase.AdState.Opening) {
                 return false;
             }
             this.emit(PlatformBase.EventType.CloseBanner);
-            this.banner.destroy();
-            this.banner = null;
-            this.bannerState = PlatformBase.AdState.None;
+            this._banner.destroy();
+            this._banner = null;
+            this._bannerState = PlatformBase.AdState.None;
             this.preloadBanner();
             return true;
         }
@@ -539,7 +742,7 @@ export default class TTPlatform extends PlatformBase {
     }
 
     public isInterstitialLoaded() {
-        return this.interstitialState == PlatformBase.AdState.Loaded;
+        return this._interstitialState == PlatformBase.AdState.Loaded;
     }
 
     public async preloadInterstitial() {
@@ -547,31 +750,31 @@ export default class TTPlatform extends PlatformBase {
             return;
         }
 
-        if (this.interstitialState == PlatformBase.AdState.Loaded) {
+        if (this._interstitialState == PlatformBase.AdState.Loaded) {
             return;
         }
 
-        if (this.interstitialState == PlatformBase.AdState.Loading) {
+        if (this._interstitialState == PlatformBase.AdState.Loading) {
             return await PromiseHelper.waitUntil(() => {
-                return this.interstitialState != PlatformBase.AdState.Loading;
+                return this._interstitialState != PlatformBase.AdState.Loading;
             });
         }
 
-        this.interstitialState = PlatformBase.AdState.Loading;
-        if (this.interstitial == null) {
-            this.interstitial = tt.createInterstitialAd({ adUnitId: PlatformConfig.tt.interstitialId });
+        this._interstitialState = PlatformBase.AdState.Loading;
+        if (this._interstitial == null) {
+            this._interstitial = tt.createInterstitialAd({ adUnitId: this._configs.interstitialId });
 
-            this.interstitial.onLoad(() => {
-                this.interstitialState = PlatformBase.AdState.Loaded;
+            this._interstitial.onLoad(() => {
+                this._interstitialState = PlatformBase.AdState.Loaded;
             });
 
-            this.interstitial.onError(async (error) => {
-                this.interstitialState = PlatformBase.AdState.None;
-                cc.log(error)
+            this._interstitial.onError(async (error) => {
+                this._interstitialState = PlatformBase.AdState.None;
+                console.log(error)
             });
 
-            this.interstitial.onClose(() => {
-                this.interstitialState = PlatformBase.AdState.None;
+            this._interstitial.onClose(() => {
+                this._interstitialState = PlatformBase.AdState.None;
                 this.emit(PlatformBase.EventType.CloseInterstitial);
             });
         }
@@ -579,19 +782,21 @@ export default class TTPlatform extends PlatformBase {
 
     async showInterstitial() {
         if (!this.isSupportInterstitial()) {
-            return;
+            return Promise.resolve(false);
         }
 
         if (!this.isInterstitialLoaded()) {
-            return;
+            return Promise.resolve(false);
         }
 
         try {
-            await this.interstitial.show();
-            this.interstitialState = PlatformBase.AdState.Opening;
+            await this._interstitial.show();
+            this._interstitialState = PlatformBase.AdState.Opening;
             this.emit(PlatformBase.EventType.OpenInterstitial)
+            return Promise.resolve(true);
         } catch (error) {
-            cc.log(error);
+            console.log(error);
+            return Promise.resolve(false);
         }
     }
 
@@ -599,7 +804,7 @@ export default class TTPlatform extends PlatformBase {
     /**
      * 发送邀请
      */
-    public async sendInvite(imageUrl: string, title: string, param: any): Promise<any> {
+    public async sendInvite(imageUrl: string, title: string, param: any): Promise<void> {
         param.shareTime = blade.timer.getTime();
 
         tt.shareAppMessage({
@@ -612,7 +817,7 @@ export default class TTPlatform extends PlatformBase {
         this.emit(PlatformBase.EventType.OpenShare, imageUrl, title, param);
     }
 
-    public async sendInviteByID(id: string, imageUrl: string, title: string, param: any): Promise<any> {
+    public async sendInviteByID(id: string, imageUrl: string, title: string, param: any): Promise<void> {
         param.shareTime = blade.timer.getTime();
 
         tt.shareAppMessage({
@@ -658,7 +863,7 @@ export default class TTPlatform extends PlatformBase {
                 path: path,
                 extraData: extraData,
                 success: () => {
-                    cc.log(`跳转 ${appid}`);
+                    console.log(`跳转 ${appid}`);
                     resolve(true);
                 },
                 fail: reject,
@@ -666,5 +871,26 @@ export default class TTPlatform extends PlatformBase {
         });
     }
 
+    public copyToClipBoard(string: string): Promise<void> {
+        return new Promise((resolve, reject) => {
+            tt.setClipboardData({
+                data: string, success: () => {
+                    console.log("已经复制到剪贴板");
+                    resolve();
+                }, fail: (error) => {
+                    console.log("复制到剪贴板失败");
+                    reject(error);
+                }
+            });
+        });
+    }
+
 }
+
+import PlatformConfig from "../../Module/Defines/PlatformConfig";
+import TTConfigBase from "../../Module/Defines/PlatformConfig/Bases/TTConfigBase";
+import HttpHelper from "../Helpers/HttpHelper";
+import PromiseHelper from "../Helpers/PromiseHelper";
+import StringHelper from "../Helpers/StringHelper";
+import PlatformService from "../Services/PlatformService";
 

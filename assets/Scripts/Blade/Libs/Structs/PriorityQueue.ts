@@ -1,4 +1,3 @@
-import Queue from "./Queue";
 
 class QueueElement<T> {
     element: T = null;
@@ -41,7 +40,7 @@ export default class PriorityQueue<T> {
             return;
         }
         let added = false;
-        for (var i = 0; i < this.items.length; i++) {
+        for (let i = 0; i < this.items.length; i++) {
             if (queueElement.priority > this.items[i].priority) {
                 this.items.splice(i, 0, queueElement);
                 added = true;
@@ -120,7 +119,7 @@ export default class PriorityQueue<T> {
         for (let index = 0; index < this.items.length; index++) {
             tmp += JSON.stringify(this.items[index].element) + "\n";
         }
-        cc.log(tmp);
+        console.log(tmp);
     }
 
 	/**
@@ -136,7 +135,7 @@ export default class PriorityQueue<T> {
 
     /**
      * 判断元素是否存在
-     * @param item 
+     * @param item
      */
     has(item: T) {
         if (this.isEmpty) {
@@ -164,8 +163,8 @@ export default class PriorityQueue<T> {
 
     /**
      * 遍历
-     * @param callbackfn 
-     * @param thisArg 
+     * @param callbackfn
+     * @param thisArg
      */
     forEach(callbackfn: (value: T) => void, thisArg?: any): void {
         this.items.forEach((value, index, array) => {

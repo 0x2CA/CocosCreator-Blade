@@ -1,11 +1,10 @@
 import SingletonBase from "../Bases/SingletonBase";
-import AssetService from "./AssetService";
-import PlatformService from "./PlatformService";
+import StringHelper from "../Helpers/StringHelper";
 
 /**
  * 多语言服务
  */
-class LocalizedService extends SingletonBase {
+class LocalizedService extends SingletonBase<LocalizedService> {
 
     private static readonly CURRENT_LANG_KEY = 'curLang';
 
@@ -13,19 +12,19 @@ class LocalizedService extends SingletonBase {
     public readonly EditorRefreshInterval: number = 2;
 
     // 所有语言包
-    private readonly langs: { [lang: string]: { [id: string]: string } } = {};
+    private readonly _langs: { [lang: string]: { [id: string]: string } } = {};
     // 当前语言
-    private curLang: LocalizedService.LangType = null;
+    private _curLang: LocalizedService.LangType = null;
 
-    private readonly langPath = 'Langs'
+    private readonly _langPath = 'Langs'
 
-    private event: cc.EventTarget = new cc.EventTarget();
+    private _event: cc.EventTarget = new cc.EventTarget();
 
-    public onInitialize() {
+    protected onInitialize() {
         this.initLang();
     }
 
-    public onDispose() {
+    protected onDispose() {
     }
 
     /**
@@ -34,10 +33,11 @@ class LocalizedService extends SingletonBase {
     public initLang() {
         let sysLang = cc.sys.language
         let lang: string;
-        if (cc.sys.platform == cc.sys.EDITOR_PAGE) {
+        if (cc.sys.platform == cc.sys.EDITOR_PAGE || cc.sys.platform == cc.sys.EDITOR_CORE) {
             lang = LocalizedService.LangType.zh_CN
         } else {
-            lang = PlatformService.getInstance().getPlatform().getArchive(LocalizedService.CURRENT_LANG_KEY);
+            let archive = blade.platform.getArchive();
+            lang = archive.get(LocalizedService.CURRENT_LANG_KEY, null);
         }
         if (lang == null || lang == "") {
             switch (sysLang) {
@@ -63,20 +63,30 @@ class LocalizedService extends SingletonBase {
      * @param data
      */
     public load(lang: LocalizedService.LangType, data: { [key: string]: string }) {
-        this.langs[lang] = data;
-        if (lang == this.curLang) {
-            console.log("多语言加载成功:", lang, data);
+        this._langs[lang] = data;
+        if (lang == this._curLang) {
+            console.log("多语言加载成功:", lang);
             this.emit(LocalizedService.EventType.LanguageChange, lang);
         }
     }
 
     /**
+     * 判断是否有对应的语言包
+     * @param lang
+     * @returns
+     */
+    public hasLangConfig(lang: LocalizedService.LangType): boolean {
+        return this._langs[lang] != null;
+    }
+
+    /**
      * 加载多国语言json文件
      */
-    public async loadLangConfig(lang: LocalizedService.LangType) {
-        let asset = await AssetService.getInstance().loadAssetAsync(lang + ".json", cc.JsonAsset) as cc.JsonAsset;
+    public async loadLangConfig(lang: LocalizedService.LangType, progress: (finish: number, total: number) => void = null) {
+        let fileName = lang + ".json";
+        let asset = await blade.asset.loadAssetAsync(fileName, cc.JsonAsset, progress);
         this.load(lang, asset.json);
-        AssetService.getInstance().unloadAsset(lang + ".json");
+        blade.asset.unloadAsset(fileName);
     }
 
     /**
@@ -84,12 +94,13 @@ class LocalizedService extends SingletonBase {
      * @param lang
      */
     public setLang(lang: LocalizedService.LangType) {
-        if (lang != null && this.curLang != lang) {
-            cc.log("设置语言环境:", lang)
-            this.curLang = lang;
+        if (lang != null && this._curLang != lang) {
+            console.log("设置语言环境:", lang)
+            this._curLang = lang;
             this.emit(LocalizedService.EventType.LanguageChange, lang);
             if (cc.sys.platform != cc.sys.EDITOR_PAGE) {
-                PlatformService.getInstance().getPlatform().saveArchive(LocalizedService.CURRENT_LANG_KEY, lang)
+                let archive = blade.platform.getArchive();
+                archive.set(LocalizedService.CURRENT_LANG_KEY, lang)
             }
         }
     }
@@ -98,7 +109,7 @@ class LocalizedService extends SingletonBase {
      * 获取当前设置的语言
      */
     public getLang() {
-        return this.curLang;
+        return this._curLang;
     }
 
     /**
@@ -107,14 +118,9 @@ class LocalizedService extends SingletonBase {
      * @param params
      */
     public value(langID: string, ...params: any[]) {
-        const langData = this.langs[this.curLang];
+        const langData = this._langs[this._curLang];
         let content = langData ? (langData[langID] || langID) : langID;
-        if (params && params.length > 0) {
-            content = content.replace(/\{(\d+)\}/g, (match, number) => {
-                return number in params ? params[number] : match;
-            });
-        }
-        return content;
+        return StringHelper.format(content, ...params);
     }
 
     /**
@@ -123,17 +129,17 @@ class LocalizedService extends SingletonBase {
     */
     info(name?: string) {
         if (name) {
-            if (this.langs[name] != null) {
-                cc.log(name + ":", this.langs[name]);
+            if (this._langs[name] != null) {
+                console.log(name + ":", this._langs[name]);
             } else {
-                cc.log(`没有注册${name}语言`);
+                console.log(`没有注册${name}语言`);
             }
         } else {
             let info = "多语言信息:\n"
 
-            for (const key in this.langs) {
-                if (this.langs.hasOwnProperty(key)) {
-                    const lang = this.langs[key];
+            for (const key in this._langs) {
+                if (this._langs.hasOwnProperty(key)) {
+                    const lang = this._langs[key];
                     info += "   " + key + "    ✔" + "\n";
                 }
             }
@@ -141,28 +147,28 @@ class LocalizedService extends SingletonBase {
                 info += "   没有注册语言";
             }
 
-            cc.log(info)
+            console.log(info)
         }
     }
 
     public hasEventListener(type: string): boolean {
-        return this.event.hasEventListener(type);
+        return this._event.hasEventListener(type);
     }
 
     public emit(key: string, arg1?: any, arg2?: any, arg3?: any, arg4?: any, arg5?: any): void {
-        this.event.emit(key, arg1, arg2, arg3, arg4, arg5);
+        this._event.emit(key, arg1, arg2, arg3, arg4, arg5);
     }
 
     public on<T extends Function>(type: string, callback: T, target?: any, useCapture?: boolean): T {
-        return this.event.on(type, callback, target, useCapture);
+        return this._event.on(type, callback, target, useCapture);
     }
 
     public off(type: string, callback?: Function, target?: any): void {
-        this.event.off(type, callback, target);
+        this._event.off(type, callback, target);
     }
 
     public targetOff(target: any): void {
-        this.event.targetOff(target);
+        this._event.targetOff(target);
     }
 
     public once(type: string, callback: (arg1?: any, arg2?: any, arg3?: any, arg4?: any, arg5?: any) => void, target?: any): void {
@@ -170,7 +176,7 @@ class LocalizedService extends SingletonBase {
     }
 
     public clear(): void {
-        this.event.clear();
+        this._event.clear();
     }
 }
 

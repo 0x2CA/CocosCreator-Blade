@@ -5,7 +5,7 @@
  *  https://github.com/MikeMcl/big.js/LICENCE
  */
 ;
-(function(GLOBAL) {
+(function (GLOBAL) {
     'use strict';
     var Big,
 
@@ -308,7 +308,7 @@
     /*
      * Return a new Big whose value is the absolute value of this Big.
      */
-    P.abs = function() {
+    P.abs = function () {
         var x = new this.constructor(this);
         x.s = 1;
         return x;
@@ -320,7 +320,7 @@
      *       -1 if the value of this Big is less than the value of Big y, or
      *        0 if they have the same value.
      */
-    P.cmp = function(y) {
+    P.cmp = function (y) {
         var isneg,
             x = this,
             xc = x.c,
@@ -357,7 +357,7 @@
      * Return a new Big whose value is the value of this Big divided by the value of Big y, rounded,
      * if necessary, to a maximum of Big.DP decimal places using rounding mode Big.RM.
      */
-    P.div = function(y) {
+    P.div = function (y) {
         var x = this,
             Big = x.constructor,
             a = x.c, // dividend
@@ -458,7 +458,7 @@
     /*
      * Return true if the value of this Big is equal to the value of Big y, otherwise return false.
      */
-    P.eq = function(y) {
+    P.eq = function (y) {
         return !this.cmp(y);
     };
 
@@ -467,7 +467,7 @@
      * Return true if the value of this Big is greater than the value of Big y, otherwise return
      * false.
      */
-    P.gt = function(y) {
+    P.gt = function (y) {
         return this.cmp(y) > 0;
     };
 
@@ -476,7 +476,7 @@
      * Return true if the value of this Big is greater than or equal to the value of Big y, otherwise
      * return false.
      */
-    P.gte = function(y) {
+    P.gte = function (y) {
         return this.cmp(y) > -1;
     };
 
@@ -484,7 +484,7 @@
     /*
      * Return true if the value of this Big is less than the value of Big y, otherwise return false.
      */
-    P.lt = function(y) {
+    P.lt = function (y) {
         return this.cmp(y) < 0;
     };
 
@@ -493,7 +493,7 @@
      * Return true if the value of this Big is less than or equal to the value of Big y, otherwise
      * return false.
      */
-    P.lte = function(y) {
+    P.lte = function (y) {
         return this.cmp(y) < 1;
     };
 
@@ -501,7 +501,7 @@
     /*
      * Return a new Big whose value is the value of this Big minus the value of Big y.
      */
-    P.minus = P.sub = function(y) {
+    P.minus = P.sub = function (y) {
         var i, j, t, xlty,
             x = this,
             Big = x.constructor,
@@ -607,7 +607,7 @@
     /*
      * Return a new Big whose value is the value of this Big modulo the value of Big y.
      */
-    P.mod = function(y) {
+    P.mod = function (y) {
         var ygtx,
             x = this,
             Big = x.constructor,
@@ -637,7 +637,7 @@
     /*
      * Return a new Big whose value is the value of this Big plus the value of Big y.
      */
-    P.plus = P.add = function(y) {
+    P.plus = P.add = function (y) {
         var t,
             x = this,
             Big = x.constructor,
@@ -712,7 +712,7 @@
      *
      * n {number} Integer, -MAX_POWER to MAX_POWER inclusive.
      */
-    P.pow = function(n) {
+    P.pow = function (n) {
         var x = this,
             one = new x.constructor(1),
             y = one,
@@ -721,7 +721,7 @@
         if (n !== ~~n || n < -MAX_POWER || n > MAX_POWER) throw Error(INVALID + 'exponent');
         if (isneg) n = -n;
 
-        for (;;) {
+        for (; ;) {
             if (n & 1) y = y.times(x);
             n >>= 1;
             if (!n) break;
@@ -742,7 +742,7 @@
      * dp? {number} Integer, -MAX_DP to MAX_DP inclusive.
      * rm? 0, 1, 2 or 3 (ROUND_DOWN, ROUND_HALF_UP, ROUND_HALF_EVEN, ROUND_UP)
      */
-    P.round = function(dp, rm) {
+    P.round = function (dp, rm) {
         var Big = this.constructor;
         if (dp === UNDEFINED) dp = 0;
         else if (dp !== ~~dp || dp < -MAX_DP || dp > MAX_DP) throw Error(INVALID_DP);
@@ -754,7 +754,7 @@
      * Return a new Big whose value is the square root of the value of this Big, rounded, if
      * necessary, to a maximum of Big.DP decimal places using rounding mode Big.RM.
      */
-    P.sqrt = function() {
+    P.sqrt = function () {
         var r, c, t,
             x = this,
             Big = x.constructor,
@@ -798,7 +798,7 @@
     /*
      * Return a new Big whose value is the value of this Big times the value of Big y.
      */
-    P.times = P.mul = function(y) {
+    P.times = P.mul = function (y) {
         var c,
             x = this,
             Big = x.constructor,
@@ -869,7 +869,7 @@
      *
      * dp? {number} Integer, 0 to MAX_DP inclusive.
      */
-    P.toExponential = function(dp) {
+    P.toExponential = function (dp) {
         return stringify(this, 1, dp, dp);
     };
 
@@ -883,7 +883,7 @@
      * (-0).toFixed(0) is '0', but (-0.1).toFixed(0) is '-0'.
      * (-0).toFixed(1) is '0.0', but (-0.01).toFixed(1) is '-0.0'.
      */
-    P.toFixed = function(dp) {
+    P.toFixed = function (dp) {
         return stringify(this, 2, dp, this.e + dp);
     };
 
@@ -895,7 +895,7 @@
      *
      * sd {number} Integer, 1 to MAX_DP inclusive.
      */
-    P.toPrecision = function(sd) {
+    P.toPrecision = function (sd) {
         return stringify(this, 3, sd, sd - 1);
     };
 
@@ -906,7 +906,7 @@
      * Big.PE, or a negative exponent equal to or less than Big.NE.
      * Omit the sign for negative zero.
      */
-    P.toString = function() {
+    P.toString = function () {
         return stringify(this);
     };
 
@@ -917,7 +917,7 @@
      * Big.PE, or a negative exponent equal to or less than Big.NE.
      * Include the sign for negative zero.
      */
-    P.valueOf = P.toJSON = function() {
+    P.valueOf = P.toJSON = function () {
         return stringify(this, 4);
     };
 
@@ -930,16 +930,16 @@
     Big['default'] = Big.Big = Big;
 
     //AMD.
-    // if (typeof define === 'function' && define.amd) {
-    //     define(function() { return Big; });
+    if (typeof define === 'function' && define.amd) {
+        define(function () { return Big; });
 
-    //     // Node and other CommonJS-like environments that support module.exports.
-    // } else if (typeof module !== 'undefined' && module.exports) {
-    //     module.exports = Big;
+        // Node and other CommonJS-like environments that support module.exports.
+    } else if (typeof module !== 'undefined' && module.exports) {
+        module.exports = Big;
 
-    //     //Browser.
-    // } else {
-    //     GLOBAL.Big = Big;
-    // }
-    GLOBAL.Big = Big;
+        //Browser.
+    } else {
+        GLOBAL.Big = Big;
+    }
+    // GLOBAL.Big = Big;
 })(window);

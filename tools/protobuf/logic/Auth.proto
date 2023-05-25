@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+option java_package = "lilith.server.protobuf";
+option java_outer_classname = "AuthProto";
+
+package protobuf;
+
+
+
+/**请求服务器时间*/
+message C2SServerTime {
+    
+}
+
+message S2CServerTime {
+    /**	服务端器当前时间戳*/
+    int64 serverTime = 1;
+}
+
+
+/**心跳*/
+message C2SHeartBeate {
+    
+}
+
+message S2CHeartBeate {
+    
+}
+
+
+/**玩家校验请求*/
+message C2SAuth {
+    string identityId = 1;
+    string identityName = 2;
+    int64  timeStamp = 3;
+	/**渠道用户ID*/
+    string userId = 4;
+	/**平台ID*/
+	int32 platformId = 5;
+	/**渠道ID*/
+	int32 channelId = 6;
+}
+
+message S2CAuth { 
+   /** 验证结果标识: 0:表示.身份合法.验证成功 1:表示.非法请求.时戳过期 2:表示.非法请求.md5校验失败 3:表示.非法请求.参数错误 */
+   int32 state = 1;
+}

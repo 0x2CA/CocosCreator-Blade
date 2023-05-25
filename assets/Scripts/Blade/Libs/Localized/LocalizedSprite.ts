@@ -1,7 +1,3 @@
-import LocalizedItem from "./LocalizedItem";
-import LocalizedService from "../../Services/LocalizedService";
-import TimerService from "../../Services/TimerService";
-
 const { ccclass, property, executeInEditMode, menu, requireComponent, executionOrder } = cc._decorator;
 
 /**
@@ -61,23 +57,23 @@ export default class LocalizedSprite extends cc.Component implements LocalizedIt
 
     onLoad() {
         this.defaultFrame = this.spriteFrame;
-        LocalizedService.getInstance().on(LocalizedService.EventType.LanguageChange, this.updateLang, this);
+        blade.locale.on(LocalizedService.EventType.LanguageChange, this.updateLang, this);
 
         // 编辑器模式, 执行
         if (CC_EDITOR) {
-            this.updateInterval = blade.timer.startTimer(LocalizedService.getInstance().EditorRefreshInterval, this.updateLang.bind(this));
+            this.updateInterval = blade.timer.startTimer(blade.locale.EditorRefreshInterval, this.updateLang.bind(this));
         }
     }
 
     onDestroy() {
-        LocalizedService.getInstance().off(LocalizedService.EventType.LanguageChange, this.updateLang, this);
+        blade.locale.off(LocalizedService.EventType.LanguageChange, this.updateLang, this);
         if (this.updateInterval) {
-            blade.timer.stopTimer(this.updateInterval);
+            blade.timer.stop(this.updateInterval);
         }
     }
 
     updateLang() {
-        this.spriteFrame = this.getSpriteFrameByLang(LocalizedService.getInstance().getLang());
+        this.spriteFrame = this.getSpriteFrameByLang(blade.locale.getLang());
     }
 
     private getSpriteFrameByLang(lang): cc.SpriteFrame {
@@ -90,3 +86,8 @@ export default class LocalizedSprite extends cc.Component implements LocalizedIt
         return this.defaultFrame;
     }
 }
+
+import LocalizedService from "../../Services/LocalizedService";
+import TimerService from "../../Services/TimerService";
+import LocalizedItem from "./LocalizedItem";
+

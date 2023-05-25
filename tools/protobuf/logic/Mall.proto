@@ -1,0 +1,219 @@
+syntax = "proto3";
+
+option java_package = "lilith.server.protobuf";//指定java代码的包路径
+option java_outer_classname = "MallProto";//自定义生成java文件的名称
+
+package protobuf;
+/**
+ * 商店系统
+ */
+ 
+
+/** 商店全部信息 */
+message Mall {
+	/** 特惠活动信息 */
+	MallOne mallOne = 1;
+	/** 超值月卡信息 */
+	MallTwo mallTwo = 2;
+	/** 超值好礼信息 */
+	MallThree mallThree = 3;
+	/** 精选好礼信息 */
+	MallFour mallFour = 4;
+	/** 每日精选信息 */
+	MallFive mallFive = 5;
+	/** 钻石购买信息 */
+	MallDiamondBuy mallDiamondBuy = 6;
+}
+ 
+
+/** 特惠活动信息 */
+message MallOne {
+	/** 已购买的礼包refId */
+	string refId = 1;
+}
+
+
+
+/** 超值月卡信息 */
+message MallTwo {
+	/** 月卡refId */
+	string refId = 1;
+	/** 购买时间(单位：秒) */
+	int32 buyTime = 2;
+	/** 领取每日奖励 */
+	bool reward = 3;
+}
+
+
+/** 超值好礼信息 */
+message MallThree {
+	/** 礼包refId */
+	string refId = 1;
+	/** 已购买的次数 */
+	int32 buyNum = 2;
+}
+
+
+/** 精选好礼信息 */
+message MallFour {
+	/** 礼包信息 */
+	repeated GiftBag giftBag = 1;
+	/** 每日手动刷新次数 */
+	int32 refreshNum = 2;
+	/** 手动刷新CD结束时间(单位：秒) */
+	int32 refreshCDEndTime = 3;
+	
+	message GiftBag {
+		/** 礼包refId */
+		string refId = 1;
+		/** 每日购买次数 */
+		int32 buyNum = 2;
+	}
+	
+}
+
+
+/** 每日精选信息 */
+message MallFive {
+	/** 礼包信息 */
+	repeated GiftBag giftBag = 1;
+	/** 每日手动刷新次数 */
+	int32 refreshNum = 2;
+	/** 手动刷新CD结束时间(单位：秒) */
+	int32 refreshCDEndTime = 3;
+	
+	message GiftBag {
+		/** 礼包refId */
+		string refId = 1;
+		/** 每日购买次数 */
+		int32 buyNum = 2;
+	}
+	
+}
+
+
+/** 钻石购买信息 */
+message MallDiamondBuy {
+	/** 礼包信息 */
+	repeated DiamondBag diamondBag = 1;
+	
+	message DiamondBag {
+		/** 礼包refId */
+		string refId = 1;
+		/** 首次购买 */
+		bool firstBuy = 2;
+	}
+}
+
+
+/** 请求商店全部信息 */
+message C2SMallInfo {
+
+}
+
+
+/** 同步商店全部信息 */
+message S2CMallInfo {
+	/** 商店全部信息 */
+	Mall mall = 1;
+}
+
+
+/** 领取月卡每日奖励 */
+message C2SCardDayReward {
+	/** 月卡refId */
+	string refId = 1;
+}
+
+
+/** 同步月卡每日奖励 */
+message S2CCardDayReward {
+	/** 超值月卡信息 */
+	MallTwo mallTwo = 1;
+}
+
+
+
+/** 刷新精选好礼 */
+message C2SMallFourRefresh {
+
+}
+
+
+/** 刷新精选好礼 */
+message S2CMallFourRefresh {
+	/** 商店全部信息 */
+	MallFour mallFour = 1;
+}
+
+
+
+/** 刷新每日精选 */
+message C2SMallFiveRefresh {
+
+}
+
+
+/** 刷新每日精选 */
+message S2CMallFiveRefresh {
+	/** 商店全部信息 */
+	MallFive mallFive = 1;
+}
+
+
+/** 每日精选购买 */
+message C2SMallFiveBuy {
+	/** 礼包refId */
+	string refId = 1;
+}
+
+/** 每日精选购买 */
+message S2CMallFiveBuy {
+	 
+}
+
+/** 金币购买 */
+message C2SMallGoldBuy {
+	/** 礼包refId */
+	string refId = 1;
+}
+
+
+/** 金币购买 */
+message S2CMallGoldBuy {
+	
+}
+
+
+
+/** 同步特惠活动信息 */
+message S2CMallOne {
+	/** 特惠活动信息 */
+	MallOne mallOne = 1;
+}
+
+
+/** 同步超值好礼信息 */
+message S2CMallThree {
+	/** 超值好礼信息 */
+	MallThree mallThree = 1;
+}
+
+
+/** 同步钻石购买信息 */
+message S2CMallDiamondBuy {
+	/** 钻石购买信息 */
+	MallDiamondBuy mallDiamondBuy = 1;
+}
+
+
+/** 同步获得的奖励 */
+message S2CMallReward {
+	/** 获得的奖励信息 */
+	string mallReward = 1;
+}
+
+
+
+
+
