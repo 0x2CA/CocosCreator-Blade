@@ -5,7 +5,7 @@ const { ccclass, property, menu } = cc._decorator;
 /*
  * @作者: 0x2CA
  * @创建时间: 2022-09-29
- * @最后编辑时间: 2023-03-17
+ * @最后编辑时间: 2023-05-26
  * @最后编辑者: 0x2CA
  * @描述: 可视检测 draw call优化组件
  */
@@ -66,12 +66,10 @@ export default class VisibleDetection extends cc.Component {
         rect1_o.x -= rect1_o.width * 0.25;
         rect1_o.y -= rect1_o.height * 0.25;
 
-        blade.timer.startTimeout(0.1, () => {
-            if (this.containerNode) {
-                this.containerNode.children.forEach(v1_o => {
-                    v1_o.opacity = this.checkContain(rect1_o, v1_o) ? 255 : 0;
-                });
-            }
-        });
+        if (this.containerNode) {
+            this.containerNode.children.forEach(v1_o => {
+                v1_o.opacity = this.checkContain(rect1_o, v1_o) ? 255 : 0;
+            });
+        }
     }
 }
