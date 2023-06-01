@@ -801,10 +801,113 @@ namespace Tween {
      * 缓动算法
      */
     export namespace Easing {
+
         export namespace Linear {
             export const None: IEasing = function (k) {
                 return k;
             }
+        }
+
+        /**
+         * 自定义缓动
+         * https://cubic-bezier.com/
+         */
+        export const CubicBezier = function (p1x: number, p1y: number, p2x: number, p2y: number) {
+            if (p1x < 0) {
+                p1x = 0;
+            }
+            if (p1x > 1) {
+                p1x = 1;
+            }
+            if (p2x < 0) {
+                p2x = 0;
+            }
+            if (p2x > 1) {
+                p2x = 1;
+            }
+
+            const cx = 3 * p1x;
+            const bx = 3 * (p2x - p1x) - cx;
+            const ax = 1 - cx - bx;
+            const cy = 3 * p1y;
+            const by = 3 * (p2y - p1y) - cy;
+            const ay = 1 - cy - by;
+
+            /**
+             * @param t - progress [0-1]
+             * @return - sampled X value
+             */
+            const sampleCurveX = function (t: number) {
+                return ((ax * t + bx) * t + cx) * t;
+            }
+
+            /**
+             * @param t - progress [0-1]
+             * @return - sampled Y value
+             */
+            const sampleCurveY = function (t: number) {
+                return ((ay * t + by) * t + cy) * t;
+            }
+
+            /**
+              * @param t - progress [0-1]
+              * @return - sampled curve derivative X value
+              */
+            const sampleCurveDerivativeX = function (t: number) {
+                return (3 * ax * t + 2 * bx) * t + cx;
+            }
+
+            /**
+             * @param x - progress [0-1]
+             * @return - solved curve X value
+             */
+            const solveCurveX = function (x: number) {
+                // Set Precision
+                const epsilon = 1e-6;
+
+                // Skip values out of range
+                if (x <= 0) return 0;
+                if (x >= 1) return 1;
+
+                let t2 = x;
+                let x2 = 0;
+                let d2 = 0;
+
+                // First try a few iterations of Newton's method
+                // -- usually very fast.
+                for (let i = 0; i < 8; i += 1) {
+                    x2 = sampleCurveX(t2) - x;
+                    if (Math.abs(x2) < epsilon) return t2;
+                    d2 = sampleCurveDerivativeX(t2);
+                    /* istanbul ignore next */
+                    if (Math.abs(d2) < epsilon) break;
+                    t2 -= x2 / d2;
+                }
+
+                // No solution found - use bi-section
+                let t0 = 0;
+                let t1 = 1;
+                t2 = x;
+
+                while (t0 < t1) {
+                    x2 = sampleCurveX(t2);
+                    if (Math.abs(x2 - x) < epsilon) return t2;
+                    if (x > x2) t0 = t2;
+                    else t1 = t2;
+
+                    t2 = (t1 - t0) * 0.5 + t0;
+                }
+
+                // Give up
+                /* istanbul ignore next */
+                return t2;
+            }
+
+            const easing: IEasing = function (k) {
+                return sampleCurveY(solveCurveX(k));
+            }
+
+            return easing;
         }
 
         export namespace Quadratic {
