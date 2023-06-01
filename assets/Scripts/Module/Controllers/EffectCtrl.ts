@@ -178,7 +178,7 @@ class EffectCtrl extends ControllerBase implements ITicker {
         sprite.spriteFrame = null;
 
         let info = new EffectCtrl.EffectInfo();
-        info.effectType = EffectCtrl.EffectType.Spine;
+        info.effectType = EffectCtrl.EffectType.Sprite;
         info.effectName = effectName;
         info.node = node;
         info.render = sprite;
