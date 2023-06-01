@@ -101,6 +101,7 @@ class EffectCtrl extends ControllerBase implements ITicker {
 
                 spine.setAnimationCacheMode(sp.Skeleton.AnimationCacheMode.PRIVATE_CACHE);
                 spine.enableBatch = true;
+                spine.premultipliedAlpha = true;
 
                 spine.skeletonData = res;
 
