@@ -191,7 +191,7 @@ class Tween<T = any> {
      * @returns
      */
     private addStep(step: Step) {
-        if (step.duration > 0) {
+        if (step.duration >= 0) {
             step.type = Step.StepType.Step;
             this._steps.push(step);
             step.time = this._duration;
@@ -296,6 +296,11 @@ class Tween<T = any> {
 
         step.propsStart = this.cloneProps(this._props);
         step.propsEnd = this.appendProps(props);
+
+        // 如果总延迟0而且时间0说明立刻的To
+        if (this._duration == 0 && duration == 0) {
+            this.setProps(step.propsEnd);
+        }
 
         step.easing = easing;
         step.interpolation = interpolation;
