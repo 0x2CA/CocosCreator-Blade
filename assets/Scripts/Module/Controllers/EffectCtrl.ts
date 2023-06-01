@@ -67,6 +67,9 @@ class EffectCtrl extends ControllerBase implements ITicker {
         let node = this._spinePools.get();
 
         node.parent = effectContainer;
+        node.scale = 1;
+        node.angle = 0;
+        node.position = cc.Vec3.ZERO;
         node.active = true;
 
         let spine = node.getComponent(sp.Skeleton);
@@ -165,6 +168,9 @@ class EffectCtrl extends ControllerBase implements ITicker {
         let node = this._spritePools.get();
 
         node.parent = effectContainer;
+        node.scale = 1;
+        node.angle = 0;
+        node.position = cc.Vec3.ZERO;
         node.active = true;
 
         let sprite = node.getComponent(cc.Sprite);
