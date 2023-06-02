@@ -253,6 +253,17 @@ export default abstract class CharacterBase<
     }
 
     /**
+     * 清除Buff
+     */
+    public clearBuff() {
+        for (let index = this._buffs.length - 1; index >= 0; index--) {
+            const buff = this._buffs[index];
+            buff.onRemove();
+            this._buffs.splice(index, 1);
+        }
+    }
+
+    /**
      * 获取指定技能
      * @param id
      * @returns
