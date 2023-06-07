@@ -4,7 +4,7 @@ import IObjectPool from "./IObjectPool";
 /*
  * @作者: 0x2CA
  * @创建时间: 2023-03-14
- * @最后编辑时间: 2023-05-09
+ * @最后编辑时间: 2023-06-07
  * @最后编辑者: 0x2CA
  * @描述: 对象池
  */
@@ -101,16 +101,21 @@ export default class ObjectPool<T> implements IObjectPool<T> {
             this._onReleaseFun(element);
         }
 
-        if (this._stack.size() < this._maxSize) {
-            this._stack.push(element);
-        } else {
-            // 放不下走销毁
+        if (this._total == 0) {
             if (this._onDestroyFun != null) {
                 this._onDestroyFun(element);
             }
+        } else {
+            if (this._stack.size() < this._maxSize) {
+                this._stack.push(element);
+            } else {
+                // 放不下走销毁
+                if (this._onDestroyFun != null) {
+                    this._onDestroyFun(element);
+                }
 
-            this._total--;
+                this._total--;
+            }
         }
     }
-
 }
