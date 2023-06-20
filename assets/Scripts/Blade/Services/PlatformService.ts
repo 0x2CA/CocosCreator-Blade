@@ -9,44 +9,6 @@ class PlatformService extends SingletonBase<PlatformService> {
     private _archive: PlatformService.Archive = null;
 
     protected onInitialize() {
-
-        switch (this.getType()) {
-            case PlatformService.PlatformType.WX:
-                this._platform = new WxPlatform();
-                break;
-            case PlatformService.PlatformType.QQ:
-                this._platform = new QQPlatform();
-                break;
-            case PlatformService.PlatformType.ANDROID:
-                this._platform = new AndroidPlatform();
-                break;
-            case PlatformService.PlatformType.BYTEDANCE:
-                this._platform = new TTPlatform();
-                break;
-            case PlatformService.PlatformType.OPPO:
-                this._platform = new OppoPlatform();
-                break;
-            case PlatformService.PlatformType.VIVO:
-                this._platform = new VivoPlatform();
-                break;
-            case PlatformService.PlatformType.XIAOMI:
-                this._platform = new XiaoMiPlatform();
-                break;
-            case PlatformService.PlatformType.HUAWEI:
-                this._platform = new HuaWeiPlatform();
-                break;
-            case PlatformService.PlatformType.IOS:
-                this._platform = new IOSPlatform();
-                break;
-            default:
-                this._platform = new WebPlatform();
-                break;
-        }
-
-        let onInitialize = Reflect.get(this._platform, "onInitialize");
-        onInitialize.call(this._platform);
-
-        this._archive = new PlatformService.Archive(this._platform);
     }
 
     protected onDispose() {
@@ -102,6 +64,44 @@ class PlatformService extends SingletonBase<PlatformService> {
      * 获取当前平台对象
      */
     get<T extends PlatformBase>(): T {
+        if (this._platform == null) {
+            switch (this.getType()) {
+                case PlatformService.PlatformType.WX:
+                    this._platform = new WxPlatform();
+                    break;
+                case PlatformService.PlatformType.QQ:
+                    this._platform = new QQPlatform();
+                    break;
+                case PlatformService.PlatformType.ANDROID:
+                    this._platform = new AndroidPlatform();
+                    break;
+                case PlatformService.PlatformType.BYTEDANCE:
+                    this._platform = new TTPlatform();
+                    break;
+                case PlatformService.PlatformType.OPPO:
+                    this._platform = new OppoPlatform();
+                    break;
+                case PlatformService.PlatformType.VIVO:
+                    this._platform = new VivoPlatform();
+                    break;
+                case PlatformService.PlatformType.XIAOMI:
+                    this._platform = new XiaoMiPlatform();
+                    break;
+                case PlatformService.PlatformType.HUAWEI:
+                    this._platform = new HuaWeiPlatform();
+                    break;
+                case PlatformService.PlatformType.IOS:
+                    this._platform = new IOSPlatform();
+                    break;
+                default:
+                    this._platform = new WebPlatform();
+                    break;
+            }
+
+            let onInitialize = Reflect.get(this._platform, "onInitialize");
+            onInitialize.call(this._platform);
+
+        }
         return this._platform as T;
     }
 
@@ -109,6 +109,9 @@ class PlatformService extends SingletonBase<PlatformService> {
      * 获取存档
      */
     getArchive(): PlatformService.Archive {
+        if (this._archive == null) {
+            this._archive = new PlatformService.Archive(this.get());
+        }
         return this._archive;
     }
 
