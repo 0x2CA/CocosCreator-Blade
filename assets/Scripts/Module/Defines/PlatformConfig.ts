@@ -1,4 +1,5 @@
 import PlatformService from "../../Blade/Services/PlatformService";
+import PlatformConfigBase from "./PlatformConfig/Bases/PlatformConfigBase";
 import AndroidConfig from "./PlatformConfig/Configs/AndroidConfig";
 import FbConfig from "./PlatformConfig/Configs/FbConfig";
 import HuaWeiConfig from "./PlatformConfig/Configs/HuaWeiConfig";
@@ -7,6 +8,7 @@ import OppoConfig from "./PlatformConfig/Configs/OppoConfig";
 import QQConfig from "./PlatformConfig/Configs/QQConfig";
 import TTConfig from "./PlatformConfig/Configs/TTConfig";
 import VivoConfig from "./PlatformConfig/Configs/VivoConfig";
+import WebConfig from "./PlatformConfig/Configs/WebConfig";
 import WxConfig from "./PlatformConfig/Configs/WxConfig";
 import XiaoMiConfig from "./PlatformConfig/Configs/XiaoMiConfig";
 
@@ -18,6 +20,8 @@ import XiaoMiConfig from "./PlatformConfig/Configs/XiaoMiConfig";
  * @描述: 平台配置
  */
 const PlatformConfig = {
+    // Web
+    [PlatformService.PlatformType.WEB]: new WebConfig.DefaultConfig(),
     // 微信
     [PlatformService.PlatformType.WX]: new WxConfig.DefaultConfig(),
     //手Q
@@ -47,4 +51,3 @@ const PlatformConfig = {
 
 export default PlatformConfig;
 
-import PlatformConfigBase from "./PlatformConfig/Bases/PlatformConfigBase";
