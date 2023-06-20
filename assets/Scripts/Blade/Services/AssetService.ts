@@ -177,7 +177,7 @@ class AssetService extends SingletonBase<AssetService> {
 
         if (info.count == 0) {
             this._assetInfos.delete(assetName);
-            cc.resources.release(info.address);
+            // cc.resources.release(info.address);
         }
     }
 
