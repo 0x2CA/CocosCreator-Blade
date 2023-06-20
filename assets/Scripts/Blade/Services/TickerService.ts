@@ -1,4 +1,5 @@
 import ITicker from "../../Blade/Interfaces/ITicker";
+import GameConfig from "../../Module/Defines/GameConfig";
 import SingletonBase from "../Bases/SingletonBase";
 
 /**
@@ -179,7 +180,7 @@ namespace TickerService {
 
         private _lastTime: number = null;
 
-        private _frameRate = 30;
+        private _frameRate = GameConfig.frameRate;
         private _fixedTime: number = Math.floor(1000 / this._frameRate);
         private _fixedTimeOffset: number = 1000 - (this._fixedTime * this._frameRate);
         private _fixedTimeCount: number = 0;
@@ -206,26 +207,24 @@ namespace TickerService {
 
             let subTime = currrentTime - this._lastTime;
 
-            if (subTime >= this._fixedTime) {
-                this._lastTime = currrentTime;
+            this._lastTime = currrentTime;
 
-                this._fixedTimeTotal += subTime;
+            this._fixedTimeTotal += subTime;
 
-                // 时间判断满足不满足下一个
-                while (this._fixedTimeTotal >= ((this._fixedTimeCount + 1) * 1000 / this._frameRate)) {
-                    this._fixedTimeCount += 1;
-                    let fixedTime = this._fixedTime;
-                    if (this._fixedTimeCount % this._frameRate == 0) {
-                        fixedTime += this._fixedTimeOffset;
-                    }
-                    this._fixedTick.call(this._tickerService, fixedTime);
+            // 时间判断满足不满足下一个
+            while (this._fixedTimeTotal >= ((this._fixedTimeCount + 1) * 1000 / this._frameRate)) {
+                this._fixedTimeCount += 1;
+                let fixedTime = this._fixedTime;
+                if (this._fixedTimeCount % this._frameRate == 0) {
+                    fixedTime += this._fixedTimeOffset;
                 }
-
-                // 以秒为单位缩减次数和累计时间(防止浮点数误差)
-                let seconds = Math.floor(this._fixedTimeCount / this._frameRate);
-                this._fixedTimeCount -= seconds * this._frameRate;
-                this._fixedTimeTotal -= 1000 * seconds;
+                this._fixedTick.call(this._tickerService, fixedTime);
             }
+
+            // 以秒为单位缩减次数和累计时间(防止浮点数误差)
+            let seconds = Math.floor(this._fixedTimeCount / this._frameRate);
+            this._fixedTimeCount -= seconds * this._frameRate;
+            this._fixedTimeTotal -= 1000 * seconds;
 
             this._tick.call(this._tickerService, subTime);
         }
