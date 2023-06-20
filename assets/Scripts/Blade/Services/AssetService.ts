@@ -74,6 +74,7 @@ class AssetService extends SingletonBase<AssetService> {
             if (info == null) {
                 info = new AssetService.AssetInfo();
                 info.asset = null;
+                info.address = address;
                 info.count = 0;
                 info.callbacks = [];
                 info.progressCallbacks = [];
@@ -176,6 +177,7 @@ class AssetService extends SingletonBase<AssetService> {
 
         if (info.count == 0) {
             this._assetInfos.delete(assetName);
+            cc.resources.release(info.address);
         }
     }
 
@@ -238,6 +240,7 @@ class AssetService extends SingletonBase<AssetService> {
 namespace AssetService {
     export class AssetInfo {
         public asset: cc.Asset;
+        public address: string;
         public count: number;
         public callbacks: Function[];
         public progressCallbacks: Function[];
