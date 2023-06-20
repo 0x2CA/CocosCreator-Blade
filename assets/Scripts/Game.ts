@@ -93,5 +93,9 @@ if (typeof blade == typeof undefined) {
         cc.macro.CLEANUP_IMAGE_CACHE = false;
         cc.dynamicAtlasManager.enabled = true;
         console.log("开启动态合图:", cc.macro.CLEANUP_IMAGE_CACHE, cc.dynamicAtlasManager.enabled)
+
+        // 抗锯齿开启
+        cc.view.enableAntiAlias(true);
+        cc.macro.ENABLE_WEBGL_ANTIALIAS = true;
     }
 }

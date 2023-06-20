@@ -25,11 +25,11 @@ export default class AndroidPlatform extends PlatformBase {
     protected onInitialize() {
         this._configs = PlatformConfig[PlatformService.PlatformType.ANDROID];
 
-        this.callNative('initialize',
-            "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V",
-            this._configs.appId,
-            this._configs.bannerId,
-            this._configs.interstitialId);
+        // this.callNative('initialize',
+        //     "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V",
+        //     this._configs.appId,
+        //     this._configs.bannerId,
+        //     this._configs.interstitialId);
     }
 
 

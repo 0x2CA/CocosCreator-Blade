@@ -42,10 +42,6 @@ class GameCtrl extends ControllerBase {
         // cc.macro.ENABLE_MULTI_TOUCH = false;
 
         // NodeHelper.redirectNodeEvent();
-
-        // 抗锯齿开启
-        cc.view.enableAntiAlias(true);
-        cc.macro.ENABLE_WEBGL_ANTIALIAS = true;
     }
 
     public onDispose() {
