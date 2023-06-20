@@ -9,7 +9,7 @@ import UICtrl from "./UICtrl";
 /*
  * @作者: 0x2CA
  * @创建时间: 2023-03-15
- * @最后编辑时间: 2023-05-04
+ * @最后编辑时间: 2023-06-20
  * @最后编辑者: 0x2CA
  * @描述:
  */
@@ -26,11 +26,6 @@ class GameCtrl extends ControllerBase {
         this.setFrame();
 
         blade.locale.setLang(LocalizedService.LangType.zh_CN);
-
-        // 开启动态合图
-        cc.macro.CLEANUP_IMAGE_CACHE = false;
-        cc.dynamicAtlasManager.enabled = true;
-        console.log("开启动态合图:", cc.macro.CLEANUP_IMAGE_CACHE, cc.dynamicAtlasManager.enabled)
 
         if (cc.sys.os == cc.sys.OS_IOS || cc.sys.os == cc.sys.OS_OSX) {
             cc.view.enableRetina(true);

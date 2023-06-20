@@ -1,7 +1,7 @@
 /*
  * @作者: 0x2CA
  * @创建时间: 2023-03-15
- * @最后编辑时间: 2023-03-20
+ * @最后编辑时间: 2023-06-20
  * @最后编辑者: 0x2CA
  * @描述:
  */
@@ -88,5 +88,10 @@ if (typeof blade == typeof undefined) {
             let runGame = Reflect.get(gameCtrl, "runGame");
             runGame.call(gameCtrl);
         }
+
+        // 开启动态合图
+        cc.macro.CLEANUP_IMAGE_CACHE = false;
+        cc.dynamicAtlasManager.enabled = true;
+        console.log("开启动态合图:", cc.macro.CLEANUP_IMAGE_CACHE, cc.dynamicAtlasManager.enabled)
     }
 }
