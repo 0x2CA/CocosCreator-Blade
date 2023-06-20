@@ -206,26 +206,28 @@ namespace TickerService {
 
             let subTime = currrentTime - this._lastTime;
 
-            this._lastTime = currrentTime;
+            if (subTime > 0 && subTime >= this._fixedTime) {
+                this._lastTime = currrentTime;
 
-            this._fixedTimeTotal += subTime;
+                this._fixedTimeTotal += subTime;
 
-            // 时间判断满足不满足下一个
-            while (this._fixedTimeTotal >= ((this._fixedTimeCount + 1) * 1000 / this._frameRate)) {
-                this._fixedTimeCount += 1;
-                let fixedTime = this._fixedTime;
-                if (this._fixedTimeCount % this._frameRate == 0) {
-                    fixedTime += this._fixedTimeOffset;
+                // 时间判断满足不满足下一个
+                while (this._fixedTimeTotal >= ((this._fixedTimeCount + 1) * 1000 / this._frameRate)) {
+                    this._fixedTimeCount += 1;
+                    let fixedTime = this._fixedTime;
+                    if (this._fixedTimeCount % this._frameRate == 0) {
+                        fixedTime += this._fixedTimeOffset;
+                    }
+                    this._fixedTick.call(this._tickerService, fixedTime);
                 }
-                this._fixedTick.call(this._tickerService, fixedTime);
+
+                // 以秒为单位缩减次数和累计时间(防止浮点数误差)
+                let seconds = Math.floor(this._fixedTimeCount / this._frameRate);
+                this._fixedTimeCount -= seconds * this._frameRate;
+                this._fixedTimeTotal -= 1000 * seconds;
+
+                this._tick.call(this._tickerService, subTime);
             }
-
-            // 以秒为单位缩减次数和累计时间(防止浮点数误差)
-            let seconds = Math.floor(this._fixedTimeCount / this._frameRate);
-            this._fixedTimeCount -= seconds * this._frameRate;
-            this._fixedTimeTotal -= 1000 * seconds;
-
-            this._tick.call(this._tickerService, subTime);
         }
 
         lateUpdate() {
