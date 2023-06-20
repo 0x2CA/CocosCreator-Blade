@@ -206,7 +206,7 @@ namespace TickerService {
 
             let subTime = currrentTime - this._lastTime;
 
-            if (subTime > 0 && subTime >= this._fixedTime) {
+            if (subTime >= this._fixedTime) {
                 this._lastTime = currrentTime;
 
                 this._fixedTimeTotal += subTime;
@@ -225,9 +225,9 @@ namespace TickerService {
                 let seconds = Math.floor(this._fixedTimeCount / this._frameRate);
                 this._fixedTimeCount -= seconds * this._frameRate;
                 this._fixedTimeTotal -= 1000 * seconds;
-
-                this._tick.call(this._tickerService, subTime);
             }
+
+            this._tick.call(this._tickerService, subTime);
         }
 
         lateUpdate() {
