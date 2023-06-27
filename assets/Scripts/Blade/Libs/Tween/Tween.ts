@@ -205,7 +205,7 @@ class Tween<T = any> {
      * @param step
      * @returns
      */
-    private addAction(step: Step): Tween {
+    private addAction(step: Step) {
         step.time = this._duration;
         step.type = Step.StepType.Action;
         this._steps.push(step);
@@ -263,7 +263,7 @@ class Tween<T = any> {
      * @param duration
      * @returns
      */
-    public wait(duration: number): Tween {
+    public wait(duration: number) {
         if (duration == null || duration <= 0) {
             return this;
         }
