@@ -1,7 +1,7 @@
 /*
  * @作者: 0x2CA
  * @创建时间: 2023-02-09
- * @最后编辑时间: 2023-03-16
+ * @最后编辑时间: 2023-06-29
  * @最后编辑者: 0x2CA
  * @描述:
  */
@@ -43,7 +43,7 @@ export default class WebPlatform extends PlatformBase {
 
     public async playRewardVideo() {
         this.emit(PlatformBase.EventType.OpenVideo)
-        await PromiseHelper.wait(3)
+        console.log("模拟看广告");
         this.emit(PlatformBase.EventType.CloseVideo)
         return true;
     }
@@ -93,6 +93,9 @@ export default class WebPlatform extends PlatformBase {
 
     public async pay(refId: string): Promise<void> {
         console.log("充值模拟");
+        // let ref = blade.config.getRefItem<IMallRechargeRefConfig>(EDataConfig.MallRechargeRef, refId);
+        // let gmModel = blade.model.get(GMModel);
+        // gmModel.requestCommd(`rmb ${ref.refId} ${ref.money}`);
     }
 
     public copyToClipBoard(string: string): Promise<void> {
