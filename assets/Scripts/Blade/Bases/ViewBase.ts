@@ -77,11 +77,19 @@ abstract class ViewBase<A = any, P extends ViewBase = any> extends cc.Component 
     }
 
     protected onEnable(): void {
-        this.showView();
+        if (this.getViewInfo()?.status == ViewBase.Status.Initialize) {
+            if (this.onShow) {
+                this.onShow();
+            }
+        }
     }
 
     protected onDisable(): void {
-        this.hideView();
+        if (this.getViewInfo()?.status == ViewBase.Status.Initialize) {
+            if (this.onHide) {
+                this.onHide();
+            }
+        }
 
         if (this.isValid && this.node.isValid && cc.isValid(this, true) && cc.isValid(this.node, true)) {
             return;
@@ -124,7 +132,7 @@ abstract class ViewBase<A = any, P extends ViewBase = any> extends cc.Component 
      * @returns
      */
     public getArgs(): A {
-        return this.getViewInfo()?.args as A;
+        return this._data || this.getViewInfo()?.args as A;
     }
 
     /**
