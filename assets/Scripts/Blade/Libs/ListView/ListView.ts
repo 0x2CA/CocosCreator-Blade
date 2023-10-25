@@ -201,7 +201,7 @@ class ListView extends cc.Component {
         }
     }
 
-    public setData(data: Array<any>) {
+    public setData(data: Array<any>, toTop: boolean = true) {
 
         this._datas = data;
 
@@ -218,7 +218,7 @@ class ListView extends cc.Component {
         console.log("数据", data);
 
         if (this._content) {
-            this.notifyUpdate();
+            this.notifyUpdate(null, toTop);
         }
     }
 
