@@ -60,13 +60,16 @@ class ViewService extends SingletonBase<ViewService>{
             console.warn("唯一窗口错误", error);
         }
 
+        let onlyInfo = null;
+
         if (isOnly) {
             // 当前页面需要唯一
-            this._onlyViews.set(alias, {
+            onlyInfo = {
                 view: null,
                 viewType: type,
                 isTemp: false
-            });
+            };
+            this._onlyViews.set(alias, onlyInfo);
         }
 
         // 界面打开之前
@@ -90,17 +93,14 @@ class ViewService extends SingletonBase<ViewService>{
 
         if (isOnly) {
             // 当前页面需要唯一
-            let onlyInfo = this._onlyViews.get(alias);
-            if (onlyInfo == null) {
-                onlyInfo = {
-                    view,
-                    viewType: type,
-                    isTemp: false
-                }
-            } else {
+            if (view != null && view.isInitialize() == true) {
                 onlyInfo.view = view;
+            } else {
+                let currentOnlyInfo = this._onlyViews.get(alias);
+                if (currentOnlyInfo != null && currentOnlyInfo == onlyInfo) {
+                    this._onlyViews.delete(alias);
+                }
             }
-            this._onlyViews.set(alias, onlyInfo);
         }
 
         return view as V;
@@ -148,13 +148,16 @@ class ViewService extends SingletonBase<ViewService>{
             console.warn("唯一窗口错误", error);
         }
 
+        let onlyInfo = null;
+
         if (isOnly) {
             // 当前页面需要唯一
-            this._onlyViews.set(alias, {
+            onlyInfo = {
                 view: null,
                 viewType: type,
                 isTemp: true
-            });
+            };
+            this._onlyViews.set(alias, onlyInfo);
         }
 
         // 界面打开之前
@@ -177,18 +180,14 @@ class ViewService extends SingletonBase<ViewService>{
         blade.notice.emit(ViewService.EventType.LoadViewAfter);
 
         if (isOnly) {
-            // 当前页面需要唯一
-            let onlyInfo = this._onlyViews.get(alias);
-            if (onlyInfo == null) {
-                onlyInfo = {
-                    view: subView,
-                    viewType: type,
-                    isTemp: false
-                }
-            } else {
+            if (subView != null && subView.isInitialize() == true) {
                 onlyInfo.view = subView;
+            } else {
+                let currentOnlyInfo = this._onlyViews.get(alias);
+                if (currentOnlyInfo != null && currentOnlyInfo == onlyInfo) {
+                    this._onlyViews.delete(alias);
+                }
             }
-            this._onlyViews.set(alias, onlyInfo);
         }
 
         return subView;

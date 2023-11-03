@@ -62,6 +62,10 @@ abstract class ViewBase<A = any, P extends ViewBase = any> extends cc.Component 
         }
     }
 
+    public isInitialize() {
+        return this.getViewInfo()?.status == ViewBase.Status.Initialize;
+    }
+
     protected onLoad(): void {
         if (this.getViewInfo(true).isOpen == false) {
             this.initialize();
