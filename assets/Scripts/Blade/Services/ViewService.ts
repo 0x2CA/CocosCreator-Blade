@@ -165,15 +165,22 @@ class ViewService extends SingletonBase<ViewService>{
 
         let tempView = await this.openView(type, tempViewType, null, false);
 
-        tempView.node.active = false;
+        if (tempView != null && tempView.isInitialize() == true) {
+            tempView.node.active = false;
+        }
 
-        let subView = await tempView.openSubView(subViewType, data);
+        let subView = null;
 
-        tempView.node.active = true;
+        if (tempView != null && tempView.isInitialize() == true) {
+            subView = await tempView.openSubView(subViewType, data);
+        }
 
-        if (tempType == ViewService.TempType.Full || tempType == null) {
-            // 打开一个全屏界面
-            this.checkOcclusion();
+        if (tempView != null && tempView.isInitialize() == true) {
+            tempView.node.active = true;
+            if (tempType == ViewService.TempType.Full || tempType == null) {
+                // 打开一个全屏界面
+                this.checkOcclusion();
+            }
         }
 
         // 界面打开之后

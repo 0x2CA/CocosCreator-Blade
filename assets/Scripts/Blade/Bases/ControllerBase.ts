@@ -68,10 +68,12 @@ abstract class ControllerBase {
             let signIndex = signs.indexOf(sign);
             // 还处于打开状态,允许加入列表
             if (signIndex >= 0) {
-                // 只有不存在列表才可以加入,因为有可能是唯一页面
-                let viewIndex = this._views.indexOf(view);
-                if (viewIndex == -1) {
-                    this._views.push(view);
+                if (view != null && view.isInitialize() == true) {
+                    // 只有不存在列表才可以加入,因为有可能是唯一页面
+                    let viewIndex = this._views.indexOf(view);
+                    if (viewIndex == -1) {
+                        this._views.push(view);
+                    }
                 }
 
                 signs.splice(signIndex, 1);
@@ -84,7 +86,7 @@ abstract class ControllerBase {
         }
 
         //标记已经移除,说明需要关闭
-        view.close();
+        view?.close();
 
         // throw new Error(alias + "界面在打开过程中已经关闭");
         console.warn(alias + "界面在打开过程中已经关闭");
@@ -112,10 +114,12 @@ abstract class ControllerBase {
             let signIndex = signs.indexOf(sign);
             // 还处于打开状态,允许加入列表
             if (signIndex >= 0) {
-                // 只有不存在列表才可以加入,因为有可能是唯一页面
-                let viewIndex = this._views.indexOf(subView);
-                if (viewIndex == -1) {
-                    this._views.push(subView);
+                if (subView != null && subView.isInitialize() == true) {
+                    // 只有不存在列表才可以加入,因为有可能是唯一页面
+                    let viewIndex = this._views.indexOf(subView);
+                    if (viewIndex == -1) {
+                        this._views.push(subView);
+                    }
                 }
 
                 signs.splice(signIndex, 1);
@@ -129,7 +133,7 @@ abstract class ControllerBase {
         }
 
         //标记已经移除,说明需要关闭
-        subView.close();
+        subView?.close();
 
         // throw new Error(alias + "界面在打开过程中已经关闭");
 
@@ -204,5 +208,3 @@ namespace ControllerBase {
 }
 
 export default ControllerBase;
-
-
