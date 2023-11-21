@@ -156,6 +156,10 @@ abstract class ViewBase<A = any, P extends ViewBase = any> extends cc.Component 
     */
     protected abstract onDispose();
 
+    public isShow() {
+        return this.node.active;
+    }
+
     /**
      * 显示视图
      */
