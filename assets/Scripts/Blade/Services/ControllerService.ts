@@ -1,6 +1,7 @@
 
 import ControllerBase from "../Bases/ControllerBase";
 import SingletonBase from "../Bases/SingletonBase";
+import { getNoticeEvents } from "../Decorators/NoticeEvent";
 import ViewService from "./ViewService";
 
 /*
@@ -64,7 +65,7 @@ class ControllerService extends SingletonBase<ControllerService> {
         let onCloseViewBefore = Reflect.get(controller, "onCloseViewBefore");
         blade.notice.on(ViewService.EventType.CloseViewBefore, onCloseViewBefore, controller);
 
-        let noticeEvents = Reflect.get(controller, "_noticeEvents") as Map<any, Set<string>>;
+        let noticeEvents = getNoticeEvents(controller);
 
         if (noticeEvents) {
             noticeEvents.forEach((functionList, eventName) => {

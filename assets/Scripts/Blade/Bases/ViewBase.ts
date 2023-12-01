@@ -27,8 +27,6 @@ let GlobalViewInfo: Map<ViewBase, ViewInfo> = new Map<ViewBase, ViewInfo>();
 @ccclass
 abstract class ViewBase<A = any, P extends ViewBase = any> extends cc.Component {
 
-    private _noticeEvents: Map<any, Set<string>>;
-
     private _nodeEvents: Map<string, Map<string, Set<string>>>;
 
     /**
@@ -391,9 +389,10 @@ abstract class ViewBase<A = any, P extends ViewBase = any> extends cc.Component 
 
         this.offEvent();
 
-        if (this._noticeEvents) {
+        let noticeEvents = getNoticeEvents(this)
+        if (noticeEvents != null) {
             // 通知初始化
-            this._noticeEvents.forEach((functionList, eventName) => {
+            noticeEvents.forEach((functionList, eventName) => {
                 functionList.forEach((functionName) => {
                     if (this[functionName]) {
                         blade.notice.on(eventName, this[functionName], this);
@@ -432,7 +431,8 @@ abstract class ViewBase<A = any, P extends ViewBase = any> extends cc.Component 
 
     private offEvent() {
 
-        if (this._noticeEvents != null) {
+        let noticeEvents = getNoticeEvents(this)
+        if (noticeEvents != null) {
             // 通知销毁
             blade.notice.targetOff(this);
         }
@@ -551,6 +551,7 @@ namespace ViewBase {
 export default ViewBase;
 
 import GameConfig from "../../Module/Defines/GameConfig";
+import { getNoticeEvents } from "../Decorators/NoticeEvent";
 import SpriteHelper from "../Helpers/SpriteHelper";
 import AssetService from "../Services/AssetService";
 
