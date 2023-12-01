@@ -17,7 +17,7 @@ export default function NoticeEvent(event: GameEvent | string) {
             // 需要移动父亲的数据到当前节点
             let parentTarget = Reflect.getPrototypeOf(target);
             if (parentTarget != null) {
-                let parentNoticeEvents = allNoticeEvents.get(parentTarget);
+                let parentNoticeEvents = getNoticeEvents(parentTarget, true);
                 if (parentNoticeEvents != null) {
                     parentNoticeEvents.forEach((value, key, map) => {
                         let functionList = noticeEvents.get(key);
