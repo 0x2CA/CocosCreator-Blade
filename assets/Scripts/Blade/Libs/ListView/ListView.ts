@@ -88,6 +88,10 @@ class ListView extends cc.Component {
         blade.ticker.offTick(this.onTick, this);
     }
 
+    protected onEnable(): void {
+        this.initSize();
+    }
+
     protected onDisable(): void {
         if (this.isValid && this.node.isValid && cc.isValid(this, true) && cc.isValid(this.node, true)) {
             return;
@@ -161,6 +165,7 @@ class ListView extends cc.Component {
                 };
             }
             itemOne.parent = this._content;
+            itemOne.setSiblingIndex(0);
             itemOne.x = 9999;
             itemOne.y = 9999;
         }
@@ -203,7 +208,7 @@ class ListView extends cc.Component {
 
     public setData(data: Array<any>, toTop: boolean = true) {
 
-        this._datas = data;
+        this._datas = data || [];
 
         if (this._datas == null) {
             console.warn("data 为空.");
@@ -451,6 +456,7 @@ class ListView extends cc.Component {
                     }
                 };
                 itemOne.parent = this._content;
+                itemOne.setSiblingIndex(0);
             }
 
             this._useItems.push(itemOne);
