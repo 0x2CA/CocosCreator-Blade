@@ -22,6 +22,9 @@ class ListView extends cc.Component {
     @property(cc.Prefab)
     private itemTemplate: cc.Prefab = null;
 
+    @property(cc.Node)
+    private itemContent: cc.Node = null;
+
     @property
     private spacing: number = 1;
 
@@ -72,16 +75,27 @@ class ListView extends cc.Component {
     private _pullUpCallback: () => void = null;
 
     public onLoad() {
-
-        this.initSize();
-
-        this.adjustEvent();
-
-        if (this._content) {
-            this.notifyUpdate();
+        if (this.enabled == true) {
+            this.init();
         }
+    }
 
-        blade.ticker.onTick(this.onTick, this);
+    private _init: boolean = false;
+
+    private init() {
+        if (this._init == false) {
+            this._init = true;
+
+            this.initSize();
+
+            this.adjustEvent();
+
+            if (this.itemContent) {
+                this.notifyUpdate();
+            }
+
+            blade.ticker.onTick(this.onTick, this);
+        }
     }
 
     protected onDestroy(): void {
@@ -89,6 +103,7 @@ class ListView extends cc.Component {
     }
 
     protected onEnable(): void {
+        this.init();
         this.initSize();
     }
 
@@ -130,14 +145,24 @@ class ListView extends cc.Component {
         if (this._scrollView) {
             this._content = this._scrollView.content;
             this._horizontal = this._scrollView.horizontal;
+            if (this.itemContent == null) {
+                this.itemContent = this._content;
+            }
             if (this._horizontal) {
                 this._scrollView.vertical = false;
+                this.itemContent.anchorX = 0;
+                this.itemContent.anchorY = 0.5;
+                this.itemContent.x =
+                    0 - this._content.getParent().width * this._content.getParent().anchorX;
                 this._content.anchorX = 0;
                 this._content.anchorY = 0.5;
                 this._content.x =
                     0 - this._content.getParent().width * this._content.getParent().anchorX;
             } else {
                 this._scrollView.vertical = true;
+                this.itemContent.anchorX = 0.5;
+                this.itemContent.anchorY = 1;
+                this.itemContent.y = 0;
                 this._content.anchorX = 0.5;
                 this._content.anchorY = 1;
                 this._content.y = this._content.getParent().height * this._content.getParent().anchorY;
@@ -164,7 +189,7 @@ class ListView extends cc.Component {
                     }
                 };
             }
-            itemOne.parent = this._content;
+            itemOne.parent = this.itemContent;
             itemOne.setSiblingIndex(0);
             itemOne.x = 9999;
             itemOne.y = 9999;
@@ -222,7 +247,7 @@ class ListView extends cc.Component {
 
         console.log("数据", data);
 
-        if (this._content) {
+        if (this.itemContent) {
             this.notifyUpdate(null, toTop);
         }
     }
@@ -247,7 +272,7 @@ class ListView extends cc.Component {
             return;
         }
 
-        if (this._content == null) {
+        if (this.itemContent == null) {
             return;
         }
 
@@ -267,9 +292,11 @@ class ListView extends cc.Component {
         if (this._horizontal) {
             this._content.width =
                 this._datas.length * (this._itemWidth + this.spacing) - this.spacing + this.paddingHead + this.paddingEnd;
+            this.itemContent.width = this._content.width;
         } else {
             this._content.height =
                 this._datas.length * (this._itemHeight + this.spacing) - this.spacing + this.paddingHead + this.paddingEnd; // get total content height
+            this.itemContent.height = this._content.height;
         }
         if (toTop) {
             this.scrollToTop(0);
@@ -338,7 +365,7 @@ class ListView extends cc.Component {
     }
 
     public setItemTemplate(item: cc.Prefab) {
-        if (this._content != null) {
+        if (this.itemContent != null) {
             this.clear();
         }
         this.itemTemplate = item;
@@ -356,7 +383,7 @@ class ListView extends cc.Component {
 
     // 向某位置添加一个item.
     private _layoutVertical(child: cc.Node, posIndex: number) {
-        child.parent = this._content;
+        child.parent = this.itemContent;
         // 增加一个tag 属性用来存储child的位置索引.
         child["_tag"] = posIndex;
         this._filledIds[posIndex] = posIndex;
@@ -365,7 +392,7 @@ class ListView extends cc.Component {
 
     // 向某位置添加一个item.
     private _layoutHorizontal(child: cc.Node, posIndex: number) {
-        child.parent = this._content;
+        child.parent = this.itemContent;
         // 增加一个tag 属性用来存储child的位置索引.
         child["_tag"] = posIndex;
         this._filledIds[posIndex] = posIndex;
@@ -455,7 +482,7 @@ class ListView extends cc.Component {
                         onRefresh.call(view, data);
                     }
                 };
-                itemOne.parent = this._content;
+                itemOne.parent = this.itemContent;
                 itemOne.setSiblingIndex(0);
             }
 
