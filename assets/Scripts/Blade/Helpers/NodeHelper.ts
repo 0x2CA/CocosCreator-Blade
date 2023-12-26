@@ -1,3 +1,4 @@
+import RedPoint from "../Components/RedPoint";
 import TimerService from "../Services/TimerService";
 
 export default class NodeHelper {
@@ -218,6 +219,9 @@ export default class NodeHelper {
 
     //按钮置灰 nodeEvent 置灰屏蔽node事件
     public static setBtnGrayState(node: cc.Node, isGray: boolean = true, pauseNodeEvent: boolean = false) {
+        if (node == null) {
+            return;
+        }
         let btn = node.getComponent(cc.Button);
         if (!btn) {
             return;
@@ -369,25 +373,42 @@ export default class NodeHelper {
         }
 
         if (sprite != null) {
-
             let rect = sprite.spriteFrame.getOriginalSize();
             let rWidth = rect.width;
             let rHeight = rect.height;
+            NodeHelper.fillNodeByWinSize(sprite.node, rWidth, rHeight);
+        }
+    }
 
-            let scaleForShowAll = Math.min(
-                cc.view.getCanvasSize().width / rWidth,
-                cc.view.getCanvasSize().height / rHeight
-            );
-
-            let realWidth = rWidth * scaleForShowAll;
-            let realHeight = rHeight * scaleForShowAll;
+    public static fillNodeByWinSize(target: cc.Node, width: number, height: number) {
+        if (target != null) {
 
             let scale = Math.max(
-                cc.view.getCanvasSize().width / realWidth,
-                cc.view.getCanvasSize().height / realHeight
+                cc.winSize.width / width,
+                cc.winSize.height / height
             );
 
-            sprite.node.scale = scale;
+            if (
+                cc.winSize.width > width * scale ||
+                cc.winSize.height > height * scale
+            ) {
+                // 显示全部画面
+                let scaleForShowAll = Math.min(
+                    cc.winSize.width / width,
+                    cc.winSize.height / height
+                );
+
+                let realWidth = width * scaleForShowAll;
+                let realHeight = height * scaleForShowAll;
+
+                // 把空位填满
+                scale = Math.max(
+                    cc.winSize.width / realWidth,
+                    cc.winSize.height / realHeight
+                );
+            }
+
+            target.scale = scale;
         }
     }
 
@@ -425,19 +446,17 @@ export default class NodeHelper {
     }
 
     public static updateSizeByLabel(target: cc.Node | cc.Label) {
-        let node: cc.Node = null;
+        let label: cc.Label = null;
 
         if (target == null) {
             return;
         }
 
         if (target instanceof cc.Node) {
-            node = target;
+            target.getComponent(cc.Label);
         } else {
-            node = target.node;
+            label = target;
         }
-
-        let label = node.getComponent(cc.Label);
 
         if (label != null) {
             (label as any)._forceUpdateRenderData(true);
@@ -445,22 +464,36 @@ export default class NodeHelper {
     }
 
     public static updateSizeByRichText(target: cc.Node | cc.RichText) {
-        let node: cc.Node = null;
+        let richText: cc.RichText = null;
 
         if (target == null) {
             return;
         }
 
         if (target instanceof cc.Node) {
-            node = target;
+            richText = target.getComponent(cc.RichText);
         } else {
-            node = target.node;
+            richText = target;
         }
-
-        let richText = node.getComponent(cc.RichText);
 
         if (richText != null) {
             (richText as any)._updateRichText();
         }
+    }
+
+    //设置小红点
+    public static setRedPointState(node: cc.Node, state: boolean = false, pos: cc.Vec2 = new cc.Vec2(0, 0)) {
+        if (node == null) {
+            return;
+        }
+        let reddot = node.getComponent(RedPoint);
+        if (!reddot && !state) {
+            return;
+        }
+        if (!reddot) {
+            reddot = node.addComponent(RedPoint);
+        }
+        reddot.setRedPointState(state, pos);
+        return reddot;
     }
 }
