@@ -46,8 +46,8 @@ class Step<T = any> {
     public duration: number = 0;
     public easing: Tween.IEasing = Tween.Easing.Linear.None;
     public interpolation: Tween.IInterpolation = Tween.Interpolation.Linear;
-    public propsStart: { [key in keyof T]?: number } = {} as any;
-    public propsEnd: { [key in keyof T]?: number | number[] } = {} as any;
+    public propsStart: { [key in keyof T]?: number | boolean | string } = {} as any;
+    public propsEnd: { [key in keyof T]?: number | number[] | boolean | string } = {} as any;
 }
 
 class Action extends Step {
@@ -83,9 +83,9 @@ class Tween<T = any> {
 
     private _steps: Step<T>[] = [];
 
-    private _propsInit: { [key in keyof T]?: number } = {} as any;
+    private _propsInit: { [key in keyof T]?: number | boolean | string } = {} as any;
 
-    private _props: { [key in keyof T]?: number } = {} as any;
+    private _props: { [key in keyof T]?: number | boolean | string } = {} as any;
 
     public constructor(target: T) {
         this._target = target;
@@ -135,10 +135,10 @@ class Tween<T = any> {
      * @param props
      * @returns
      */
-    private appendProps(props: { [key in keyof T]?: number | number[] }) {
-        let oldValue: number = null;
+    private appendProps(props: { [key in keyof T]?: number | number[] | boolean | string }) {
+        let oldValue: number | boolean | string = null;
 
-        let newProps: { [key in keyof T]?: number | number[] } = this.cloneProps(this._props);
+        let newProps: { [key in keyof T]?: number | number[] | boolean | string } = this.cloneProps(this._props);
 
         for (const key in props) {
             if (Object.prototype.hasOwnProperty.call(props, key)) {
@@ -148,6 +148,10 @@ class Tween<T = any> {
                     //初始没有存在
                     if (typeof this._target[key] == "number") {
                         oldValue = this._target[key] as number;
+                    } else if (typeof this._target[key] == "boolean") {
+                        oldValue = this._target[key] as boolean;
+                    } else if (typeof this._target[key] == "string") {
+                        oldValue = this._target[key] as string;
                     }
 
                     if (oldValue != null) {
@@ -157,14 +161,26 @@ class Tween<T = any> {
 
                 oldValue = this._props[key];
 
-                if (value instanceof Array) {
-                    if (value.length > 0) {
-                        this._props[key] = value[value.length - 1];
-                        newProps[key] = [oldValue].concat(value);
+                if (typeof oldValue == "number") {
+                    if (value instanceof Array) {
+                        if (value.length > 0) {
+                            this._props[key] = value[value.length - 1];
+                            newProps[key] = [oldValue].concat(value);
+                        }
+                    } else if (typeof value == "number") {
+                        this._props[key] = value;
+                        newProps[key] = value;
                     }
-                } else if (typeof value == "number") {
-                    this._props[key] = value;
-                    newProps[key] = value;
+                } else if (typeof oldValue == "boolean") {
+                    if (typeof value == "boolean") {
+                        this._props[key] = value;
+                        newProps[key] = value;
+                    }
+                } else if (typeof oldValue == "string") {
+                    if (typeof value == "string") {
+                        this._props[key] = value;
+                        newProps[key] = value;
+                    }
                 }
             }
         }
@@ -216,7 +232,7 @@ class Tween<T = any> {
      * 设置属性
      * @param props
      */
-    private setProps(props: { [key in keyof T]?: number | number[] }) {
+    private setProps(props: { [key in keyof T]?: number | number[] | boolean | string }) {
         for (const key in props) {
             if (Object.prototype.hasOwnProperty.call(props, key)) {
                 const value = props[key];
@@ -229,6 +245,14 @@ class Tween<T = any> {
                     } else if (typeof value == "number") {
                         this._target[key] = value as any;
                     }
+                } else if (typeof oldValue == "boolean") {
+                    if (typeof value == "boolean") {
+                        this._target[key] = value as any;
+                    }
+                } else if (typeof oldValue == "string") {
+                    if (typeof value == "string") {
+                        this._target[key] = value as any;
+                    }
                 }
             }
         }
@@ -239,7 +263,7 @@ class Tween<T = any> {
      * @param props
      * @returns
      */
-    public set(props: { [key in keyof T]?: number }) {
+    public set(props: { [key in keyof T]?: number | boolean | string }) {
         let newProps = this.appendProps(props);
 
         // 如果总延迟0说明是开始的Set
@@ -362,6 +386,27 @@ class Tween<T = any> {
     }
 
     /**
+     * 设置进度
+     * @param progress 
+     * @returns 
+     */
+    public setProgress(progress: number) {
+        if (this._paused == true) {
+            return;
+        }
+
+        if (progress < 0) {
+            progress = 0;
+        }
+        if (progress > 1) {
+            progress = 1;
+        }
+
+        this.resetPosition();
+        this.setPosition(this._duration * progress);
+    }
+
+    /**
      * 设置循环
      * @param loop
      * @param sync
@@ -417,8 +462,8 @@ class Tween<T = any> {
             ratio = step.easing(ratio);
         }
 
-        let propsStart: number = null;
-        let propsEnd: number | number[] = null;
+        let propsStart: number | boolean | string = null;
+        let propsEnd: number | number[] | boolean | string = null;
 
         for (const key in this._propsInit) {
             if (Object.prototype.hasOwnProperty.call(this._propsInit, key)) {
@@ -429,7 +474,7 @@ class Tween<T = any> {
                     step.propsEnd[key] = propsEnd = propsStart;
                 }
 
-                let prop: number = null;
+                let prop: number | boolean | string = null;
 
                 if (propsStart == propsEnd || ratio == 0 || ratio == 1) {
                     if (ratio == 0) {
@@ -442,10 +487,12 @@ class Tween<T = any> {
                         }
                     }
                 } else {
-                    if (propsEnd instanceof Array) {
-                        prop = step.interpolation(propsEnd, ratio);
-                    } else {
-                        prop = propsStart + (propsEnd - propsStart) * ratio;
+                    if (typeof propsStart == "number") {
+                        if (propsEnd instanceof Array) {
+                            prop = step.interpolation(propsEnd, ratio);
+                        } else if (typeof propsEnd == "number") {
+                            prop = propsStart + (propsEnd - propsStart) * ratio;
+                        }
                     }
                 }
 
@@ -686,15 +733,17 @@ namespace Tween {
 
         for (let i = _tweens.length - 1; i >= 0; i--) {
             let tween: Tween = _tweens[i];
-            // 暂停判断
-            if ((_paused == true && tween.getIgnoreGlobalPause() == false) || tween.getPaused() == true) {
-                continue;
-            }
-            try {
-                tween.tick(delta * _timeScale);
-            } catch (error) {
-                console.warn("Tween动画错误", tween, error);
-                removeGlobal(tween);
+            if (tween != null) {
+                // 暂停判断
+                if ((_paused == true && tween.getIgnoreGlobalPause() == false) || tween.getPaused() == true) {
+                    continue;
+                }
+                try {
+                    tween.tick(delta * _timeScale);
+                } catch (error) {
+                    console.warn("Tween动画错误", tween, error);
+                    removeGlobal(tween);
+                }
             }
         }
     }
