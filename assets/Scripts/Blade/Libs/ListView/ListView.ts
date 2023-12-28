@@ -131,6 +131,10 @@ class ListView extends cc.Component {
         this.clear();
     }
 
+    public getUseItem() {
+        return [...this._useItems];
+    }
+
     private clear() {
         this.recycleAll();
 
