@@ -76,13 +76,19 @@ class TimerService extends SingletonBase<TimerService> {
     public syncTime() {
         if (this._isSync) {
             console.log("正在同步时间!");
+            return;
         }
 
         this._isSync = true;
 
         if (this._syncCallback != null) {
+
+            let startTime = new Date().getTime();
+
             this._syncCallback.call(this._syncCaller, (syncTime) => {
-                this._timeStamp = this._lastSyncTime = syncTime;
+                let endTime = new Date().getTime();
+                let subTime = endTime - startTime;
+                this._timeStamp = this._lastSyncTime = Math.floor(syncTime + subTime / 2);
                 this._isSync = false;
                 console.log("同步时间", this._timeStamp)
             });
@@ -185,11 +191,15 @@ class TimerService extends SingletonBase<TimerService> {
             timer.timeRemain -= delta;
             // 循环检查是否结束
             while (timer.timeRemain <= 0) {
+                if (this._deletes.has(timer)) {
+                    // 已经在待删除队列
+                    return;
+                }
                 // 时间结束
                 try {
                     timer.callback.apply(timer.thisArgs, ...timer.args);
                 } catch (error) {
-                    console.error(error);
+                    console.error(timer, error);
                     this.stop(timer);
                     return;
                 }

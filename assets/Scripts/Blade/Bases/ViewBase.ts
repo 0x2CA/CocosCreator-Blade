@@ -430,7 +430,6 @@ abstract class ViewBase<A = any, P extends ViewBase = any> extends cc.Component 
     }
 
     private offEvent() {
-
         let noticeEvents = getNoticeEvents(this)
         if (noticeEvents != null) {
             // 通知销毁
@@ -490,6 +489,12 @@ abstract class ViewBase<A = any, P extends ViewBase = any> extends cc.Component 
         this.getViewInfo().subViews.push(view);
 
         await view.initialize();
+
+        if (this.getViewInfo() == null || this.getViewInfo().status == ViewBase.Status.Dispose) {
+            view.closeView();
+            console.warn("父界面已经销毁，不能打开子界面");
+            return null;
+        }
 
         return view as V;
     }
