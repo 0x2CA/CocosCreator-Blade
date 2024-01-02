@@ -48,8 +48,12 @@ export default class RedPoint extends ViewBase {
 
     //设置红点icon
     public setRedPointIcon(icon: string = "") {
-        if (icon && icon != "") {
-            this.setSpriteFrame(this.redPointNode, icon);
+        if (cc.isValid(this, true)) {
+            if (this._isInit == true) {
+                if (icon && icon != "") {
+                    this.setSpriteFrame(this.redPointNode, icon);
+                }
+            }
         }
     }
 
@@ -104,14 +108,11 @@ export default class RedPoint extends ViewBase {
             if (this._isInit == true) {
                 if (this.redPointNode != null) {
                     blade.tween.removeTweens(this.redPointNode);
-                    let tween = blade.tween.get(this.redPointNode)
+                    blade.tween.get(this.redPointNode)
                         .set({ scaleY: this.startScale, y: this.startOffsetY })
                         .to({ scaleY: this.startScale * 1.2, y: this.startOffsetY + 5 }, 600)
-                        .to({ scaleY: this.startScale, y: this.startOffsetY }, 600, Tween.Easing.Back.Out);
-
-                    tween.setLoop(true, true);
-
-                    console.log(this.startOffsetY, tween, this.uuid)
+                        .to({ scaleY: this.startScale, y: this.startOffsetY }, 600, Tween.Easing.Back.Out)
+                        .setLoop(true, true);
                 }
             }
         }
