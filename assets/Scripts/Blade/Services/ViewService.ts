@@ -166,7 +166,7 @@ class ViewService extends SingletonBase<ViewService>{
         let tempView = await this.openView(type, tempViewType, null, false);
 
         if (tempView != null && tempView.isInitialize() == true) {
-            tempView.node.active = false;
+            tempView.hideView();
         }
 
         let subView = null;
@@ -174,17 +174,6 @@ class ViewService extends SingletonBase<ViewService>{
         if (tempView != null && tempView.isInitialize() == true) {
             subView = await tempView.openSubView(subViewType, data);
         }
-
-        if (tempView != null && tempView.isInitialize() == true) {
-            tempView.node.active = true;
-            if (tempType == ViewService.TempType.Full || tempType == null) {
-                // 打开一个全屏界面
-                this.checkOcclusion();
-            }
-        }
-
-        // 界面打开之后
-        blade.notice.emit(ViewService.EventType.LoadViewAfter);
 
         if (isOnly) {
             if (subView != null && subView.isInitialize() == true) {
@@ -196,6 +185,21 @@ class ViewService extends SingletonBase<ViewService>{
                 }
             }
         }
+
+        if (tempView != null && tempView.isInitialize() == true) {
+            tempView.showView();
+        }
+
+        // 界面打开之后
+        blade.notice.emit(ViewService.EventType.LoadViewAfter);
+
+        // 全屏界面自己处理
+        // if (tempView != null && tempView.isInitialize() == true) {
+        //     if (tempType == ViewService.TempType.Full || tempType == null) {
+        //         // 打开一个全屏界面
+        //         this.checkOcclusion();
+        //     }
+        // }
 
         return subView;
     }
@@ -290,7 +294,7 @@ class ViewService extends SingletonBase<ViewService>{
                     closeView.call(view);
                     views.splice(index, 1);
                     if (type == ViewService.ViewType.Main || (GameConfig.fullTempView != null && view instanceof GameConfig.fullTempView)) {
-                        // 打开一个全屏界面
+                        // 关闭一个全屏界面
                         this.checkOcclusion();
                     }
                 }
@@ -396,7 +400,7 @@ namespace ViewService {
     export enum EventType {
         CloseViewBefore = "CloseViewBefore",
         LoadViewBefore = "LoadViewBefore",
-        LoadViewAfter = "CloseViewAfter"
+        LoadViewAfter = "LoadViewAfter"
     }
 }
 
