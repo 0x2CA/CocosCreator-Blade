@@ -19,6 +19,8 @@ const GameConfig = {
 
     smallTempView: null,
 
+    isAutoFullCheckOcclusion: true,
+
     preloadModels: [],
 
     preloadAssets: [],

@@ -193,13 +193,14 @@ class ViewService extends SingletonBase<ViewService>{
         // 界面打开之后
         blade.notice.emit(ViewService.EventType.LoadViewAfter);
 
-        // 全屏界面自己处理
-        // if (tempView != null && tempView.isInitialize() == true) {
-        //     if (tempType == ViewService.TempType.Full || tempType == null) {
-        //         // 打开一个全屏界面
-        //         this.checkOcclusion();
-        //     }
-        // }
+        if (GameConfig.isAutoFullCheckOcclusion) {
+            if (tempView != null && tempView.isInitialize() == true) {
+                if (tempType == ViewService.TempType.Full || tempType == null) {
+                    // 打开一个全屏界面
+                    this.checkOcclusion();
+                }
+            }
+        }
 
         return subView;
     }
