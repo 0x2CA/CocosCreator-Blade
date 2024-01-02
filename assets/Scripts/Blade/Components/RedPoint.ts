@@ -1,8 +1,9 @@
 import ViewBase from "../Bases/ViewBase";
 import View from "../Decorators/View";
+import Tween from "../Libs/Tween/Tween";
 
 
-const {ccclass, property} = cc._decorator;
+const { ccclass, property } = cc._decorator;
 
 @ccclass
 @View("RedPoint")
@@ -10,26 +11,37 @@ export default class RedPoint extends ViewBase {
     private redPointNode: cc.Node = null;
 
     private redPointIcon: string = "shop_bg_num02.png";
+    private startScale = 1;
+    private startPosY = 0;
+
+    private _isInit: boolean = false;
 
     protected onInitialize() {
-        
+        this._isInit = true;
     }
+
     protected onDispose() {
-        
+        if (this.redPointNode != null) {
+            blade.tween.removeTweens(this.redPointNode);
+        }
     }
+
     protected onShow() {
-        
+        if (this._isInit == true) {
+            this.showAnimation();
+        }
     }
+
     protected onHide() {
-        
     }
+
     protected onRefresh(data: any) {
-        
     }
 
     //设置红点位置
     public setRedPointPosition(pos: cc.Vec2) {
         this.redPointNode.setPosition(pos);
+        this.startPosY = this.redPointNode.y;
     }
 
     //设置红点icon
@@ -49,12 +61,35 @@ export default class RedPoint extends ViewBase {
                 this.redPointNode.addComponent(cc.Sprite);
             }
             let nodeSize = this.node.getContentSize();
-            this.setRedPointPosition(new cc.Vec2(nodeSize.width * 0.5 + pos.x, nodeSize.height * 0.5 + pos.y))
+            this.setRedPointPosition(new cc.Vec2(nodeSize.width * 0.5 + pos.x, nodeSize.height * 0.5 + pos.y));
         }
         if (this.redPointNode) {
             this.setRedPointIcon(this.redPointIcon);
             this.redPointNode.active = state;
             this.redPointNode.scale = 1 / this.node.scale;
+            this.startScale = 1 / this.node.scale;
+            this.startPosY = this.redPointNode.y;
+            if (state) {
+                if (this._isInit == true) {
+                    this.showAnimation();
+                }
+            }
+            else {
+                blade.tween.removeTweens(this.redPointNode);
+            }
+        }
+    }
+
+    private showAnimation() {
+        if (this.redPointNode) {
+            blade.tween.removeTweens(this.redPointNode);
+            if (this.isValid == true) {
+                blade.tween.get(this.redPointNode)
+                    .set({ scaleY: this.startScale, y: this.startPosY })
+                    .to({ scaleY: this.startScale * 1.2, y: this.startPosY + 5 }, 600)
+                    .to({ scaleY: this.startScale, y: this.startPosY }, 600, Tween.Easing.Back.Out)
+                    .setLoop(true, true);
+            }
         }
     }
 }
