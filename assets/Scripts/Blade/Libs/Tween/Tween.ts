@@ -454,7 +454,8 @@ class Tween<T = any> {
     private updateTargetProps(step: Step, ratio: number) {
         if (step.propsStart == step.propsEnd) {
             // 相等的属性不需要更新
-            return;
+            // return;
+            ratio = 1;
         }
 
         // 缓动
