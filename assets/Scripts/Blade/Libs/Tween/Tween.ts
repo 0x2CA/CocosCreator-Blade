@@ -532,8 +532,8 @@ class Tween<T = any> {
             }
         }
 
-        // 如果时间没有走动跳过
-        if (time == this._prevTime) {
+        // 如果时间没有走动跳过(防止总时间为0问题导致事件没有办法结束)
+        if (this._duration != 0 && time == this._prevTime) {
             return end;
         }
 
