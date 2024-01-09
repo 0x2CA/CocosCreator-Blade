@@ -123,7 +123,6 @@ abstract class ControllerBase {
                 }
 
                 signs.splice(signIndex, 1);
-                signs.splice(signIndex, 1);
                 if (signs.length == 0) {
                     this._loadSigns.delete(alias);
                 }
