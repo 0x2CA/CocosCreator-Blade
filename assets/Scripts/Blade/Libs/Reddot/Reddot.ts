@@ -203,9 +203,29 @@ export default class Reddot {
      * @param newValue 
      * @returns 
      */
-    public setNodeValue(path: string, newValue: number): number {
+    public setNodeValue(path: string, newValue: number): void {
         let node = this.getOrAddNode(path);
-        return node.value = newValue;
+        node.value = newValue;
+    }
+
+    /**
+     * 获取节点是否隐藏
+     * @param path 
+     * @returns 
+     */
+    public getNodeIsHide(path: string): boolean {
+        let node = this.getOrAddNode(path);
+        return node.isHide;
+    }
+
+    /**
+     * 设置节点是否隐藏
+     * @param path 
+     * @param isHide 
+     */
+    public setNodeIsHide(path: string, isHide: boolean): void {
+        let node = this.getOrAddNode(path);
+        node.isHide = isHide;
     }
 
     /**
