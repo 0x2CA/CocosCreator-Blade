@@ -135,6 +135,10 @@ class ReddotNode {
             throw new Error("红点节点设置值失败,当前节点没有初始化");
         }
 
+        if (newValue < 0) {
+            throw new Error("红点节点设置值错误,当前节点值" + newValue + "不能小于0 " + this.fullPath);
+        }
+
         if (this._value != newValue) {
             this._value = newValue;
             this.change();

@@ -204,6 +204,9 @@ export default class Reddot {
      * @returns 
      */
     public setNodeValue(path: string, newValue: number): void {
+        if (newValue < 0) {
+            throw new Error("红点节点设置值错误,当前节点值" + newValue + "不能小于0 " + path);
+        }
         let node = this.getOrAddNode(path);
         node.value = newValue;
     }
