@@ -1,0 +1,15 @@
+{
+    "name": "addressables",
+    "version": "1.0.0",
+    "description": "",
+    "main": "./build/Application.js",
+    "scripts": {
+        "tsc:w": "tsc -w"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "@types/node": "^12.12.14",
+        "commander": "^4.0.1"
+    }
+}

@@ -62,6 +62,8 @@ class NodeGetter {
         return !this.node && !this.path;
     }
 
+
+
 }
 
 @ccclass("NodeStructure")
@@ -73,6 +75,26 @@ class NodeStructure {
     layerNodeGetter: NodeGetter = new NodeGetter()
 
     relativePosition: cc.Vec3 = null;
+
+    active: boolean = null;
+
+    getActive() {
+        return (this.node as any)._active;
+    }
+
+    setActive(value) {
+        value = !!value;
+        if ((this.node as any)._active !== value) {
+            (this.node as any)._active = value;
+            var parent = (this.node as any)._parent;
+            if (parent) {
+                var couldActiveInScene = parent._activeInHierarchy;
+                if (couldActiveInScene) {
+                    (cc.director as any)._nodeActivator.activateNode(this.node, value);
+                }
+            }
+        }
+    }
 }
 
 @ccclass
@@ -81,11 +103,14 @@ export default class AdjustNodeStructure extends cc.Component {
     @property
     private delay = 0;
 
+    @property
+    private listenPositionChange: boolean = false;
+
     @property(cc.Node)
     private syncActiveNode: cc.Node = null;
 
     @property
-    private isRemoveWhenDisable = false;
+    private isRemoveWhenDestroy = false;
 
     @property({ type: NodeGetter })
     private scrollView: NodeGetter = new NodeGetter();
@@ -108,6 +133,10 @@ export default class AdjustNodeStructure extends cc.Component {
         if (scrollView != null && scrollView.getComponent(cc.ScrollView) != null) {
             scrollView.on("scrolling", this.adjust, this);
         }
+
+        if (this.listenPositionChange) {
+            this.node.on(cc.Node.EventType.POSITION_CHANGED, this.adjust, this);
+        }
     }
 
     protected onEnable(): void {
@@ -116,17 +145,32 @@ export default class AdjustNodeStructure extends cc.Component {
 
     protected onDisable(): void {
         this.syncActive();
+    }
 
-        if (this.isRemoveWhenDisable == true) {
+    protected onDestroy(): void {
+        if (this.isRemoveWhenDestroy == true) {
             for (let structure of this.structures) {
-                structure.node.parent = null;
-                structure.node.destroy();
+                if (structure != null && structure.node != null) {
+                    if (structure.node == null) {
+                        continue;
+                    }
+                    if (structure.node.isValid == true) {
+                        structure.node.destroy();
+                    }
+                }
             }
+            this.structures = [];
         }
     }
 
-    private adjust() {
+    public adjust() {
+        let syncActiveNode = this.syncActiveNode;
+
         for (let structure of this.structures) {
+            if (structure.node == null) {
+                continue;
+            }
+
             // 禁用布局组件(因为分层没有办法使用)
             let widget = structure.node.getComponent(cc.Widget);
             if (widget) {
@@ -141,6 +185,30 @@ export default class AdjustNodeStructure extends cc.Component {
 
             if (structure.relativePosition == null) {
                 structure.relativePosition = this.node.convertToNodeSpaceAR(structure.node.convertToWorldSpaceAR(cc.Vec3.ZERO));
+            }
+
+            if (syncActiveNode != null && structure.active == null) {
+                structure.active = structure.node.active;
+                if (this.syncActiveNode.active == false) {
+                    structure.setActive(false);
+                }
+                Object.defineProperty(structure.node, "active", {
+                    get: function () {
+                        return structure.active;
+                    },
+                    set: function (value) {
+                        // 外部修改
+                        value = !!value;
+                        if (structure.active !== value) {
+                            structure.active = value;
+                            if (syncActiveNode.active == false) {
+                                structure.setActive(false);
+                            } else {
+                                structure.setActive(structure.active);
+                            }
+                        }
+                    },
+                });
             }
 
             let position = layerNode.convertToNodeSpaceAR(this.node.convertToWorldSpaceAR(structure.relativePosition));
@@ -173,7 +241,16 @@ export default class AdjustNodeStructure extends cc.Component {
         this.nodeActiveStatus = this.syncActiveNode.active;
 
         for (let structure of this.structures) {
-            structure.node.active = this.syncActiveNode.active
+            if (structure.node == null) {
+                continue;
+            }
+            if (structure.active != null) {
+                if (this.syncActiveNode.active == false) {
+                    structure.setActive(false);
+                } else {
+                    structure.setActive(structure.active);
+                }
+            }
         }
 
     }

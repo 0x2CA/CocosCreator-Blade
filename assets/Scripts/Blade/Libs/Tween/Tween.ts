@@ -87,13 +87,20 @@ class Tween<T = any> {
 
     private _props: { [key in keyof T]?: number | boolean | string } = {} as any;
 
-    public constructor(target: T) {
+    private _errorMessages: Object[] = null;
+
+    public constructor(target: T, errorMessages: Object[] = null) {
         this._target = target;
+        this._errorMessages = errorMessages;
         addGlobal(this);
     }
 
     public getTarget() {
         return this._target;
+    }
+
+    public getErrorMessages() {
+        return this._errorMessages;
     }
 
     public getPaused(): boolean {
@@ -609,11 +616,12 @@ namespace Tween {
 
     /**
      * 对对象添加一个动画
-     * @param target
-     * @returns
+     * @param target 
+     * @param errorMessages 
+     * @returns 
      */
-    export function get<T>(target: T) {
-        return new Tween<T>(target);
+    export function get<T>(target: T, errorMessages: Object[] = null) {
+        return new Tween<T>(target, errorMessages);
     }
 
     export function getPaused(): boolean {
@@ -742,7 +750,8 @@ namespace Tween {
                 try {
                     tween.tick(delta * _timeScale);
                 } catch (error) {
-                    console.warn("Tween动画错误", tween, error);
+                    let errorMessages = tween.getErrorMessages() || [];
+                    console.warn("Tween动画错误", ...[tween, error].concat(errorMessages));
                     removeGlobal(tween);
                 }
             }

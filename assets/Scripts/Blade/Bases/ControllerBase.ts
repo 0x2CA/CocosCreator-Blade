@@ -14,6 +14,22 @@ import ViewBase from "./ViewBase";
 abstract class ControllerBase {
 
     /**
+     * 获取别名
+     * @returns
+     */
+    public getAlias(): string {
+        return Reflect.get(this, "_alias") as string;
+    }
+
+    /**
+     * 获取别名
+     * @returns
+     */
+    public static getAlias() {
+        return Reflect.get(this, "_alias") as string;
+    }
+
+    /**
      * 初始化函数，供重载
      */
     protected abstract onInitialize();

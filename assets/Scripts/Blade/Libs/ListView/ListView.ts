@@ -44,6 +44,9 @@ class ListView extends cc.Component {
     })
     private layerSort: LayerSort = LayerSort.None;
 
+    @property(cc.Boolean)
+    private isExcludeNull: boolean = true;
+
     private _scrollView: cc.ScrollView = null;
 
     private _content: cc.Node = null;
@@ -188,7 +191,11 @@ class ListView extends cc.Component {
             } else {
                 let onRefresh = Reflect.get(view, "onRefresh");
                 (view as any).onRefresh = (data) => {
-                    if (data != null) {
+                    if (this.isExcludeNull == true) {
+                        if (data != null) {
+                            onRefresh.call(view, data);
+                        }
+                    } else {
                         onRefresh.call(view, data);
                     }
                 };
@@ -276,7 +283,7 @@ class ListView extends cc.Component {
             return;
         }
 
-        if (this.itemContent == null) {
+        if (this._init == false) {
             return;
         }
 
@@ -374,6 +381,15 @@ class ListView extends cc.Component {
         }
         this.itemTemplate = item;
         this.initSize();
+    }
+
+    public updateVisibleSize() {
+        this.recycleAll();
+        this.initSize();
+    }
+
+    public getVisibleCount() {
+        return this._itemsVisible;
     }
 
     protected onTick(detale: number) {
@@ -482,7 +498,11 @@ class ListView extends cc.Component {
                 }
                 let onRefresh = Reflect.get(view, "onRefresh");
                 (view as any).onRefresh = (data) => {
-                    if (data != null) {
+                    if (this.isExcludeNull == true) {
+                        if (data != null) {
+                            onRefresh.call(view, data);
+                        }
+                    } else {
                         onRefresh.call(view, data);
                     }
                 };

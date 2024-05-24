@@ -364,4 +364,39 @@ export default class GeometryHelper {
             new cc.Vec2(rect.xMin, rect.yMin)
         ];
     }
+
+    /**
+    * @en Test rect and circle
+    * @zh 测试矩形与圆形是否相交
+    */
+    public static rectCircle(rect: cc.Rect, cp: cc.Vec2, cr: number): boolean {
+        const cx = cp.x;
+        const cy = cp.y;
+
+        const rx = rect.x;
+        const ry = rect.y;
+        const rw = rect.width;
+        const rh = rect.height;
+
+        // temporary variables to set edges for testing
+        let testX = cx;
+        let testY = cy;
+
+        // which edge is closest?
+        if (cx < rx) testX = rx;      // test left edge
+        else if (cx > rx + rw) testX = rx + rw;   // right edge
+        if (cy < ry) testY = ry;      // top edge
+        else if (cy > ry + rh) testY = ry + rh;   // bottom edge
+
+        // get distance from closest edges
+        const distX = cx - testX;
+        const distY = cy - testY;
+        const distance = (distX * distX) + (distY * distY);
+
+        // if the distance is less than the radius, collision!
+        if (distance <= cr * cr) {
+            return true;
+        }
+        return false;
+    }
 }

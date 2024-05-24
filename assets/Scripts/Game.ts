@@ -53,7 +53,7 @@ if (typeof blade == typeof undefined) {
         // 延迟初始化
         cc.director.once(cc.Director.EVENT_AFTER_SCENE_LAUNCH, (scene: cc.Scene) => {
             console.log("延迟初始化")
-            let gameCtrl = blade.ctrl.get(GameCtrl)
+            let gameCtrl = blade.ctrl.get(GameCtrl);
             let runGame = Reflect.get(gameCtrl, "runGame");
             runGame.call(gameCtrl);
         });
@@ -84,18 +84,18 @@ if (typeof blade == typeof undefined) {
                 cc.game.addPersistRootNode(node);
             }
 
-            let gameCtrl = blade.ctrl.get(GameCtrl)
+            let gameCtrl = blade.ctrl.get(GameCtrl);
             let runGame = Reflect.get(gameCtrl, "runGame");
             runGame.call(gameCtrl);
         }
 
         // 开启动态合图
-        cc.macro.CLEANUP_IMAGE_CACHE = false;
-        cc.dynamicAtlasManager.enabled = true;
-        console.log("开启动态合图:", cc.macro.CLEANUP_IMAGE_CACHE, cc.dynamicAtlasManager.enabled)
+        // cc.macro.CLEANUP_IMAGE_CACHE = false;
+        // cc.dynamicAtlasManager.enabled = true;
+        // console.log("开启动态合图:", cc.macro.CLEANUP_IMAGE_CACHE, cc.dynamicAtlasManager.enabled)
 
         // 抗锯齿开启
-        cc.view.enableAntiAlias(true);
-        cc.macro.ENABLE_WEBGL_ANTIALIAS = true;
+        // cc.view.enableAntiAlias(true);
+        // cc.macro.ENABLE_WEBGL_ANTIALIAS = true;
     }
 }

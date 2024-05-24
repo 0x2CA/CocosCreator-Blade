@@ -228,6 +228,7 @@ export default class NodeHelper {
         }
         btn.interactable = !isGray;
         btn.enableAutoGrayEffect = isGray;
+        this.setGray(node, isGray)
         if (pauseNodeEvent) {
             if (isGray) {
                 node.pauseSystemEvents(true);

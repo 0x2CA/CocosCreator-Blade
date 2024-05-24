@@ -9,7 +9,7 @@ import UICtrl from "./UICtrl";
 /*
  * @作者: 0x2CA
  * @创建时间: 2023-03-15
- * @最后编辑时间: 2023-06-20
+ * @最后编辑时间: 2023-07-04
  * @最后编辑者: 0x2CA
  * @描述:
  */
@@ -23,7 +23,7 @@ class GameCtrl extends ControllerBase {
 
         this.registerImgLoader();
 
-        this.setFrame();
+        this.updateFrame();
 
         blade.locale.setLang(LocalizedService.LangType.zh_CN);
 
@@ -70,7 +70,7 @@ class GameCtrl extends ControllerBase {
         // });
     }
 
-    private setFrame() {
+    public updateFrame() {
         // 锁定游戏帧数
         if (blade.platform.getType() == PlatformService.PlatformType.WX) {
             wx.setPreferredFramesPerSecond(GameConfig.frameRate);

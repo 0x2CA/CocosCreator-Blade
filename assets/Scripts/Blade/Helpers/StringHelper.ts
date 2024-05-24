@@ -269,6 +269,31 @@ class StringHelper {
         return blade.platform.get().copyToClipBoard(str);
     }
 
+    public static toSmallByUnit(bigNumber: number, fixed: number, minUnitOffset: number, unitOffset: number, units: string[], isLocale: boolean = true) {
+        let sign = Math.sign(bigNumber);
+        let abs = Math.abs(bigNumber);
+        let scale = Math.pow(10, fixed);
+        if (bigNumber < minUnitOffset) {
+            return (sign * Math.floor(abs * scale) / scale).toString();
+        } else {
+            // 大于最小单位
+            abs /= minUnitOffset;
+
+            let unitIndex = 0;
+
+            while (unitIndex + 1 < units.length && abs >= unitOffset) {
+                abs /= unitOffset;
+                unitIndex++;
+            }
+
+            if (isLocale == true) {
+                return (sign * Math.floor(abs * scale) / scale).toString() + blade.locale.value(units[unitIndex]);
+            } else {
+                return (sign * Math.floor(abs * scale) / scale).toString() + units[unitIndex];
+            }
+        }
+    }
+
 }
 
 

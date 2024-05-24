@@ -9,6 +9,7 @@
  */
 export default function Controller<T extends ControllerBase>(controllerName: string) {
     return function (target: { new(): T }) {
+        Reflect.set(target.prototype, "_alias", controllerName);
         Reflect.set(target, "_alias", controllerName)
     }
 }

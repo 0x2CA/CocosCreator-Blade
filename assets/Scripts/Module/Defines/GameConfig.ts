@@ -46,7 +46,9 @@ const GameConfig = {
     isSocketMessageLog: true,
 
     // 是否隐藏VConsole
-    isHideVConsole: true
+    isHideVConsole: true,
+
+    isTest: true,
 };
 
 

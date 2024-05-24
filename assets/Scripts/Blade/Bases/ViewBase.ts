@@ -200,6 +200,7 @@ abstract class ViewBase<A = any, P extends ViewBase = any> extends cc.Component 
      * 防止因为没有非open界面没有初始化导致刷新失败
      */
     private _data: A = null;
+    private _needUpdate: boolean = false;
 
     /**
      * 更新
@@ -208,6 +209,7 @@ abstract class ViewBase<A = any, P extends ViewBase = any> extends cc.Component 
     public async refresh(data: A) {
         if (this.getViewInfo()?.status == ViewBase.Status.Initialize) {
             this._data = null;
+            this._needUpdate = false;
             let viewInfo = this.getViewInfo();
             if (viewInfo != null) {
                 viewInfo.args = data as object;
@@ -217,6 +219,7 @@ abstract class ViewBase<A = any, P extends ViewBase = any> extends cc.Component 
             }
         } else {
             this._data = data;
+            this._needUpdate = true;
         }
     };
 
@@ -463,11 +466,13 @@ abstract class ViewBase<A = any, P extends ViewBase = any> extends cc.Component 
 
             this.onEvent();
 
+            if (this._needUpdate == true) {
+                this.getViewInfo().args = this._data as any;
+                this._data = null;
+                this._needUpdate = false;
+            }
+
             if (this.onRefresh) {
-                if (this._data != null) {
-                    this.getViewInfo().args = this._data as any;
-                    this._data = null;
-                }
                 await this.onRefresh(this.getViewInfo().args as A);
             }
 
