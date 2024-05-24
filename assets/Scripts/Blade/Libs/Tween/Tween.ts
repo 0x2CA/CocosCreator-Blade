@@ -87,10 +87,13 @@ class Tween<T = any> {
 
     private _props: { [key in keyof T]?: number | boolean | string } = {} as any;
 
+    private _tickCallBack: () => void = null;
+
     private _errorMessages: Object[] = null;
 
-    public constructor(target: T, errorMessages: Object[] = null) {
+    public constructor(target: T, tickCallBack: () => void = null, errorMessages: Object[] = null) {
         this._target = target;
+        this._tickCallBack = tickCallBack;
         this._errorMessages = errorMessages;
         addGlobal(this);
     }
@@ -606,7 +609,13 @@ class Tween<T = any> {
             return;
         }
 
-        if (this.setPosition(this._prevPosition + delta * this._timeScale)) {
+        let isFinish = this.setPosition(this._prevPosition + delta * this._timeScale);
+
+        if (this._tickCallBack != null) {
+            this._tickCallBack();
+        }
+
+        if (isFinish == true) {
             this.setPaused(true);
         }
     }
@@ -617,11 +626,12 @@ namespace Tween {
     /**
      * 对对象添加一个动画
      * @param target 
+     * @param tickCallBack 
      * @param errorMessages 
      * @returns 
      */
-    export function get<T>(target: T, errorMessages: Object[] = null) {
-        return new Tween<T>(target, errorMessages);
+    export function get<T>(target: T, tickCallBack: () => void = null, errorMessages: Object[] = null) {
+        return new Tween<T>(target, tickCallBack, errorMessages);
     }
 
     export function getPaused(): boolean {

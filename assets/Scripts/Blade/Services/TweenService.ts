@@ -15,11 +15,11 @@ export default class TweenService extends SingletonBase<TweenService> {
         blade.ticker.offTick(this.onTick, this);
     }
 
-    public get<T>(target: T, errorMessages: Object[] = null) {
-        return Tween.get(target, errorMessages);
+    public get<T>(target: T, tickCallBack: () => void = null) {
+        return Tween.get(target, tickCallBack);
     }
 
-    public getBySelf<T, B extends ViewBase | ControllerBase | cc.Node | cc.Component | string>(target: T, self: B) {
+    public getBySelf<T, B extends ViewBase | ControllerBase | cc.Node | cc.Component | string>(target: T, self: B, tickCallBack: () => void = null) {
         let errorMessages: Object[] = null;
         if (GameConfig.isTest) {
             errorMessages = [];
@@ -36,7 +36,7 @@ export default class TweenService extends SingletonBase<TweenService> {
                 }
             }
         }
-        return Tween.get(target, errorMessages);
+        return Tween.get(target, tickCallBack, errorMessages);
     }
 
     public removeTweens<T>(target: T): void {

@@ -27,14 +27,54 @@ export default class VisibleDetection extends cc.Component {
     private containerNode: cc.Node = null;
 
     onLoad() {
+        if (this.detectionRangeNode == null || this.containerNode == null) {
+            return null;
+        }
+
+        this.offEvent();
+
+        this.onEvent();
+
+        this.updateOpacity();
+    }
+
+    public setContainer(container: cc.Node) {
+        this.offEvent();
+        this.containerNode = container;
+        this.onEvent();
+        this.updateOpacity();
+    }
+
+    public setDetectionRange(detectionRange: cc.Node) {
+        this.offEvent();
+        this.detectionRangeNode = detectionRange;
+        this.onEvent();
+        this.updateOpacity();
+    }
+
+    private onEvent() {
         // ------------------事件监听
-        if (this.detectionRangeNode.getComponent(cc.ScrollView) != null) {
+        if (this.detectionRangeNode != null && this.detectionRangeNode.getComponent(cc.ScrollView) != null) {
             this.detectionRangeNode.on("scrolling", this.updateOpacity, this);
         }
 
-        this.containerNode.on(cc.Node.EventType.CHILD_ADDED, this.updateOpacity, this);
-        this.containerNode.on(cc.Node.EventType.CHILD_REMOVED, this.updateOpacity, this);
-        this.containerNode.on(cc.Node.EventType.CHILD_REORDER, this.updateOpacity, this);
+        if (this.containerNode != null) {
+            this.containerNode.on(cc.Node.EventType.CHILD_ADDED, this.updateOpacity, this);
+            this.containerNode.on(cc.Node.EventType.CHILD_REMOVED, this.updateOpacity, this);
+            this.containerNode.on(cc.Node.EventType.CHILD_REORDER, this.updateOpacity, this);
+        }
+    }
+
+    private offEvent() {
+        if (this.detectionRangeNode != null && this.detectionRangeNode.getComponent(cc.ScrollView) != null) {
+            this.detectionRangeNode.off("scrolling", this.updateOpacity, this);
+        }
+
+        if (this.containerNode != null) {
+            this.containerNode.off(cc.Node.EventType.CHILD_ADDED, this.updateOpacity, this);
+            this.containerNode.off(cc.Node.EventType.CHILD_REMOVED, this.updateOpacity, this);
+            this.containerNode.off(cc.Node.EventType.CHILD_REORDER, this.updateOpacity, this);
+        }
     }
 
     /* ***************功能函数*************** */
@@ -58,7 +98,10 @@ export default class VisibleDetection extends cc.Component {
         return rect1_o.intersects(rect2_o);
     }
     /* ***************自定义事件*************** */
-    private updateOpacity(): void {
+    public updateOpacity(): void {
+        if (this.detectionRangeNode == null || this.containerNode == null) {
+            return null;
+        }
         let rect1_o = this.getBoundingBoxToWorld(this.detectionRangeNode);
         // ------------------保险范围
         rect1_o.width += rect1_o.width * 0.5;
