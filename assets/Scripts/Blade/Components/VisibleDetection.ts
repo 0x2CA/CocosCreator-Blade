@@ -38,6 +38,12 @@ export default class VisibleDetection extends cc.Component {
         this.updateOpacity();
     }
 
+    protected update(dt: number): void {
+        if (this._needUpdateCount > 0) {
+            this.updateOpacity();
+        }
+    }
+
     public setContainer(container: cc.Node) {
         this.offEvent();
         this.containerNode = container;
@@ -55,25 +61,63 @@ export default class VisibleDetection extends cc.Component {
     private onEvent() {
         // ------------------事件监听
         if (this.detectionRangeNode != null && this.detectionRangeNode.getComponent(cc.ScrollView) != null) {
-            this.detectionRangeNode.on("scrolling", this.updateOpacity, this);
+            this.detectionRangeNode.on("scroll-began", this.needUpdate, this);
+            this.detectionRangeNode.on("scrolling", this.needUpdate, this);
+            this.detectionRangeNode.on("scroll-end", this.needUpdate, this);
+            let scrollView = this.detectionRangeNode.getComponent(cc.ScrollView);
+            // 备份
+            (scrollView as any).__moveContent = (scrollView as any)._moveContent;
+            (scrollView as any)._moveContent = (deltaMove, canStartBounceBack) => {
+                (scrollView as any).__moveContent(deltaMove, canStartBounceBack);
+                this.needUpdate();
+            };
+            // 备份
+            (scrollView as any).__calculateBoundary = (scrollView as any)._calculateBoundary;
+            (scrollView as any)._calculateBoundary = () => {
+                (scrollView as any).__calculateBoundary();
+                this.needUpdate();
+            };
+            if (scrollView.content != null) {
+                scrollView.content.on(cc.Node.EventType.SIZE_CHANGED, this.needUpdate, this);
+                scrollView.content.on(cc.Node.EventType.POSITION_CHANGED, this.needUpdate, this);
+            }
         }
 
         if (this.containerNode != null) {
-            this.containerNode.on(cc.Node.EventType.CHILD_ADDED, this.updateOpacity, this);
-            this.containerNode.on(cc.Node.EventType.CHILD_REMOVED, this.updateOpacity, this);
-            this.containerNode.on(cc.Node.EventType.CHILD_REORDER, this.updateOpacity, this);
+            this.containerNode.on(cc.Node.EventType.CHILD_ADDED, this.needUpdate, this);
+            this.containerNode.on(cc.Node.EventType.CHILD_REMOVED, this.needUpdate, this);
+            this.containerNode.on(cc.Node.EventType.CHILD_REORDER, this.needUpdate, this);
+            this.containerNode.on(cc.Node.EventType.SIZE_CHANGED, this.needUpdate, this);
+            this.containerNode.on(cc.Node.EventType.POSITION_CHANGED, this.needUpdate, this);
         }
     }
 
     private offEvent() {
         if (this.detectionRangeNode != null && this.detectionRangeNode.getComponent(cc.ScrollView) != null) {
-            this.detectionRangeNode.off("scrolling", this.updateOpacity, this);
+            this.detectionRangeNode.off("scroll-began", this.needUpdate, this);
+            this.detectionRangeNode.off("scrolling", this.needUpdate, this);
+            this.detectionRangeNode.off("scroll-end", this.needUpdate, this);
+            let scrollView = this.detectionRangeNode.getComponent(cc.ScrollView);
+            if ((scrollView as any).__moveContent != null) {
+                (scrollView as any)._moveContent = (scrollView as any).__moveContent;
+                (scrollView as any).__moveContent = null;
+            }
+            if ((scrollView as any).__calculateBoundary != null) {
+                (scrollView as any).__calculateBoundary = (scrollView as any).__calculateBoundary;
+                (scrollView as any).__calculateBoundary = null;
+            }
+            if (scrollView.content != null) {
+                scrollView.content.off(cc.Node.EventType.SIZE_CHANGED, this.needUpdate, this);
+                scrollView.content.off(cc.Node.EventType.POSITION_CHANGED, this.needUpdate, this);
+            }
         }
 
         if (this.containerNode != null) {
-            this.containerNode.off(cc.Node.EventType.CHILD_ADDED, this.updateOpacity, this);
-            this.containerNode.off(cc.Node.EventType.CHILD_REMOVED, this.updateOpacity, this);
-            this.containerNode.off(cc.Node.EventType.CHILD_REORDER, this.updateOpacity, this);
+            this.containerNode.off(cc.Node.EventType.CHILD_ADDED, this.needUpdate, this);
+            this.containerNode.off(cc.Node.EventType.CHILD_REMOVED, this.needUpdate, this);
+            this.containerNode.off(cc.Node.EventType.CHILD_REORDER, this.needUpdate, this);
+            this.containerNode.off(cc.Node.EventType.SIZE_CHANGED, this.needUpdate, this);
+            this.containerNode.off(cc.Node.EventType.POSITION_CHANGED, this.needUpdate, this);
         }
     }
 
@@ -92,16 +136,29 @@ export default class VisibleDetection extends cc.Component {
         rect_o.transformMat4(rect_o, node_o_._worldMatrix);
         return rect_o;
     }
+
     /**检测包含 */
     private checkContain(rect1_o: cc.Rect, node_o_: cc.Node): boolean {
         let rect2_o = this.getBoundingBoxToWorld(node_o_);
         return rect1_o.intersects(rect2_o);
     }
+
+    private _needUpdateCount: number = 0;
+
+    private needUpdate() {
+        this._needUpdateCount = 2;
+    }
+
     /* ***************自定义事件*************** */
     public updateOpacity(): void {
+        if (this._needUpdateCount > 0) {
+            this._needUpdateCount -= 1;
+        }
+
         if (this.detectionRangeNode == null || this.containerNode == null) {
             return null;
         }
+
         let rect1_o = this.getBoundingBoxToWorld(this.detectionRangeNode);
         // ------------------保险范围
         rect1_o.width += rect1_o.width * 0.5;
