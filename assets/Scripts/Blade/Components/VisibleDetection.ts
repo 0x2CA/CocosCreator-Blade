@@ -103,7 +103,7 @@ export default class VisibleDetection extends cc.Component {
                 (scrollView as any).__moveContent = null;
             }
             if ((scrollView as any).__calculateBoundary != null) {
-                (scrollView as any).__calculateBoundary = (scrollView as any).__calculateBoundary;
+                (scrollView as any)._calculateBoundary = (scrollView as any).__calculateBoundary;
                 (scrollView as any).__calculateBoundary = null;
             }
             if (scrollView.content != null) {
