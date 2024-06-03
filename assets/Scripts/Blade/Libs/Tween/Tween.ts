@@ -451,7 +451,14 @@ class Tween<T = any> {
         }
         let position = action.time;
         if (position == endPosition || (position > startPosition && position < endPosition) || (includeStart && position == startPosition)) {
-            action.callback.apply(action.thisObj, action.params);
+            try {
+                action.callback.apply(action.thisObj, action.params);
+            } catch (error) {
+                let errorMessages = this.getErrorMessages() || [];
+                console.warn("Tween动画错误", ...[this, error].concat(errorMessages));
+                removeGlobal(this);
+                throw error;
+            }
         }
     }
 
@@ -612,7 +619,13 @@ class Tween<T = any> {
         let isFinish = this.setPosition(this._prevPosition + delta * this._timeScale);
 
         if (this._tickCallBack != null) {
-            this._tickCallBack();
+            try {
+                this._tickCallBack();
+            } catch (error) {
+                let errorMessages = this.getErrorMessages() || [];
+                console.warn("Tween动画错误", ...[this, error].concat(errorMessages));
+                removeGlobal(this);
+            }
         }
 
         if (isFinish == true) {
@@ -760,8 +773,8 @@ namespace Tween {
                 try {
                     tween.tick(delta * _timeScale);
                 } catch (error) {
-                    let errorMessages = tween.getErrorMessages() || [];
-                    console.warn("Tween动画错误", ...[tween, error].concat(errorMessages));
+                    // let errorMessages = tween.getErrorMessages() || [];
+                    // console.warn("Tween动画错误", ...[tween, error].concat(errorMessages));
                     removeGlobal(tween);
                 }
             }
