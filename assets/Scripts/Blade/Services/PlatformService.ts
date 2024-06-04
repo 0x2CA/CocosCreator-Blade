@@ -209,17 +209,17 @@ namespace PlatformService {
             }
         }
 
-        private localRemote: () => Promise<{ alterTime: number } | { [key: string]: object }> = null
+        private loadRemote: () => Promise<{ alterTime: number } | { [key: string]: object }> = null
         private saveRemote: (data: { alterTime: number } | { [key: string]: object }) => void = null;
 
         /**
        * 本地和网络存档进行同步
        */
-        public async sync(localRemote: () => Promise<{ alterTime: number } | { [key: string]: object }>, saveRemote: (data: { alterTime: number } | { [key: string]: object }) => void) {
-            this.localRemote = localRemote;
+        public async sync(loadRemote: () => Promise<{ alterTime: number } | { [key: string]: object }>, saveRemote: (data: { alterTime: number } | { [key: string]: object }) => void) {
+            this.loadRemote = loadRemote;
             this.saveRemote = saveRemote;
 
-            const remoteData = await localRemote();
+            const remoteData = await loadRemote();
             const localData = this._data;
             //本地无存档
             if (localData == null) {
@@ -275,6 +275,17 @@ namespace PlatformService {
             }
         }
 
+        /**
+         * 移除到指定键名的值
+         * @param key 
+         * @returns 
+         */
+        public remove(key: string) {
+            if (this._data == null) {
+                return;
+            }
+            this._data[key] = null;
+        }
 
         public clear() {
             console.warn("存档已经重置");
