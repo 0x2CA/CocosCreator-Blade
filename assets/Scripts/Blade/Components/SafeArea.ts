@@ -8,6 +8,13 @@ const { ccclass, property, menu } = cc._decorator;
 @ccclass
 @menu('适配/安全区域')
 export class SafeArea extends cc.Component {
+
+    /**
+     * 是否不包含菜单按钮
+     */
+    @property()
+    private isExcludeMenuButton: boolean = true;
+
     onLoad(): void {
         let widget = this.getComponent(cc.Widget);
         if (widget == null) {
@@ -48,7 +55,7 @@ export class SafeArea extends cc.Component {
         if (
             blade.platform.getType() == PlatformService.PlatformType.ANDROID ||
             blade.platform.getType() == PlatformService.PlatformType.IOS ||
-            blade.platform.getType() == PlatformService.PlatformType.WX ||
+            // blade.platform.getType() == PlatformService.PlatformType.WX ||
             blade.platform.getType() == PlatformService.PlatformType.VIVO ||
             blade.platform.getType() == PlatformService.PlatformType.OPPO ||
             blade.platform.getType() == PlatformService.PlatformType.HUAWEI ||
@@ -57,46 +64,9 @@ export class SafeArea extends cc.Component {
             return cc.sys.getSafeAreaRect();
         }
 
-        // if (blade.platform.getType() == PlatformService.PlatformType.WX) {
-        //     let sysInfo = wx.getSystemInfoSync();
-
-        //     // 屏幕坐标系（物理分辨率），左上角为原点
-        //     let safeArea = sysInfo.safeArea;
-
-        //     if (safeArea == null) {
-        //         // 有部份机型不存在安全区域，默认返回屏幕大小
-        //         return new cc.Rect(0, 0, winSize.width, winSize.height);
-        //     }
-
-        //     // 物理分辨率和像素分辨率比
-        //     let DPR = sysInfo.pixelRatio;
-
-        //     // 窗口像素分辨率
-        //     let windowWidth = sysInfo.windowWidth * DPR;
-        //     let windowHeight = sysInfo.windowHeight * DPR;
-
-        //     // 安全矩形距离边缘的像素
-        //     let topEdge = safeArea.top * DPR;
-        //     let bottomEdge = windowHeight - safeArea.bottom * DPR;
-        //     let leftEdge = safeArea.left * DPR;
-        //     let rightEdge = windowWidth - safeArea.right * DPR;
-
-        //     // 屏幕空间下的安全区域左下和右上
-        //     let leftBottom = new cc.Vec2(leftEdge, bottomEdge);
-        //     let rightTop = new cc.Vec2(windowWidth - rightEdge, windowHeight - topEdge);
-
-        //     // 转换到视窗空间
-        //     this.convertToUISpace(leftBottom);
-        //     this.convertToUISpace(rightTop);
-
-        //     const x = leftBottom.x;
-        //     const y = leftBottom.y;
-        //     const width = rightTop.x - leftBottom.x;
-        //     const height = rightTop.y - leftBottom.y;
-
-        //     // 返回安全矩形
-        //     return new cc.Rect(x, y, width, height);
-        // }
+        if (blade.platform.getType() == PlatformService.PlatformType.WX) {
+            return this.getSafeAreaRectWX();
+        }
 
         if (blade.platform.getType() != PlatformService.PlatformType.WEB) {
             console.warn("SafeArea 没有实现相应的安全范围获取");
@@ -104,6 +74,56 @@ export class SafeArea extends cc.Component {
 
         return new cc.Rect(0, 0, winSize.width, winSize.height);
         // return new cc.Rect(0, 68, winSize.width, winSize.height - 68 - 68);
+    }
+
+    public getSafeAreaRectWX() {
+        let winSize = cc.winSize;
+
+        let sysInfo = wx.getSystemInfoSync();
+
+        // 屏幕坐标系（物理分辨率），左上角为原点
+        let safeArea = sysInfo.safeArea;
+
+        if (safeArea == null) {
+            // 有部份机型不存在安全区域，默认返回屏幕大小
+            return new cc.Rect(0, 0, winSize.width, winSize.height);
+        }
+
+        // 物理分辨率和像素分辨率比
+        let DPR = sysInfo.pixelRatio;
+
+        // 窗口像素分辨率
+        let windowWidth = sysInfo.windowWidth * DPR;
+        let windowHeight = sysInfo.windowHeight * DPR;
+
+        // 安全矩形距离边缘的像素
+        let topEdge = safeArea.top * DPR;
+        if (this.isExcludeMenuButton == true) {
+            // 不包含
+            let rect = wx.getMenuButtonBoundingClientRect();
+            if (rect != null) {
+                topEdge = (rect.top + rect.height) * DPR;
+            }
+        }
+        let bottomEdge = windowHeight - safeArea.bottom * DPR;
+        let leftEdge = safeArea.left * DPR;
+        let rightEdge = windowWidth - safeArea.right * DPR;
+
+        // 屏幕空间下的安全区域左下和右上
+        let leftBottom = new cc.Vec2(leftEdge, bottomEdge);
+        let rightTop = new cc.Vec2(windowWidth - rightEdge, windowHeight - topEdge);
+
+        // 转换到视窗空间
+        this.convertToUISpace(leftBottom);
+        this.convertToUISpace(rightTop);
+
+        const x = leftBottom.x;
+        const y = leftBottom.y;
+        const width = rightTop.x - leftBottom.x;
+        const height = rightTop.y - leftBottom.y;
+
+        // 返回安全矩形
+        return new cc.Rect(x, y, width, height);
     }
 
     /**

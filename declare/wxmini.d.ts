@@ -96,6 +96,21 @@ declare namespace wx {
         SDKVersion: string;
         /** 性能等级*/
         benchmarkLevel: number;
+        /** 在竖屏正方向下的安全区域。部分机型没有安全区域概念，也不会返回 safeArea 字段，开发者需自行兼容 */
+        safeArea?: {
+            /** 安全区域左上角横坐标 */
+            left: number;
+            /** 安全区域右下角横坐标 */
+            right: number;
+            /** 安全区域左上角纵坐标 */
+            top: number;
+            /** 安全区域右下角纵坐标 */
+            bottom: number;
+            /** 安全区域的宽度，单位逻辑像素 */
+            width: number;
+            /** 安全区域的高度，单位逻辑像素 */
+            height: number;
+        }
     }
 
     type launchOption = {
