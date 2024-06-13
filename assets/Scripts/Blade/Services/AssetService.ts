@@ -1,4 +1,5 @@
 import SingletonBase from "../Bases/SingletonBase";
+import StringHelper from "../Helpers/StringHelper";
 
 class AssetService extends SingletonBase<AssetService> {
     private _assetInfos: Map<string, AssetService.AssetInfo> = new Map<string, AssetService.AssetInfo>();
@@ -54,6 +55,24 @@ class AssetService extends SingletonBase<AssetService> {
         } else {
             callback(null, this._addressables);
         }
+    }
+
+    public getNativePath(assetName: string) {
+        return new Promise<string>((resolve, reject) => {
+            this.loadAddressables((err, addressables) => {
+                if (err != null) {
+                    reject(err);
+                    return;
+                }
+                let path = addressables[assetName];
+
+                if (path == null) {
+                    reject(assetName + "资源不在寻址表");
+                }
+
+                resolve(StringHelper.getNativePath(path))
+            });
+        });
     }
 
     public loadAsset<T extends cc.Asset>(assetName: string, type: new () => T, callback: (err: Error, asset: T) => void, progress: (finish: number, total: number) => void = null) {
