@@ -294,6 +294,22 @@ class StringHelper {
         }
     }
 
+    /**
+     * 获取地址
+     * @param path 
+     * @returns 
+     */
+    public static getNativePath(path: string) {
+        if (path.startsWith("resources/")) {
+            path = path.substring("resources/".length);
+        }
+        const extname = cc.path.extname(path);
+        const changeExtname = cc.path.changeExtname(path);
+        const bundle = cc.AssetManager.BuiltinBundleName.RESOURCES;
+        const filePath = (cc.AssetManager.prototype as any)._transform({ path: changeExtname, bundle: bundle, __isNative__: true, ext: extname });
+        return filePath;
+    }
+
 }
 
 
