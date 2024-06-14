@@ -299,11 +299,11 @@ class StringHelper {
      * @param path 
      * @returns 
      */
-    public static getNativePath(path: string) {
+    public static getNativePath(path: string, extname: string = null) {
         if (path.startsWith("resources/")) {
             path = path.substring("resources/".length);
         }
-        const extname = cc.path.extname(path);
+        extname = extname || cc.path.extname(path);
         const changeExtname = cc.path.changeExtname(path);
         const bundle = cc.AssetManager.BuiltinBundleName.RESOURCES;
         const filePath = (cc.AssetManager.prototype as any)._transform({ path: changeExtname, bundle: bundle, __isNative__: true, ext: extname });

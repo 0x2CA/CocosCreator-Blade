@@ -70,7 +70,7 @@ class AssetService extends SingletonBase<AssetService> {
                     reject(assetName + "资源不在寻址表");
                 }
 
-                resolve(StringHelper.getNativePath(path))
+                resolve(StringHelper.getNativePath(path, cc.path.extname(assetName)))
             });
         });
     }
