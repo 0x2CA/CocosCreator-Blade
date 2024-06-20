@@ -196,7 +196,9 @@ class AssetService extends SingletonBase<AssetService> {
 
         if (info.count == 0) {
             this._assetInfos.delete(assetName);
-            // cc.resources.release(info.address);
+            if (info.asset.refCount <= 0 && info.asset.loaded == true) {
+                cc.resources.release(info.address);
+            }
         }
     }
 
@@ -211,6 +213,30 @@ class AssetService extends SingletonBase<AssetService> {
                     reject(err);
                 } else {
                     resolve(res as T);
+                }
+            });
+        });
+    }
+
+    /**
+     * 加载目录资源
+     * @param path 
+     * @param progress 
+     */
+    public async loadDir<T extends cc.Asset>(
+        path: string,
+        progress: (finish: number, total: number) => void = null
+    ) {
+        return await new Promise<T[]>((resolve, reject) => {
+            cc.resources.loadDir(path, (finish: number, total: number) => {
+                if (progress) {
+                    progress(finish, total);
+                }
+            }, (err, res: cc.Asset[]) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(res as T[]);
                 }
             });
         });
@@ -254,6 +280,13 @@ class AssetService extends SingletonBase<AssetService> {
             );
         });
     }
+
+    /**
+     * 卸载未使用的资源
+     */
+    public unloadUnusedAssets() {
+        (cc.assetManager as any).releaseUnusedAssets();
+    }
 }
 
 namespace AssetService {
@@ -271,6 +304,7 @@ namespace AssetService {
     export class AssetLoadProxy {
 
         protected _assets: Map<string, number> = new Map<string, number>();
+        protected _dirAssets: Map<cc.Asset, number> = new Map<cc.Asset, number>();
 
         private _isValid: boolean = true;
 
@@ -358,10 +392,62 @@ namespace AssetService {
             }
         }
 
+        public unloadDirAsset(asset: cc.Asset) {
+            if (this._dirAssets.has(asset)) {
+                let count = this._dirAssets.get(asset);
+                if (count > 1) {
+                    this._dirAssets.set(asset, count - 1);
+                } else {
+                    this._dirAssets.delete(asset);
+                }
+                asset.decRef();
+            }
+        }
+
+        /**
+         * 加载目录资源
+         * @param path 
+         * @param progress 
+         */
+        public async loadDir<T extends cc.Asset>(
+            path: string,
+            progress: (finish: number, total: number) => void = null
+        ) {
+            if (this._isValid == false) {
+                new Error("资源加载代理已经销毁");
+                return;
+            }
+
+            let assets: T[] = await blade.asset.loadDir<T>(path, progress);
+
+            if (this._isValid == true) {
+                for (let index = 0; index < assets.length; index++) {
+                    const asset = assets[index];
+                    asset.addRef();
+                    if (this._dirAssets.has(asset)) {
+                        this._dirAssets.set(asset, this._dirAssets.get(asset) + 1);
+                    } else {
+                        this._dirAssets.set(asset, 1);
+                    }
+                }
+
+                return assets;
+            }
+
+            new Error("资源加载代理已经销毁");
+            return;
+        }
+
         /**
          * 销毁加载资源
          */
         public unloadAssets() {
+            this._dirAssets.forEach((value, key) => {
+                for (let index = 0; index < value; index++) {
+                    key.decRef();
+                }
+            });
+            this._dirAssets.clear();
             this._assets.forEach((value, key) => {
                 for (let index = 0; index < value; index++) {
                     blade.asset.unloadAsset(key);
