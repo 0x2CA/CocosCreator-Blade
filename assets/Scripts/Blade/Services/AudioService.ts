@@ -1,4 +1,5 @@
 import SingletonBase from "../Bases/SingletonBase";
+import AssetService from "./AssetService";
 
 /**
  * 全局的声音服务
@@ -18,6 +19,8 @@ export default class AudioService extends SingletonBase<AudioService> {
 
     // 背景播放id
     private _bgmAudioID: number = 0;
+
+    private _loadProxy: AssetService.AssetLoadProxy = new AssetService.AssetLoadProxy();
 
     protected onInitialize() {
         this.initVolume();
@@ -58,7 +61,7 @@ export default class AudioService extends SingletonBase<AudioService> {
     ) {
         if (!this._audios.has(name)) {
             try {
-                let audio = await blade.asset.loadAssetAsync(name, cc.AudioClip, progress);
+                let audio = await this._loadProxy.loadAssetAsync(name, cc.AudioClip, progress);
                 this.register(name, audio);
             } catch (error) {
                 console.error(`加载声音${name}失败`, error);
@@ -71,26 +74,16 @@ export default class AudioService extends SingletonBase<AudioService> {
         path: string,
         progress: (finish: number, total: number) => void = null
     ) {
-        await new Promise<void>((resolve, reject) => {
-            cc.resources.loadDir(path, (finish: number, total: number) => {
-                if (progress) {
-                    progress(finish, total);
-                }
-            }, (error, assets: cc.AudioClip[]) => {
-                if (error) {
-                    console.error("预加载声音资源失败", error);
-                    reject(error);
-                    return;
-                }
-
-                for (let index = 0; index < assets.length; index++) {
-                    let asset = assets[index];
-                    this.register(asset.name, asset);
-                }
-
-                resolve();
-            });
+        let assets = await this._loadProxy.loadDir<cc.AudioClip>(path, (finish: number, total: number) => {
+            if (progress) {
+                progress(finish, total);
+            }
         });
+
+        for (let index = 0; index < assets.length; index++) {
+            let asset = assets[index];
+            this.register(asset.name, asset);
+        }
     }
 
     public unregister(name: string) {
@@ -171,7 +164,8 @@ export default class AudioService extends SingletonBase<AudioService> {
     */
     public setSFXVolume(vol: number) {
         if (this._sfxVolume != vol) {
-            blade.platform.get().saveArchive(AudioService.SFX_VOL_KEY, vol.toString());
+            let archive = blade.platform.getArchive();
+            archive.set(AudioService.SFX_VOL_KEY, vol.toString());
             this._sfxVolume = vol;
         }
     }
@@ -191,7 +185,8 @@ export default class AudioService extends SingletonBase<AudioService> {
             }
         }
         if (this._bgmVolume != vol) {
-            blade.platform.get().saveArchive(AudioService.BGM_VOL_KEY, vol.toString());
+            let archive = blade.platform.getArchive();
+            archive.set(AudioService.BGM_VOL_KEY, vol.toString());
             this._bgmVolume = vol;
             cc.audioEngine.setVolume(this._bgmAudioID, vol);
         }
@@ -237,3 +232,4 @@ export default class AudioService extends SingletonBase<AudioService> {
         }
     }
 }
+
