@@ -8,6 +8,7 @@
 import { EDataConfig } from "../../Module/Configs/IDataConfig";
 import GameConfig from "../../Module/Defines/GameConfig";
 import SingletonBase from "../Bases/SingletonBase";
+import AssetService from "./AssetService";
 
 /**
  * 全局的配置服务
@@ -17,6 +18,34 @@ import SingletonBase from "../Bases/SingletonBase";
 class ConfigService extends SingletonBase<ConfigService>{
 
     private _datas: object = {};
+
+    private _loadProxy: AssetService.AssetLoadProxy = new AssetService.AssetLoadProxy();
+
+    private _addKey: PropertyDescriptor = {
+        value: null,
+        writable: false,
+        configurable: false,
+        enumerable: true,
+    };
+
+    private _hideIndex: PropertyDescriptor = {
+        configurable: false,
+        enumerable: false
+    };
+
+    private bindRemoveKey(keys: string[], values: object[]) {
+        for (const key in values) {
+            if (Object.prototype.hasOwnProperty.call(values, key)) {
+                const target = values[key];
+                for (let index = 0; index < keys.length; index++) {
+                    const key = keys[index];
+                    this._addKey.value = target[index];
+                    Object.defineProperty(target, key, this._addKey);
+                    Object.defineProperty(target, index, this._hideIndex);
+                }
+            }
+        }
+    }
 
     protected onInitialize() {
     }
@@ -29,7 +58,12 @@ class ConfigService extends SingletonBase<ConfigService>{
         data: object
     ) {
         if (this._datas[name] == null) {
-            this._datas[name] = data;
+            if (data["keys"] != null && data["keys"] instanceof Array && data["values"] != null) {
+                this.bindRemoveKey(data["keys"], data["values"]);
+                this._datas[name] = data["values"];
+            } else {
+                this._datas[name] = data;
+            }
         }
     }
 
@@ -40,15 +74,11 @@ class ConfigService extends SingletonBase<ConfigService>{
     }
 
     async registerAllAsync(progress: (finish: number, total: number) => void = null) {
-        await new Promise<void>((resolve, reject) => {
+        await new Promise<void>(async (resolve, reject) => {
 
             if (GameConfig.isZipConfigs) {
                 //加载Configs.bin
-                cc.resources.load("Configs", cc.BufferAsset, (finish: number, total: number) => {
-                    if (progress) {
-                        progress(Math.floor(1 * finish / total), 4);
-                    }
-                }, async (err, asset: cc.BufferAsset) => {
+                this._loadProxy.loadAsset("Configs", cc.BufferAsset, async (err, asset: cc.BufferAsset) => {
 
                     //解析
                     let zip = await JSZip.loadAsync((asset as any)._buffer)
@@ -91,27 +121,31 @@ class ConfigService extends SingletonBase<ConfigService>{
                     await Promise.all(promises);
 
                     resolve();
-                });
-
-            } else {
-                cc.resources.loadDir("Configs", (finish: number, total: number) => {
+                }, (finish: number, total: number) => {
                     if (progress) {
-                        progress(finish, total);
+                        progress(Math.floor(1 * finish / total), 4);
                     }
-                }, (error, assets: cc.JsonAsset[]) => {
-                    if (error) {
-                        console.error("预加载配置资源失败", error);
-                        reject(error);
-                        return;
-                    }
+                });
+            } else {
+
+                try {
+                    let assets = await this._loadProxy.loadDir<cc.JsonAsset>("Configs", (finish: number, total: number) => {
+                        if (progress) {
+                            progress(finish, total);
+                        }
+                    });
 
                     for (let index = 0; index < assets.length; index++) {
                         let asset = assets[index];
                         this.register(asset.name, asset.json);
+                        // 释放
+                        this._loadProxy.unloadDirAsset(asset);
                     }
 
                     resolve();
-                });
+                } catch (error) {
+                    reject(error)
+                }
             }
         });
     }
