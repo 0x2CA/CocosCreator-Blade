@@ -33,15 +33,20 @@ class ConfigService extends SingletonBase<ConfigService>{
         enumerable: false
     };
 
-    private bindRemoveKey(keys: string[], values: object[]) {
-        for (const key in values) {
-            if (Object.prototype.hasOwnProperty.call(values, key)) {
-                const target = values[key];
-                for (let index = 0; index < keys.length; index++) {
-                    const key = keys[index];
-                    this._addKey.value = target[index];
-                    Object.defineProperty(target, key, this._addKey);
-                    Object.defineProperty(target, index, this._hideIndex);
+    private bindRemoveKey(keys: string[], items: object) {
+        for (const refId in items) {
+            if (Object.prototype.hasOwnProperty.call(items, refId)) {
+                const item = items[refId];
+                for (let keyIndex = 0; keyIndex < keys.length; keyIndex++) {
+                    const key = keys[keyIndex];
+                    if (keyIndex == 0) {
+                        this._addKey.value = refId;
+                        Object.defineProperty(item, key, this._addKey);
+                    } else {
+                        this._addKey.value = item[keyIndex - 1];
+                        Object.defineProperty(item, key, this._addKey);
+                        Object.defineProperty(item, keyIndex - 1, this._hideIndex);
+                    }
                 }
             }
         }
