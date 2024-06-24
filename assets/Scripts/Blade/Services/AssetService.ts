@@ -196,9 +196,10 @@ class AssetService extends SingletonBase<AssetService> {
 
         if (info.count == 0) {
             this._assetInfos.delete(assetName);
-            if (info.asset.refCount <= 0 && info.asset.loaded == true) {
-                cc.resources.release(info.address);
-            }
+            // 直接删除有动态图集问题
+            // if (info.asset.refCount <= 0 && info.asset.loaded == true) {
+            //     cc.resources.release(info.address);
+            // }
         }
     }
 
