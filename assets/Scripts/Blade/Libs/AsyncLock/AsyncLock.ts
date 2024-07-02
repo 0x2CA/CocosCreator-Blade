@@ -19,7 +19,13 @@ export default class AsyncLock {
             // 获取锁失败
             await new Promise<void>((resolve, reject) => {
                 // 需要等待解锁
-                this._waitList.push(resolve);
+                this._waitList.push((isClear: boolean) => {
+                    if (isClear == true) {
+                        reject(new Error("强制清除锁"));
+                    } else {
+                        resolve();
+                    }
+                });
             });
         }
         // 获取锁成功
@@ -32,11 +38,24 @@ export default class AsyncLock {
     public unlock() {
         this._isLock = false;
         while (this._waitList.length > 0) {
-            let resolve = this._waitList.shift();
-            if (resolve != null) {
+            let wait = this._waitList.shift();
+            if (wait != null) {
                 // 允许下一个获取锁
-                resolve();
+                wait();
                 return;
+            }
+        }
+    }
+
+    /**
+     * 破锁
+     */
+    public break() {
+        this._isLock = false;
+        while (this._waitList.length > 0) {
+            let wait = this._waitList.shift();
+            if (wait != null) {
+                wait(true);
             }
         }
     }
