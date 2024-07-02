@@ -15,8 +15,7 @@ import AssetService from "./AssetService";
  *
  * @class ConfigService
  */
-class ConfigService extends SingletonBase<ConfigService>{
-
+class ConfigService extends SingletonBase<ConfigService> {
     private _datas: object = {};
 
     private _loadProxy: AssetService.AssetLoadProxy = new AssetService.AssetLoadProxy();
@@ -28,10 +27,10 @@ class ConfigService extends SingletonBase<ConfigService>{
         enumerable: true,
     };
 
-    private _hideIndex: PropertyDescriptor = {
-        configurable: false,
-        enumerable: false
-    };
+    // private _hideIndex: PropertyDescriptor = {
+    //     configurable: false,
+    //     enumerable: false
+    // };
 
     private bindRemoveKey(keys: string[], items: object) {
         for (const refId in items) {
@@ -45,23 +44,19 @@ class ConfigService extends SingletonBase<ConfigService>{
                     } else {
                         this._addKey.value = item[keyIndex - 1];
                         Object.defineProperty(item, key, this._addKey);
-                        Object.defineProperty(item, keyIndex - 1, this._hideIndex);
+                        // Object.defineProperty(item, keyIndex - 1, this._hideIndex);
                     }
                 }
+                item.length = 0;
             }
         }
     }
 
-    protected onInitialize() {
-    }
+    protected onInitialize() {}
 
-    protected onDispose() {
-    }
+    protected onDispose() {}
 
-    async register(
-        name: string,
-        data: object
-    ) {
+    async register(name: string, data: object) {
         if (this._datas[name] == null) {
             if (data["keys"] != null && data["keys"] instanceof Array && data["values"] != null) {
                 this.bindRemoveKey(data["keys"], data["values"]);
@@ -80,65 +75,73 @@ class ConfigService extends SingletonBase<ConfigService>{
 
     async registerAllAsync(progress: (finish: number, total: number) => void = null) {
         await new Promise<void>(async (resolve, reject) => {
-
             if (GameConfig.isZipConfigs) {
                 //加载Configs.bin
-                this._loadProxy.loadAsset("Configs", cc.BufferAsset, async (err, asset: cc.BufferAsset) => {
+                this._loadProxy.loadAsset(
+                    "Configs",
+                    cc.BufferAsset,
+                    async (err, asset: cc.BufferAsset) => {
+                        //解析
+                        let zip = await JSZip.loadAsync((asset as any)._buffer);
 
-                    //解析
-                    let zip = await JSZip.loadAsync((asset as any)._buffer)
-
-                    //获取配置
-                    let files: JSZip.JSZipObject[] = [];
-                    for (const key in zip.files) {
-                        if (Object.prototype.hasOwnProperty.call(zip.files, key)) {
-                            const file = zip.files[key];
-                            if (key.endsWith(".json")) {
-                                files.push(file);
+                        //获取配置
+                        let files: JSZip.JSZipObject[] = [];
+                        for (const key in zip.files) {
+                            if (Object.prototype.hasOwnProperty.call(zip.files, key)) {
+                                const file = zip.files[key];
+                                if (key.endsWith(".json")) {
+                                    files.push(file);
+                                }
                             }
                         }
-                    }
 
-                    let promises: Promise<void>[] = [];
+                        let promises: Promise<void>[] = [];
 
-                    let finish = 0;
+                        let finish = 0;
 
-                    for (let index = 0; index < files.length; index++) {
-                        const file = files[index];
+                        for (let index = 0; index < files.length; index++) {
+                            const file = files[index];
 
-                        promises.push(file.async("text").then((data) => {
-                            let name = file.name.replace(/^.*\/(.*)\.json$/g, "$1");
-                            //string转成json格式
-                            let json = JSON.parse(data);
-                            // console.log(name, json);
-                            blade.config.register(name, json);
+                            promises.push(
+                                file.async("text").then((data) => {
+                                    let name = file.name.replace(/^.*\/(.*)\.json$/g, "$1");
+                                    //string转成json格式
+                                    let json = JSON.parse(data);
+                                    // console.log(name, json);
+                                    blade.config.register(name, json);
 
-                            finish += 1;
+                                    finish += 1;
 
-                            let total = Math.floor(files.length / 0.75);
-                            if (progress) {
-                                progress(Math.floor(total * 0.25) + finish, total);
-                            }
-                        }));
+                                    let total = Math.floor(files.length / 0.75);
+                                    if (progress) {
+                                        progress(Math.floor(total * 0.25) + finish, total);
+                                    }
+                                }),
+                            );
+                        }
 
-                    }
+                        await Promise.all(promises);
 
-                    await Promise.all(promises);
+                        this._loadProxy.unloadAsset("Configs");
 
-                    resolve();
-                }, (finish: number, total: number) => {
-                    if (progress) {
-                        progress(Math.floor(1 * finish / total), 4);
-                    }
-                });
-            } else {
-
-                try {
-                    let assets = await this._loadProxy.loadDir<cc.JsonAsset>("Configs", (finish: number, total: number) => {
+                        resolve();
+                    },
+                    (finish: number, total: number) => {
                         if (progress) {
-                            progress(finish, total);
+                            progress(Math.floor((1 * finish) / total), 4);
                         }
-                    });
+                    },
+                );
+            } else {
+                try {
+                    let assets = await this._loadProxy.loadDir<cc.JsonAsset>(
+                        "Configs",
+                        (finish: number, total: number) => {
+                            if (progress) {
+                                progress(finish, total);
+                            }
+                        },
+                    );
 
                     for (let index = 0; index < assets.length; index++) {
                         let asset = assets[index];
@@ -149,7 +152,7 @@ class ConfigService extends SingletonBase<ConfigService>{
 
                     resolve();
                 } catch (error) {
-                    reject(error)
+                    reject(error);
                 }
             }
         });
@@ -162,8 +165,8 @@ class ConfigService extends SingletonBase<ConfigService>{
     public getRef<T extends object>(config: EDataConfig | string): { [key: string]: T } {
         // 转换表名
         let name = EDataConfig[config];
-        if (name == null || typeof (name) == "number") {
-            name = config
+        if (name == null || typeof name == "number") {
+            name = config;
         }
         //获取表
         if (this._datas[name] != null) {
@@ -180,7 +183,7 @@ class ConfigService extends SingletonBase<ConfigService>{
      * @returns
      */
     public getRefConfig<T extends object>(config: EDataConfig | string): T {
-        return (this.getRef<object>(config) as any) as T;
+        return this.getRef<object>(config) as any as T;
     }
 
     public getRefItem<T extends object>(config: EDataConfig | string, refId: string): T {
@@ -200,25 +203,22 @@ class ConfigService extends SingletonBase<ConfigService>{
                 console.log(`没有${name}配置文件`);
             }
         } else {
-            let info = "配置信息:\n"
+            let info = "配置信息:\n";
 
             const keys = Object.keys(this._datas);
 
             if (keys.length > 0) {
-                keys.forEach(
-                    (value: string, index: number, array: string[]) => {
-                        info += "   " + value + "    ✔" + "\n";
-                    }
-                );
+                keys.forEach((value: string, index: number, array: string[]) => {
+                    info += "   " + value + "    ✔" + "\n";
+                });
             } else {
                 info += "   没有注册配置";
             }
-            console.log(info)
+            console.log(info);
         }
     }
 }
 
-namespace ConfigService {
-}
+namespace ConfigService {}
 
 export default ConfigService;
